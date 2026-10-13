@@ -1,26 +1,36 @@
 [project]
-name = "simapci-yt"
-version = "0.1.0"
-description = "Management System of Scientific Production at Yachay Tech"
+name = "red-papers"
+version = "1.0.0"
+description = "RED PAPERS: Portal Web para la Visualización y Gestión de la Producción Científica de la ECMC, Yachay Tech"
 readme = "README.md"
 authors = [
     {name = "Demian Viter", email = "demivn15@gmail.com"},
     {name = "Alejandro Ortiz"},
     {name = "Jhony Peñaherrera"},
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 dependencies = [
-    "authlib>=1.8.0",
+    "bcrypt>=4.2.0",
     "fastapi[standard]>=0.143.0",
     "httpx>=0.28.1",
-    "passlib[bcrypt]>=1.7.4",
+    "openpyxl>=3.1.5",
+    "pandas>=2.2.0",
     "pydantic[email]>=2.14.0",
+    "pydantic-settings>=2.7.0",
+    "psycopg2-binary>=2.9.9",
     "pymysql>=1.2.3",
+    "pypdf>=5.1.0",
     "python-dotenv>=1.2.4",
     "python-jose[cryptography]>=3.5.0",
     "python-multipart>=0.0.32",
+    "reportlab>=4.2.5",
     "sqlalchemy>=2.1.4",
     "uvicorn>=0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
 ]
 
 [build-system]
