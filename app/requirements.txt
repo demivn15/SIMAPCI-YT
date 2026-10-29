@@ -1,0 +1,6 @@
+PyJWT
+fastapi 
+ldap3
+pydantic-settings 
+python-dotenv
+uvicorn 
