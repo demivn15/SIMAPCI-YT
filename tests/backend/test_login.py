@@ -71,4 +71,4 @@ def test_me_returns_profile_after_login(monkeypatch):
     response = session.get("/api/v1/auth/me")
     assert response.status_code == 200
     assert response.json()["username"] == "professor"
-    assert response.json()["role"] == "admin"
+    assert response.json()["role"] == "professor"
