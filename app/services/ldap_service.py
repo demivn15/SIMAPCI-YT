@@ -27,7 +27,7 @@ class LDAPService:
             )
 
             return conn
-        except LDAPSocketOpenError as e:
+        except LDAPSocketOpenError:
                     # Server is down, unreachable, or timed out
                     raise HTTPException(
                         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
