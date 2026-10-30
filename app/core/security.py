@@ -1,4 +1,3 @@
-import json
 """
 File: security.py
 Author: Demian Viteri
