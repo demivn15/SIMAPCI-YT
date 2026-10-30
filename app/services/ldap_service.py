@@ -6,7 +6,7 @@ Description: LDAP logic: connection, authentication, group membership verificati
 
 from app.core.config import settings
 from fastapi import HTTPException, status
-from ldap3 import ALL, SUBTREE, Connection, Server
+from ldap3 import Server, Connection, ALL, SUBTREE
 from ldap3.core.exceptions import LDAPException, LDAPSocketOpenError
 
 class LDAPService:

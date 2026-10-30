@@ -1,6 +1,9 @@
 PyJWT
 fastapi 
+httpx
 ldap3
 pydantic-settings 
+pytest
 python-dotenv
+ruff
 uvicorn 
