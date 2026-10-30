@@ -1,77 +1,160 @@
-# SIMAPCI · Yachay Tech Research Portal
+# Institutional Professor Portal — Authentication & Authorization System
 
-**SIMAPCI** is a web portal for exploring and organizing scientific publications, research projects, and academic profiles across Yachay Tech's seven schools. It provides a public landing page, a portal for each school, and demonstration workflows for faculty, students, the Scientific Committee, and developers.
+A secure, scalable, role-based authentication and authorization web application designed for institutional portals. The system authenticates users against an institutional LDAP server, verifies role membership (restricting access to professors), and manages session state via secure, stateless JWT tokens delivered in `HttpOnly` cookies.
 
-> **Status and intended use:** this version is a static web prototype. Authentication, permissions, and records are handled in the browser; there is no application server or central database. Demo accounts and records are not institutional identities or verified institutional information. Read [Security and limitations](docs/security-and-limitations.md) before using real data.
+---
 
-## Features
+## Architecture Overview
 
-- Responsive landing page for selecting a school.
-- School dashboards with featured publications, production metrics, time trends, research lines, and faculty metrics.
-- Searchable and filterable publication/project catalog, academic directory, and record details.
-- Demonstration forms for registering research output, reviewing bibliographic metadata, and attaching PDF files.
-- Demonstration workflows for Scientific Committee review, record corrections, project tracking, and notifications.
-- Faculty and student profiles, student collaborations, and developer tools for roles and project traceability.
-- CSV and Excel export, plus browser-based printing of catalogs and reports.
-- An ECMC bibliographic import derived from an ORCID dataset supplied for this project. Its scope and limitations are described in [Data and provenance](docs/data-and-provenance.md) and the [ECMC source notes](src/data/README.md).
+```
+                          ┌───────────────────────────┐
+                          │   Institutional LDAP /    │
+                          │     Active Directory      │
+                          └─────────────▲─────────────┘
+                                        │
+                         1. Search DN   │  2. User Bind &
+                         & Attributes   │     Group Verification
+                                        │
+┌─────────────────────────┐   HTTP/JSON ┴─────────────────────────┐
+│     React Frontend      │◄───────────►│      FastAPI Backend      │
+│  (Vite, Tailwind CSS,   │  HttpOnly   │ (PyJWT, ldap3, Pydantic,  │
+│     TanStack Query)     │  Cookie     │   Dependency Injection)   │
+└─────────────────────────┘             └─────────────────────────┘
+```
 
-## Technology
+1. **Authentication Flow (Two-Step LDAP Bind):**
+   * **Step 1 (Directory Search):** The backend uses a dedicated service account (`LDAP_BIND_DN`) to locate the target user by `uid` or `sAMAccountName` and retrieve user metadata and `memberOf` attributes.
+   * **Step 2 (User Authentication):** The backend attempts an LDAP bind using the user’s full Distinguished Name (DN) and submitted password.
+2. **Authorization (Role-Based Access Control - RBAC):**
+   * Upon successful credential bind, the backend checks group membership against `LDAP_PROFESSOR_GROUP_CN` (either via the `memberOf` attribute or explicit group container lookup).
+3. **Session Management (Stateless JWT in HttpOnly Cookies):**
+   * Once authenticated and authorized, the backend issues an `HS256`-signed JWT token containing user identity details and role assertions.
+   * The token is returned in a secure `HttpOnly`, `SameSite=Lax` cookie to prevent Cross-Site Scripting (XSS) and mitigate Cross-Site Request Forgery (CSRF).
+4. **Frontend Session Hydration:**
+   * On page load or refresh, the React client executes a `/auth/me` health query. If valid, user state is hydrated; if invalid (401), the frontend safely redirects to the login view.
 
-| Area | Technology |
-| --- | --- |
-| UI | React 19, TypeScript, Tailwind CSS 4 |
-| Development | Vite 8, TypeScript 7, Vitest 5 |
-| Motion and icons | Motion, lucide-react |
-| Spreadsheet export | SheetJS (`xlsx`) |
-| Hosting | Static GitHub Pages site deployed with GitHub Actions |
+---
 
-The app uses ES modules and pins its dependency tree in `package-lock.json`. CI uses Node.js 22.
+## Tech Stack
 
-## Requirements and local setup
+### Backend
+* **Framework:** [FastAPI](https://fastapi.tiangolo.com/) (Python 3.10+)
+* **LDAP Integration:** [`ldap3`](https://pypi.org/project/ldap3/)
+* **Security & Tokens:** [`PyJWT`](https://pyjwt.readthedocs.io/), `passlib`
+* **Settings Management:** [`pydantic-settings`](https://docs.pydantic.dev/)
+* **ASGI Server:** `uvicorn`
 
-Install Node.js 22 and npm. From the repository root:
+### Frontend
+* **Core & Build Tool:** [React 18](https://react.dev/) + [Vite](https://vitejs.dev/)
+* **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+* **State Management & Data Fetching:** [TanStack Query (React Query v5)](https://tanstack.com/query/latest)
+* **Routing:** [React Router v6](https://reactrouter.com/)
+* **HTTP Client:** [Axios](https://axios-http.com/)
 
+---
+
+## Key Security Implementation Features
+
+* **HttpOnly & SameSite Cookies:** Eliminates JavaScript access to tokens, making session hijacking via XSS impossible.
+* **Strict CORS Policy:** Configured via FastAPI middleware with `allow_credentials=True` restricted to explicitly whitelisted origin domains.
+* **Non-Enumeration Auth Response:** Credentials and authorization errors return generic 401 responses to prevent account harvest attacks.
+* **Connection Fail-Fast:** LDAP connections enforce a 5-second connection timeout, returning clean `503 Service Unavailable` responses during directory server downtime.
+
+---
+
+## Directory Structure
+
+```
+.
+├── docker-compose.yml          # Local mock OpenLDAP environment
+├── .env                        # Local environment variables
+├── TESTS.md                    # Execution manual for QA/testing
+├── app/                        # FastAPI Backend Application
+│   ├── main.py                 # FastAPI initialization and CORS setup
+│   ├── api/
+│   │   ├── deps.py             # Security dependency injection (get_current_professor)
+│   │   └── v1/
+│   │       ├── auth.py         # Auth endpoints (/login, /me, /logout)
+│   │       └── professor.py    # Protected domain routes
+│   ├── core/
+│   │   ├── config.py           # Pydantic environment configuration
+│   │   └── security.py         # JWT creation, decoding, and validation
+│   └── services/
+│       └── ldap_service.py     # LDAP authentication and RBAC logic
+└── frontend/                   # React Single-Page Application
+    ├── src/
+    │   ├── api/                # Axios client configuration (withCredentials: true)
+    │   ├── components/         # ProtectedRoute guard components
+    │   ├── context/            # AuthContext & TanStack Query wrapper
+    │   ├── pages/              # LoginPage and Dashboard view components
+    │   └── App.jsx             # React router configuration
+    ├── index.css               # Tailwind directives
+    └── vite.config.js          # Vite build configuration
+```
+
+---
+
+## API Endpoint Reference
+
+| Method | Endpoint | Protection | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/auth/login` | Public | Authenticates credentials with LDAP, checks RBAC, sets `HttpOnly` JWT cookie |
+| `GET` | `/api/v1/auth/me` | Protected (JWT) | Validates session cookie and returns user profile details |
+| `POST` | `/api/v1/auth/logout` | Public | Clears the `access_token` session cookie |
+| `GET` | `/api/v1/professor/dashboard` | Protected (Professor) | Example domain endpoint guarded by `get_current_professor` |
+
+---
+
+## Local Setup & Quickstart
+
+### Prerequisites
+* Python 3.10+
+* Node.js 18+ & npm
+* Docker & Docker Compose
+
+### 1. Environment Configuration
+Create a `.env` file in the root directory:
+
+```env
+APP_NAME="Institutional Professor Portal"
+SECRET_KEY="super_secret_local_development_key_change_in_prod"
+ALGORITHM="HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES=480
+
+# LDAP Connection Settings (Mock Configuration)
+LDAP_SERVER_URI="ldap://localhost:10389"
+LDAP_BIND_DN="cn=admin,dc=planetexpress,dc=com"
+LDAP_BIND_PASSWORD="GoodNewsEveryone"
+
+LDAP_USER_BASE_DN="ou=people,dc=planetexpress,dc=com"
+LDAP_GROUP_BASE_DN="ou=people,dc=planetexpress,dc=com"
+LDAP_PROFESSOR_GROUP_CN="admin_staff"
+
+BACKEND_CORS_ORIGINS=["http://localhost:5173"]
+```
+
+### 2. Backend Initialization
 ```bash
-npm ci
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install fastapi uvicorn ldap3 PyJWT pydantic-settings
+
+# Start FastAPI server
+uvicorn app.main:app --reload --port 8000
+```
+
+### 3. Frontend Initialization
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start Vite development server
 npm run dev
 ```
 
-Vite serves the app at `http://localhost:3000`. The development server listens on all network interfaces to support testing from another device on the same network. Do not expose that port on an untrusted network.
-
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | Starts Vite on port 3000. |
-| `npm run lint` | Runs `tsc --noEmit` for TypeScript checking; it does not run ESLint. |
-| `npm test` | Runs the Vitest `check-*.test.tsx` suite. |
-| `npm run build` | Builds the static site into `dist/`. |
-| `npm run preview` | Serves the latest `dist/` build for local review. |
-
-See [Development and deployment](docs/development-and-deployment.md) for environment variables and production settings.
-
-## Documentation
-
-- [Architecture](docs/architecture.md): application structure, navigation, and module responsibilities.
-- [User guide](docs/user-guide.md): workflows for visitors and portal roles.
-- [Data and provenance](docs/data-and-provenance.md): schools, records, seed data, and the ECMC source.
-- [Development and deployment](docs/development-and-deployment.md): local setup, configuration, and GitHub Pages.
-- [Tests](docs/tests.md): automated coverage and manual verification.
-- [Security and limitations](docs/security-and-limitations.md): local storage, demo authentication, and operational constraints.
-
-## Repository layout
-
-```text
-src/
-  App.tsx, PortalApp.tsx      Landing shell, school selection, and school portal
-  components/                 Landing, catalog, dashboard, directory, access, and tools
-  services/                   Local persistence, authentication, products, metrics, exports
-  constants/                  Schools, research lines, demo accounts, and seed data
-  data/                       ECMC ORCID dataset and source documentation
-  types/                      Domain types
-public/                       Static assets served with the site
-.github/workflows/pages.yml   Checks and GitHub Pages deployment
-check-*.test.tsx              Automated tests
-```
-
-Start with `src/constants/schools.ts` for school configuration, `src/services/storage.ts` for persistence, and `src/services/productService.ts` for product rules.
-
-Some source strings, the npm package name, and generated report labels still use the historical names “SIMAPC” or “RED PAPERS”. This documentation uses **SIMAPCI** as the project name; those internal identifiers have not been renamed.
+Visit `http://localhost:5173` to access the login portal.
