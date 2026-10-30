@@ -5,7 +5,8 @@ Description: LDAP logic: connection, authentication, group membership verificati
 """
 
 from app.core.config import settings
-from ldap3 import Server, Connection, ALL, SUBTREE
+from fastapi import HTTPException, status
+from ldap3 import ALL, SUBTREE, Connection, Server
 from ldap3.core.exceptions import LDAPException, LDAPSocketOpenError
 
 class LDAPService:
@@ -26,7 +27,7 @@ class LDAPService:
             )
 
             return conn
-        except LDAPSocketOpenError as e:
+        except LDAPSocketOpenError:
                     # Server is down, unreachable, or timed out
                     raise HTTPException(
                         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
