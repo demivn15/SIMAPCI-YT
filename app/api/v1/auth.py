@@ -7,9 +7,18 @@ Description: Expose login endpoint; receive user credentials, run them through L
 from app.api.deps import get_current_professor
 from app.core.config import settings
 from app.core.security import create_access_token
+from app.db.session import get_db
 from app.services.ldap_service import LDAPService
+from app.services.user_service import (
+    EmailAlreadyRegisteredError,
+    InactiveAccountError,
+    IncompleteIdentityError,
+    LdapIdentity,
+    UserService,
+)
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix = "/auth", tags = ["Authentication"])
 
@@ -18,7 +27,7 @@ class LoginRequest(BaseModel):
     password: str
 
 @router.post("/login")
-def login(credentials: LoginRequest, response: Response):
+def login(credentials: LoginRequest, response: Response, db: Session = Depends(get_db)):
     """
     Authenticates an institutional user via LDAP and checks professor authorization.
     Issues a secure HttpOnly cookie containing a JWT session token upon success.
@@ -36,17 +45,39 @@ def login(credentials: LoginRequest, response: Response):
             detail="Invalid institutional credentials or unauthorized user role (Professors only)."
         )
     
-    # 2. Create JWT token payload with user identity and claims
+    # 2. Crear la cuenta en el primer acceso o recuperar la existente (PGPCECMC-20)
+    try:
+        provisioning = UserService.provision_from_ldap(
+            db,
+            LdapIdentity(
+                username=user_data["username"],
+                full_name=user_data["full_name"],
+                email=user_data["email"],
+            ),
+        )
+    except EmailAlreadyRegisteredError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    except InactiveAccountError as exc:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
+    except IncompleteIdentityError as exc:
+        # El dato faltante viene del directorio, no del usuario: 502 (error del servicio externo)
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+
+    user = provisioning.user
+
+    # 3. Create JWT token payload with user identity and claims
+    # Los datos salen de nuestra BD; "user_id" permite asociar productos a la cuenta.
     token_payload = {
-        "sub": user_data["username"],
-        "name": user_data["full_name"],
-        "email": user_data["email"],
-        "role": "professor"
+        "sub": user.username,
+        "user_id": user.id,
+        "name": user.full_name,
+        "email": user.email,
+        "role": user.role,
     }
     
     access_token = create_access_token(data = token_payload)
     
-    # 3. Set token in a secure HttpOnly cookie
+    # 4. Set token in a secure HttpOnly cookie
     # secure=True ensures it only transmits over HTTPS (set to False only for local http testing if needed)
     response.set_cookie(
         key = "access_token",
@@ -59,8 +90,10 @@ def login(credentials: LoginRequest, response: Response):
     
     return {
         "message": "Login successful",
-        "username": user_data["username"],
-        "full_name": user_data["full_name"]
+        "username": user.username,
+        "full_name": user.full_name,
+        # True solo en el primer acceso: el frontend puede mostrar "Cuenta creada" (CA01)
+        "account_created": provisioning.created,
     }
 
 @router.get("/me")
