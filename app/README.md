@@ -100,8 +100,9 @@ A secure, scalable, role-based authentication and authorization web application 
 | :--- | :--- | :--- | :--- |
 | `POST` | `/api/v1/auth/login` | Public | Authenticates credentials with LDAP, checks RBAC, sets `HttpOnly` JWT cookie |
 | `GET` | `/api/v1/auth/me` | Protected (JWT) | Validates session cookie and returns user profile details |
-| `POST` | `/api/v1/auth/logout` | Public | Clears the `access_token` session cookie |
-| `GET` | `/api/v1/professor/dashboard` | Protected (Professor) | Example domain endpoint guarded by `get_current_professor` |
+| `POST` | `/api/v1/auth/register` | Public | Validates required fields and the `@yachaytech.edu.ec` domain; stores only a PBKDF2 password hash (`201`, `409` if the email exists, `422` if invalid) |
+| `POST` | `/api/v1/auth/logout` | Public (idempotent) | Revokes the active token server-side (blocklist by `jti`) and clears the `access_token` cookie |
+| `GET` | `/api/v1/professor/dashboard` | Protected (Professor) | Private function guarded by `require_roles("professor")`: `401` without session, `403` with another role |
 
 ---
 
