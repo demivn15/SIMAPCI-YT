@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import RegisterProductPage from './pages/RegisterProductPage';
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,7 @@ export default function App() {
             {/* Protected Routes Guard */}
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/products/new" element={<RegisterProductPage />} />
             </Route>
 
             {/* Fallback Catch-all Redirect */}

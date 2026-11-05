@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -42,6 +42,13 @@ export default function DashboardPage() {
             <div><span className="font-semibold text-slate-900">Email:</span> {user?.email || 'N/A'}</div>
             <div><span className="font-semibold text-slate-900">Role:</span> {user?.role}</div>
           </div>
+
+          <Link
+            to="/products/new"
+            className="mt-6 inline-flex py-2 px-4 rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+          >
+            Registrar producto
+          </Link>
         </div>
       </main>
     </div>
