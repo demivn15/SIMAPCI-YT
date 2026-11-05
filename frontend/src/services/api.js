@@ -12,7 +12,12 @@ export const api = axios.create({
 api.interceptors.response.use(
     (response) => response, // Pass through successful responses
     (error) => {
-        if (error.response && error.response.status === 401) {
+        // /auth/me y /auth/login responden 401 de forma normal (aún no hay sesión
+        // o las credenciales son incorrectas): no significan que una sesión venció.
+        // De esos casos se encargan ProtectedRoute y la pantalla de login.
+        const isAuthRequest = ['/auth/me', '/auth/login'].includes(error.config?.url);
+
+        if (error.response && error.response.status === 401 && !isAuthRequest) {
             // Token expired or invalid session - force redirect to login
             if (window.location.pathname !== '/login') {
                 window.location.href = '/login?expired=true';

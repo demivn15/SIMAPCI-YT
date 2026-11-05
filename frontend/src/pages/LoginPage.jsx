@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { getLoginErrorMessage } from '../utils/loginMessages';
 
@@ -9,6 +11,8 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { isAuthenticated } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -18,9 +22,12 @@ export default function LoginPage() {
     try {
       // Send credentials to FastAPI backend
       await api.post('/auth/login', { username, password });
-      
-      // On success, redirect to the professor dashboard
-      navigate('/dashboard');
+
+      // Vuelve a consultar /auth/me para que AuthContext tenga al usuario antes de
+      // navegar; sin esto, ProtectedRoute aún ve "sin sesión" y regresa al login
+      await queryClient.invalidateQueries({ queryKey: ['authUser'] });
+
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       // Mensaje propio según el código HTTP; no se muestra el texto del backend (CA05)
       setError(getLoginErrorMessage(err));
@@ -28,6 +35,11 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  // Si ya hay una sesión activa, no tiene sentido mostrar el formulario
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
