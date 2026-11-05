@@ -47,15 +47,36 @@ export function normalizeProjectCode(rawCode?: string): string {
   return rawCode.trim().toUpperCase().replace(/\s+/g, '-');
 }
 
+/** Tiempo máximo de espera de la consulta a Crossref antes de abandonarla. */
+export const DOI_LOOKUP_TIMEOUT_MS = 8000;
+
+export type DoiLookupErrorCode = 'invalid' | 'not_found' | 'timeout' | 'unavailable' | 'network';
+
+export interface DoiLookupResult {
+  success: boolean;
+  data?: ExtractedPublicationMetadata;
+  error?: string;
+  errorCode?: DoiLookupErrorCode;
+}
+
+function lookupFailure(errorCode: DoiLookupErrorCode, doi = ''): DoiLookupResult {
+  const messages: Record<DoiLookupErrorCode, string> = {
+    invalid: 'Por favor ingresa un identificador DOI válido.',
+    not_found: `No se encontraron metadatos en línea para el DOI "${doi}". Puedes completar los datos manualmente o revisar que el identificador sea correcto.`,
+    timeout: 'El servicio de metadatos (Crossref) tardó demasiado en responder. Puedes reintentar o completar los datos manualmente.',
+    unavailable: 'El servicio de metadatos (Crossref) no está disponible en este momento. Puedes reintentar más tarde o completar los datos manualmente.',
+    network: 'No fue posible conectar con el servicio de metadatos. Revisa tu conexión a internet o completa los datos manualmente.',
+  };
+  return { success: false, error: messages[errorCode], errorCode };
+}
+
 export const doiService = {
   /**
    * Resuelve metadatos bibliográficos a partir de un DOI
    */
-  async resolveDoi(rawDoi: string): Promise<{ success: boolean; data?: ExtractedPublicationMetadata; error?: string }> {
+  async resolveDoi(rawDoi: string): Promise<DoiLookupResult> {
     const cleanDoi = normalizeDoi(rawDoi);
-    if (!cleanDoi) {
-      return { success: false, error: 'Por favor ingresa un identificador DOI válido.' };
-    }
+    if (!cleanDoi) return lookupFailure('invalid');
 
     // 1. Catálogo de demostración precargado de respuesta inmediata
     const KNOWN_MOCKS: Record<string, ExtractedPublicationMetadata> = {
@@ -109,15 +130,28 @@ export const doiService = {
       return { success: true, data: KNOWN_MOCKS[cleanDoi] };
     }
 
-    // 2. Consulta real a CrossRef Public API con fallback transparente
+    // 2. Consulta real a CrossRef Public API con tiempo de espera y errores diferenciados
+    const controller = new AbortController();
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, DOI_LOOKUP_TIMEOUT_MS);
+
     try {
       const response = await fetch(`https://api.crossref.org/works/${encodeURIComponent(cleanDoi)}`, {
         headers: { Accept: 'application/json' },
+        signal: controller.signal,
       });
 
       if (response.ok) {
-        const json = await response.json();
-        const item = json.message;
+        let item;
+        try {
+          item = (await response.json()).message;
+        } catch {
+          item = undefined;
+        }
+        if (!item || typeof item !== 'object') return lookupFailure('unavailable');
         const title = item.title?.[0] || 'Publicación sin título';
         const authors = (item.author || []).map((a: { given?: string; family?: string; name?: string }) =>
           a.given && a.family ? `${a.given} ${a.family}` : a.name || 'Autor Desconocido'
@@ -143,14 +177,16 @@ export const doiService = {
           },
         };
       }
-    } catch {
-      // Fallback si no hay conexión o API responde con error
-    }
 
-    return {
-      success: false,
-      error: `No se encontraron metadatos en línea para el DOI "${cleanDoi}". Puedes completar los datos manualmente o revisar que el identificador sea correcto.`,
-    };
+      // 429 y 5xx: el servicio existe pero no puede atender la consulta ahora
+      if (response.status === 429 || response.status >= 500) return lookupFailure('unavailable');
+      return lookupFailure('not_found', cleanDoi);
+    } catch {
+      // El tiempo de espera aborta la petición; cualquier otro fallo es de red
+      return lookupFailure(timedOut ? 'timeout' : 'network');
+    } finally {
+      clearTimeout(timer);
+    }
   },
 
   /**
