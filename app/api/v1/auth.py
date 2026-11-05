@@ -47,12 +47,12 @@ def login(credentials: LoginRequest, response: Response):
     access_token = create_access_token(data = token_payload)
     
     # 3. Set token in a secure HttpOnly cookie
-    # secure=True ensures it only transmits over HTTPS (set to False only for local http testing if needed)
+    # secure ensures it only transmits over HTTPS (COOKIE_SECURE=true in production; false only for local http testing)
     response.set_cookie(
         key = "access_token",
         value = access_token,
         httponly = True,
-        secure = False, # Set to True in production (HTTPS required)
+        secure = settings.COOKIE_SECURE,
         samesite = "lax",
         max_age = settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
     )

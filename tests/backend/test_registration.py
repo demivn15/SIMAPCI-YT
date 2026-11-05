@@ -33,7 +33,7 @@ def _register(**overrides):
 
 def test_register_valid_data_is_accepted_and_normalized():
     response = _register(email="  Ana.Torres@YachayTech.edu.ec ", school="ecmc", full_name="  Ana   Torres ")
-    assert response.status_code == 202
+    assert response.status_code == 201
     assert response.json()["email"] == "ana.torres@yachaytech.edu.ec"
     assert response.json()["school"] == "ECMC"
 
