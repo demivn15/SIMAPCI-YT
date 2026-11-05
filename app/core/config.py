@@ -24,6 +24,16 @@ class Settings(BaseSettings):
     # Imprime el SQL generado en consola (solo para depurar en local)
     DATABASE_ECHO: bool = False
 
+    # External integrations (T-HU03-02, PGPCECMC-33)
+    CROSSREF_API_URL: str = "https://api.crossref.org"
+    OPENALEX_API_URL: str = "https://api.openalex.org"
+    ORCID_API_URL: str = "https://pub.orcid.org/v3.0"
+    # Correo de contacto para el "polite pool" de Crossref y OpenAlex (atienden
+    # más rápido y con menos bloqueos a quien se identifica). Opcional.
+    INTEGRATIONS_CONTACT_EMAIL: str = ""
+    # Tiempo máximo de espera por servicio externo, en segundos
+    INTEGRATIONS_TIMEOUT_SECONDS: float = 5.0
+
     # LDAP Connection Settings
     LDAP_SERVER_URI: str # e.g., ldaps://ldap.institution.edu:636
     
