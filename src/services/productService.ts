@@ -4,6 +4,7 @@ import { storageService, STORAGE_KEYS, withStorageRollback } from './storage';
 import { normalizeDoi, normalizeProjectCode } from './doiService';
 import { canReview } from '../constants/demoAccounts';
 import { productMatchesTeacher } from './productPresentation';
+import { getRegistryModule } from './registry';
 
 export interface DuplicateCheckResult {
   hasDuplicate: boolean;
@@ -144,7 +145,14 @@ export const productService = {
   ): { success: boolean; product?: ScientificProduct; error?: string; warning?: string } {
     const actor=authService.getCurrentUser();
     if (!actor || !['teacher', 'developer'].includes(actor.role) || actor.id!==ownerId) return {success:false,error:'Su perfil no permite registrar publicaciones ni proyectos.'};
-    const dupCheck = this.checkDuplicates(productData);
+
+    // Cada tipo de producto lo valida y normaliza su propio módulo de registro (sin escuela por defecto)
+    const registry = getRegistryModule(productData.type);
+    if (!registry) return { success: false, error: 'Seleccione un tipo de producto válido (publicación o proyecto).' };
+    const draft = registry.prepare(productData, { id: ownerId, school: actor.school });
+    if (!draft.success) return { success: false, error: draft.error };
+
+    const dupCheck = this.checkDuplicates(draft.product);
     if (dupCheck.hasDuplicate) {
       return { success: false, error: dupCheck.message };
     }
@@ -154,10 +162,9 @@ export const productService = {
     const now = new Date().toISOString();
 
     const newProduct: ScientificProduct = {
-      ...productData,
+      ...draft.product,
       id: newId,
       ownerId,
-      school: productData.school || 'ECMC',
       status: 'cargado', // Estado oficial inicial
       citations: 0,
       createdAt: now,
@@ -198,13 +205,18 @@ export const productService = {
     if (existing.ownerId !== actor.id) return { success: false, error: 'Solo el docente responsable puede editar este producto.' };
     if (existing.status !== 'rechazado') return { success: false, error: 'Solo se pueden editar productos que estén en observación.' };
 
-    const duplicate = this.checkDuplicates(productData, productId);
+    const registry = getRegistryModule(productData.type);
+    if (!registry) return { success: false, error: 'Seleccione un tipo de producto válido (publicación o proyecto).' };
+    const draft = registry.prepare(productData, { id: existing.ownerId, school: existing.school });
+    if (!draft.success) return { success: false, error: draft.error };
+
+    const duplicate = this.checkDuplicates(draft.product, productId);
     if (duplicate.hasDuplicate) return { success: false, error: duplicate.message };
 
     const now = new Date().toISOString();
     const updated: ScientificProduct = {
       ...existing,
-      ...productData,
+      ...draft.product,
       id: existing.id,
       ownerId: existing.ownerId,
       school: existing.school,
