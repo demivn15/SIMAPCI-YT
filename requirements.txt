@@ -1,9 +1,13 @@
-PyJWT
-fastapi 
+alembic>=1.13
+cryptography
+fastapi
 httpx
 ldap3
-pydantic-settings 
+pydantic-settings
+PyJWT
+pymysql>=1.1
 pytest
 python-dotenv
 ruff
-uvicorn 
+sqlalchemy>=2.0
+uvicorn
