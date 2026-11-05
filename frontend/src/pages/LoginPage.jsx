@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import { getLoginErrorMessage } from '../utils/loginMessages';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -21,9 +22,8 @@ export default function LoginPage() {
       // On success, redirect to the professor dashboard
       navigate('/dashboard');
     } catch (err) {
-      // Extract clean error message from backend response if available
-      const errorMsg = err.response?.data?.detail || 'Failed to connect to authentication server.';
-      setError(errorMsg);
+      // Mensaje propio según el código HTTP; no se muestra el texto del backend (CA05)
+      setError(getLoginErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
@@ -33,10 +33,10 @@ export default function LoginPage() {
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900">
-          Institutional Professor Portal
+          Portal institucional de profesores
         </h2>
         <p className="mt-2 text-center text-sm text-slate-600">
-          Sign in using your institutional credentials
+          Inicia sesión con tus credenciales institucionales
         </p>
       </div>
 
@@ -53,7 +53,7 @@ export default function LoginPage() {
           <form className="space-y-6" onSubmit={handleLogin}>
             <div>
               <label className="block text-sm font-medium text-slate-700">
-                Institutional Username / ID
+                Usuario institucional
               </label>
               <div className="mt-1">
                 <input
@@ -62,14 +62,14 @@ export default function LoginPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="e.g., jdoe"
+                  placeholder="p. ej., jperez"
                 />
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-slate-700">
-                Password
+                Contraseña
               </label>
               <div className="mt-1">
                 <input
@@ -89,7 +89,7 @@ export default function LoginPage() {
                 disabled={isLoading}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
               >
-                {isLoading ? 'Authenticating with LDAP...' : 'Sign In'}
+                {isLoading ? 'Verificando credenciales...' : 'Iniciar sesión'}
               </button>
             </div>
           </form>
