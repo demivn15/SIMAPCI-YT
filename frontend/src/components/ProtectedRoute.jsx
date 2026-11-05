@@ -2,8 +2,8 @@ import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-export default function ProtectedRoute() {
-  const { isAuthenticated, isLoading } = useAuth();
+export default function ProtectedRoute({ allowedRoles }) {
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -18,6 +18,21 @@ export default function ProtectedRoute() {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Authenticated but without one of the required roles: show 403 instead of the private page.
+  // This only improves the UX; the backend enforces the real authorization on every private endpoint.
+  if (allowedRoles && !allowedRoles.includes(user?.role)) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-6">
+        <div className="max-w-md text-center" role="alert">
+          <h1 className="text-2xl font-bold text-slate-900">Access denied</h1>
+          <p className="mt-2 text-sm text-slate-600">
+            Your account does not have the privileges required to view this page.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return <Outlet />;

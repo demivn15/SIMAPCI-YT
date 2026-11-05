@@ -18,7 +18,7 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
 
             {/* Protected Routes Guard */}
-            <Route element={<ProtectedRoute />}>
+            <Route element={<ProtectedRoute allowedRoles={['professor']} />}>
               <Route path="/dashboard" element={<DashboardPage />} />
             </Route>
 
