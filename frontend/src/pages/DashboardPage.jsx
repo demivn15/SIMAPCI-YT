@@ -1,10 +1,13 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ACCOUNT_CREATED_MESSAGE } from '../utils/loginMessages';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  // T-HU01-06 (PGPCECMC-23), CA01: confirmación del registro en el primer acceso
+  const accountCreated = useLocation().state?.accountCreated === true;
 
   const handleLogout = () => {
     logout(null, {
@@ -30,6 +33,11 @@ export default function DashboardPage() {
       </nav>
 
       <main className="max-w-5xl mx-auto mt-10 px-6">
+        {accountCreated && (
+          <div className="mb-6 border-l-4 border-green-500 bg-green-50 p-4 text-sm text-green-800" role="status">
+            {ACCOUNT_CREATED_MESSAGE}
+          </div>
+        )}
         <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-8">
           <h2 className="text-2xl font-semibold text-slate-900 mb-2">
             Welcome back, Professor {user?.name}!

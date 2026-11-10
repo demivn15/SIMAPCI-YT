@@ -16,6 +16,10 @@ export const LOGIN_ERROR_MESSAGES = {
   noConnection: 'No hay conexión con el servidor. Revisa tu conexión e inténtalo de nuevo.',
 };
 
+/** Confirmación del registro en el primer acceso - T-HU01-06 (PGPCECMC-23), CA01. */
+export const ACCOUNT_CREATED_MESSAGE =
+  'Tu cuenta de profesor se creó con tus datos institucionales. Ya puedes registrar tus productos.';
+
 /**
  * Convierte el error de axios del login en un mensaje para el usuario.
  * @param {unknown} error Error lanzado por api.post('/auth/login')

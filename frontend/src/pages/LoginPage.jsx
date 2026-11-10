@@ -21,13 +21,15 @@ export default function LoginPage() {
 
     try {
       // Send credentials to FastAPI backend
-      await api.post('/auth/login', { username, password });
+      const { data } = await api.post('/auth/login', { username, password });
 
       // Vuelve a consultar /auth/me para que AuthContext tenga al usuario antes de
       // navegar; sin esto, ProtectedRoute aún ve "sin sesión" y regresa al login
       await queryClient.invalidateQueries({ queryKey: ['authUser'] });
 
-      navigate('/dashboard', { replace: true });
+      // T-HU01-06 (PGPCECMC-23), CA01: en el primer acceso el backend crea la cuenta
+      // (account_created = true) y el panel muestra la confirmación del registro
+      navigate('/dashboard', { replace: true, state: { accountCreated: data?.account_created === true } });
     } catch (err) {
       // Mensaje propio según el código HTTP; no se muestra el texto del backend (CA05)
       setError(getLoginErrorMessage(err));
