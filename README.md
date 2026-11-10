@@ -2,14 +2,14 @@
 
 SIMAPCI-YT manages the scientific production of the School of Mathematical and Computational Sciences (ECMC) at Yachay Tech: professors sign in with their institutional account, register publications and research projects, and the school can browse and measure that production. The project is developed with Scrum; backlog and sprints live in Jira (project key `PGPCECMC`), and branches and commits are linked to Jira through the task key (for example `feature/PGPCECMC-33-doi-orcid-adapter`).
 
-The repository holds **two applications**:
+The repository is split by branch:
 
-| Part | Folder | What it is | Status |
-| :--- | :--- | :--- | :--- |
-| **Institutional Professor Portal** (the system under development) | `app/` + `frontend/` | FastAPI backend + React SPA: LDAP login, JWT session, professor accounts, product registration with DOI/ORCID autocomplete | Sprint 1 (in progress) |
-| **RED PAPERS prototype** | `src/` (repository root) | Static React + TypeScript portal used to validate the UX: public catalog by school, dashboards, researcher directory, traceability matrix | Published on GitHub Pages |
+| Branch | What it holds | Status |
+| :--- | :--- | :--- |
+| `main` | **Institutional Professor Portal**, the system under development: FastAPI backend (`app/`) + React SPA (`frontend/`) with LDAP login, JWT session, professor accounts and product registration with DOI/ORCID autocomplete | Sprint 1 (in progress) |
+| `prototype` | **RED PAPERS prototype**: static React + TypeScript portal used to validate the UX (public catalog by school, dashboards, researcher directory, traceability matrix), with its own README and docs | Published on GitHub Pages |
 
-The rest of this README describes the Institutional Professor Portal. The prototype is documented in [`docs/`](docs/).
+This README describes the Institutional Professor Portal.
 
 ---
 
@@ -107,8 +107,7 @@ A secure, scalable, role-based authentication and authorization web application 
 ├── render.yaml                  # Render blueprint for the API (not deployed yet)
 ├── TESTS.md                     # Manual QA walkthrough against the mock LDAP
 ├── .github/workflows/
-│   ├── ci.yml                   # Backend CI: ruff + pytest
-│   └── pages.yml                # Builds and publishes the RED PAPERS prototype to GitHub Pages
+│   └── ci.yml                   # Backend CI: ruff + pytest
 ├── app/                         # FastAPI Backend Application
 │   ├── main.py                  # FastAPI initialization, CORS and routers
 │   ├── api/
@@ -155,10 +154,8 @@ A secure, scalable, role-based authentication and authorization web application 
 │   ├── acceptance/              # Acceptance tests, one file per Jira test case (PR-HUxx-yy)
 │   ├── performance/             # Response-time measurements (T-HU02-07)
 │   └── support/                 # Test doubles: simulated LDAP directory and simulated network
-├── src/                         # RED PAPERS prototype (React + TypeScript)
-├── public/                      # Prototype static assets (logos, mascot)
-├── check-*.test.tsx             # Prototype tests (Vitest)
-└── docs/                        # Prototype documentation (architecture, data, security, user guide)
+└── docs/
+    └── deployment.md            # Deployment notes and limits (Render)
 ```
 
 ---
@@ -279,18 +276,11 @@ npm run dev
 
 Visit `http://localhost:5173` to access the login portal. With the mock directory, sign in as `professor` / `professor` (see [`TESTS.md`](TESTS.md) for the other test accounts).
 
-### RED PAPERS Prototype
-```bash
-npm ci
-npm run dev       # http://localhost:3000
-npm test
-```
-
 ---
 
 ## Deployment
 
-* **Prototype:** published automatically to GitHub Pages on every push to `main` (`.github/workflows/pages.yml`): <https://demivn15.github.io/SIMAPCI-YT/>.
+* **Prototype:** published to GitHub Pages from the `prototype` branch (its `.github/workflows/pages.yml`): <https://demivn15.github.io/SIMAPCI-YT/>.
 * **Portal API:** `render.yaml` describes a Render web service, but it is not deployed yet: it needs an LDAP directory and a MySQL database reachable from the internet. See [`docs/deployment.md`](docs/deployment.md).
 
 ---
@@ -302,4 +292,4 @@ npm test
 | Demian Viteri (`demivn15`) | LDAP login and JWT session, FastAPI and React scaffold, CI workflow |
 | Jhony Peñaherrera (`ShonyALV`) | Users table and migrations, account provisioning, login UI, product form, DOI/ORCID integrations, PR-HU01-01 |
 | Alejandro Ortiz (`Aleortz`) | CI lint and test pipeline, Render deployment blueprint |
-| Camilo Vásquez (`Camimilo-11`) | RED PAPERS prototype, Sprint 1 QA suite (acceptance, security, resilience and performance tests), account-created confirmation |
+| Camilo Vásquez (`Camimilo-11`) | RED PAPERS prototype (`prototype` branch), Sprint 1 QA suite (acceptance, security, resilience and performance tests), account-created confirmation |
