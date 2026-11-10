@@ -1,0 +1,2727 @@
+[
+  {
+    "title": "Deep reinforcement learning-based congestion control for urban multi-hop vehicular networks",
+    "year": 2026,
+    "venue": "Computer Networks",
+    "publicationType": "journal-article",
+    "doi": "10.1016/j.comnet.2026.112783",
+    "citations": 0,
+    "sjrQuartile": "Q1",
+    "sjrScore": 1.144,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      },
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      1,
+      46
+    ],
+    "id": "ecmc-orcid-38bf8784ad0885f18138f3a9"
+  },
+  {
+    "title": "Web-Integrated Deepfake Detection of Manipulated Political Audio Using CNN and Wav2Vec2 Transformer Models",
+    "year": 2026,
+    "venue": "Applied Sciences",
+    "publicationType": "journal-article",
+    "doi": "10.3390/app16199412",
+    "citations": 0,
+    "sjrQuartile": "Q2",
+    "sjrScore": 0.555,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      },
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      },
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      2,
+      47,
+      112
+    ],
+    "id": "ecmc-orcid-a7bfeb136e32f07a588f98ff"
+  },
+  {
+    "title": "Lightweight Machine Learning-Based QoS Optimization for Multi-UAV Emergency Communications in FANETs",
+    "year": 2026,
+    "venue": "Drones",
+    "publicationType": "journal-article",
+    "doi": "10.3390/drones10050336",
+    "citations": 1,
+    "sjrQuartile": "Q1",
+    "sjrScore": 1.049,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      },
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      3,
+      48
+    ],
+    "id": "ecmc-orcid-7e7d4f1e7db3157428248113"
+  },
+  {
+    "title": "A Machine Learning and SUMO-Based Framework for CO2 Emission Prediction in Urban Areas with Web Application Deployment",
+    "year": 2026,
+    "venue": "Communications in Computer and Information Science",
+    "publicationType": "book-chapter",
+    "doi": "10.1007/978-3-032-08366-1_17",
+    "citations": 1,
+    "sjrQuartile": "Q4",
+    "sjrScore": 0.181,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      4
+    ],
+    "id": "ecmc-orcid-00ef3cbec830e9fcccf7f84e"
+  },
+  {
+    "title": "A Multi-Agent Reinforcement Learning Congestion Control Protocol for Wireless Networks",
+    "year": 2026,
+    "venue": "IEEE Open Journal of the Communications Society",
+    "publicationType": "journal-article",
+    "doi": "10.1109/ojcoms.2026.3730744",
+    "citations": 0,
+    "sjrQuartile": "Q1",
+    "sjrScore": 1.723,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      5
+    ],
+    "id": "ecmc-orcid-aebff0df3ea8a022ce583578"
+  },
+  {
+    "title": "Data Privacy Analysis for ML-Based Congestion Control in Multi-Hop Wireless Networks",
+    "year": 2026,
+    "venue": "IEEE Access",
+    "publicationType": "journal-article",
+    "doi": "10.1109/access.2026.3701821",
+    "citations": 2,
+    "sjrQuartile": "Q1",
+    "sjrScore": 0.884,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      6
+    ],
+    "id": "ecmc-orcid-ba6166e493ec5e9294fdc38e"
+  },
+  {
+    "title": "Deployment-Aware Multi-Objective Optimization of Machine Learning Models for Predictive Congestion Control in Multi-Hop Vehicular Networks",
+    "year": 2026,
+    "venue": "IEEE Access",
+    "publicationType": "journal-article",
+    "doi": "10.1109/access.2026.3717251",
+    "citations": 0,
+    "sjrQuartile": "Q1",
+    "sjrScore": 0.884,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      7
+    ],
+    "id": "ecmc-orcid-93a67cd6526853849d43897f"
+  },
+  {
+    "title": "Low-Resource Kichwa Mispronunciation Detection Using CNN and Wav2Vec2 Transformer-Based Deep Learning Models",
+    "year": 2026,
+    "venue": "IEEE Access",
+    "publicationType": "journal-article",
+    "doi": "10.1109/access.2026.3737418",
+    "citations": 0,
+    "sjrQuartile": "Q1",
+    "sjrScore": 0.884,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      8
+    ],
+    "id": "ecmc-orcid-517d93b00b8dc161adb6bf2c"
+  },
+  {
+    "title": "Análisis del tráfico vehicular en Colotlán: Estudio basado en simulaciones",
+    "year": 2025,
+    "venue": "Avances de la ciencia y la tecnología para el desarrollo sostenible: Tomo V",
+    "publicationType": "book-chapter",
+    "doi": "10.52501/cc.348.03",
+    "citations": 0,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      9
+    ],
+    "id": "ecmc-orcid-e425a13e41becf4157f4c845"
+  },
+  {
+    "title": "Performance Evaluation of DQN-Based Reinforcement Learning Congestion Control in Mobile Multi-Hop Wireless Networks",
+    "year": 2025,
+    "venue": "2025 International Conference on Modeling, Analysis and Simulation of Wireless and Mobile Systems (MSWiM)",
+    "publicationType": "proceedings-article",
+    "doi": "10.1109/mswim67937.2025.11308763",
+    "citations": 0,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      10
+    ],
+    "id": "ecmc-orcid-905cc5b5a354c352f2e3faec"
+  },
+  {
+    "title": "Optimizing Predictive Models in Healthcare Using Artificial Intelligence: A Comprehensive Approach with a COVID-19 Case Study",
+    "year": 2025,
+    "venue": "Communications in Computer and Information Science",
+    "publicationType": "book-chapter",
+    "doi": "10.1007/978-3-031-75431-9_12",
+    "citations": 0,
+    "sjrQuartile": "Q4",
+    "sjrScore": 0.181,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      11
+    ],
+    "id": "ecmc-orcid-9174c69b172aacc1750a0731"
+  },
+  {
+    "title": "Federated Learning over Wireless Ad Hoc Networks: Comparative Evaluation of Aggregation Methods on Non-IID Data",
+    "year": 2025,
+    "venue": "2025 IEEE Ninth Ecuador Technical Chapters Meeting (ETCM)",
+    "publicationType": "proceedings-article",
+    "doi": "10.1109/etcm67548.2025.11304311",
+    "citations": 0,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      12
+    ],
+    "id": "ecmc-orcid-2ced582fcd76da5a20ce5b77"
+  },
+  {
+    "title": "Improving Reliability and Latency in FANETs Using Machine Learning",
+    "year": 2025,
+    "venue": "2025 IEEE Ninth Ecuador Technical Chapters Meeting (ETCM)",
+    "publicationType": "proceedings-article",
+    "doi": "10.1109/etcm67548.2025.11304389",
+    "citations": 0,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      13
+    ],
+    "id": "ecmc-orcid-a77476e17961b26bea28f199"
+  },
+  {
+    "title": "Large Language Models and Multi-Agent Systems for Customer Support Ticket Automation",
+    "year": 2025,
+    "venue": "2025 IEEE Ninth Ecuador Technical Chapters Meeting (ETCM)",
+    "publicationType": "proceedings-article",
+    "doi": "10.1109/etcm67548.2025.11304425",
+    "citations": 0,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      14
+    ],
+    "id": "ecmc-orcid-89b14a3dc2459568a2751c0e"
+  },
+  {
+    "title": "Exploring model transferability in ML-integrated RPL routing for smart grid communication: A comparative analysis across urban scenarios",
+    "year": 2024,
+    "venue": "Ad Hoc Networks",
+    "publicationType": "journal-article",
+    "doi": "10.1016/j.adhoc.2024.103626",
+    "citations": 8,
+    "sjrQuartile": "Q1",
+    "sjrScore": 1.21,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      15
+    ],
+    "id": "ecmc-orcid-baced33491663a36d0a38fd4"
+  },
+  {
+    "title": "Enhancing QoS in Urban V2V Communications Through AI: A Machine Learning Approach in Vehicular Ad-Hoc Networks",
+    "year": 2024,
+    "venue": "2024 IEEE Eighth Ecuador Technical Chapters Meeting (ETCM)",
+    "publicationType": "proceedings-article",
+    "doi": "10.1109/etcm63562.2024.10746181",
+    "citations": 4,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      16
+    ],
+    "id": "ecmc-orcid-8e5b81a6de2564b76e0c9245"
+  },
+  {
+    "title": "Evaluation of 5G Vehicle-to-Everything (V2X) Communications in Urban Scenarios",
+    "year": 2024,
+    "venue": "2024 IEEE Eighth Ecuador Technical Chapters Meeting (ETCM)",
+    "publicationType": "proceedings-article",
+    "doi": "10.1109/etcm63562.2024.10746041",
+    "citations": 4,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      17
+    ],
+    "id": "ecmc-orcid-01a0e7ea4f2847a99de8f5e1"
+  },
+  {
+    "title": "Impact of Data Augmentation Using SMOTE and GAN on Machine Learning Predictions for Vehicular Routing Datasets",
+    "year": 2024,
+    "venue": "2024 IEEE Eighth Ecuador Technical Chapters Meeting (ETCM)",
+    "publicationType": "proceedings-article",
+    "doi": "10.1109/etcm63562.2024.10746230",
+    "citations": 7,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      18
+    ],
+    "id": "ecmc-orcid-a1f7018d5a4750033b556602"
+  },
+  {
+    "title": "Strategic deployment of RSUs in urban settings: Optimizing IEEE 802.11p infrastructure",
+    "year": 2024,
+    "venue": "Ad Hoc Networks",
+    "publicationType": "journal-article",
+    "doi": "10.1016/j.adhoc.2024.103585",
+    "citations": 10,
+    "sjrQuartile": "Q1",
+    "sjrScore": 1.21,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      19
+    ],
+    "id": "ecmc-orcid-b3643e22de197b772f9bba58"
+  },
+  {
+    "title": "Q-RPL: Q-Learning-Based Routing Protocol for Advanced Metering Infrastructure in Smart Grids",
+    "year": 2024,
+    "venue": "Sensors",
+    "publicationType": "journal-article",
+    "doi": "10.3390/s24154818",
+    "citations": 19,
+    "sjrQuartile": "Q1",
+    "sjrScore": 0.764,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      20
+    ],
+    "id": "ecmc-orcid-dc3f1e6064731eaedebc74dc"
+  },
+  {
+    "title": "A Reinforcement Learning Congestion Control Algorithm for Smart Grid Networks",
+    "year": 2024,
+    "venue": "IEEE Access",
+    "publicationType": "journal-article",
+    "doi": "10.1109/access.2024.3405334",
+    "citations": 20,
+    "sjrQuartile": "Q1",
+    "sjrScore": 0.849,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      },
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      21,
+      56
+    ],
+    "id": "ecmc-orcid-21cb46308d427b4c72826520"
+  },
+  {
+    "title": "Exploring the potential, limitations, and future directions of wireless technologies in smart grid networks: A comparative analysis",
+    "year": 2023,
+    "venue": "Computer Networks",
+    "publicationType": "journal-article",
+    "doi": "10.1016/j.comnet.2023.109956",
+    "citations": 12,
+    "sjrQuartile": "Q1",
+    "sjrScore": 1.52,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      22
+    ],
+    "id": "ecmc-orcid-e37529d7731d405abe4659ab"
+  },
+  {
+    "title": "Are ML Models Scenario-Independent in Enhancing Routing Efficiency for Smart Grid Networks?",
+    "year": 2023,
+    "venue": "Proceedings of the Int'l ACM Symposium on Performance Evaluation of Wireless Ad Hoc, Sensor, & Ubiquitous Networks",
+    "publicationType": "proceedings-article",
+    "doi": "10.1145/3616394.3618275",
+    "citations": 0,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      23
+    ],
+    "id": "ecmc-orcid-6e98beb3f5c8a6e25b7e6748"
+  },
+  {
+    "title": "GNB-RPL: Gaussian Naïve Bayes for RPL Routing Protocol in Smart Grid Communications",
+    "year": 2023,
+    "venue": "Proceedings of the 19th ACM International Symposium on QoS and Security for Wireless and Mobile Networks",
+    "publicationType": "proceedings-article",
+    "doi": "10.1145/3616391.3622767",
+    "citations": 4,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      24
+    ],
+    "id": "ecmc-orcid-778d0e111982335979e86ca9"
+  },
+  {
+    "title": "Strategies to Plan the Number and Locations of RSUs for an IEEE 802.11p-based Infrastructure in Urban Environment",
+    "year": 2023,
+    "venue": "Proceedings of the Int'l ACM Conference on Modeling Analysis and Simulation of Wireless and Mobile Systems",
+    "publicationType": "proceedings-article",
+    "doi": "10.1145/3616388.3617546",
+    "citations": 1,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      25
+    ],
+    "id": "ecmc-orcid-7d7e156e2ae4803c5a22f7e5"
+  },
+  {
+    "title": "A machine learning based Distributed Congestion Control Protocol for multi-hop wireless networks",
+    "year": 2023,
+    "venue": "Computer Networks",
+    "publicationType": "journal-article",
+    "doi": "10.1016/j.comnet.2023.109813",
+    "citations": 38,
+    "sjrQuartile": "Q1",
+    "sjrScore": 1.52,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      26
+    ],
+    "id": "ecmc-orcid-f45f9c22ab57b6b121a2391e"
+  },
+  {
+    "title": "ML-RPL: Machine Learning-Based Routing Protocol for Wireless Smart Grid Networks",
+    "year": 2023,
+    "venue": "IEEE Access",
+    "publicationType": "journal-article",
+    "doi": "10.1109/access.2023.3283208",
+    "citations": 39,
+    "sjrQuartile": "Q1",
+    "sjrScore": 0.96,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      27
+    ],
+    "id": "ecmc-orcid-af847e4bae589581e461fe2c"
+  },
+  {
+    "title": "A Fast and Accurate Approximation of IEEE 802.11 Physical Layer Models for Network Simulators",
+    "year": 2022,
+    "venue": "Electronics",
+    "publicationType": "journal-article",
+    "doi": "10.3390/electronics11233900",
+    "citations": 3,
+    "sjrQuartile": "Q2",
+    "sjrScore": 0.628,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      28
+    ],
+    "id": "ecmc-orcid-03f547966f0fff64d0b597ef"
+  },
+  {
+    "title": "How does the Selection of Wireless Technology Impact the Performance of the Smart Grid? A Simulation Approach",
+    "year": 2022,
+    "venue": "Proceedings of the 19th ACM International Symposium on Performance Evaluation of Wireless Ad Hoc, Sensor, & Ubiquitous Networks on 19th ACM International Symposium on Performance Evaluation of Wireless Ad Hoc, Sensor, & Ubiquitous Networks",
+    "publicationType": "proceedings-article",
+    "doi": "10.1145/3551663.3558673",
+    "citations": 2,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      29
+    ],
+    "id": "ecmc-orcid-d369a6490b327441ec797c5f"
+  },
+  {
+    "title": "RPL+: An Improved Parent Selection Strategy for RPL in Wireless Smart Grid Networks",
+    "year": 2022,
+    "venue": "Proceedings of the 19th ACM International Symposium on Performance Evaluation of Wireless Ad Hoc, Sensor, & Ubiquitous Networks on 19th ACM International Symposium on Performance Evaluation of Wireless Ad Hoc, Sensor, & Ubiquitous Networks",
+    "publicationType": "proceedings-article",
+    "doi": "10.1145/3551663.3558677",
+    "citations": 11,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      30
+    ],
+    "id": "ecmc-orcid-93d22389462d86ad75085f91"
+  },
+  {
+    "title": "GraTree: A gradient boosting decision tree based multimetric routing protocol for vehicular ad hoc networks",
+    "year": 2022,
+    "venue": "Ad Hoc Networks",
+    "publicationType": "journal-article",
+    "doi": "10.1016/j.adhoc.2022.102995",
+    "citations": 19,
+    "sjrQuartile": "Q1",
+    "sjrScore": 1.301,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      31
+    ],
+    "id": "ecmc-orcid-8f4a35e4228b68376f8f96b2"
+  },
+  {
+    "title": "DTMR",
+    "year": 2021,
+    "venue": "Proceedings of the 18th ACM Symposium on Performance Evaluation of Wireless Ad Hoc, Sensor, & Ubiquitous Networks",
+    "publicationType": "proceedings-article",
+    "doi": "10.1145/3479240.3488525",
+    "citations": 5,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      32
+    ],
+    "id": "ecmc-orcid-d80309f095ca146bba003c6f"
+  },
+  {
+    "title": "Improving the Realism of the Physical Layer of NS-3 by Considering the PAPR Problem of the IEEE 802.11p Transmitter",
+    "year": 2021,
+    "venue": "Proceedings of the 18th ACM Symposium on Performance Evaluation of Wireless Ad Hoc, Sensor, & Ubiquitous Networks",
+    "publicationType": "proceedings-article",
+    "doi": "10.1145/3479240.3488509",
+    "citations": 1,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      33
+    ],
+    "id": "ecmc-orcid-c35bc2c4ba1dcc0100702d82"
+  },
+  {
+    "title": "Implementation of MRC diversity reception over Nakagami-m fading channel for ns-3 simulator",
+    "year": 2021,
+    "venue": "2021 IEEE 94th Vehicular Technology Conference (VTC2021-Fall)",
+    "publicationType": "proceedings-article",
+    "doi": "10.1109/vtc2021-fall52928.2021.9625579",
+    "citations": 0,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      34
+    ],
+    "id": "ecmc-orcid-2b0e1fb99e3c9549f628fc11"
+  },
+  {
+    "title": "A Multimetric Predictive ANN-Based Routing Protocol for Vehicular Ad Hoc Networks",
+    "year": 2021,
+    "venue": "IEEE Access",
+    "publicationType": "journal-article",
+    "doi": "10.1109/access.2021.3088474",
+    "citations": 29,
+    "sjrQuartile": "Q1",
+    "sjrScore": 0.927,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      35
+    ],
+    "id": "ecmc-orcid-be2a0047d26ba72c8f29cdec"
+  },
+  {
+    "title": "A fair and distributed congestion control mechanism for smart grid neighborhood area networks",
+    "year": 2020,
+    "venue": "Ad Hoc Networks",
+    "publicationType": "journal-article",
+    "doi": "10.1016/j.adhoc.2020.102169",
+    "citations": 9,
+    "sjrQuartile": "Q1",
+    "sjrScore": 0.781,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      36
+    ],
+    "id": "ecmc-orcid-5d769f46e0ce80fdb4794057"
+  },
+  {
+    "title": "Contribution to the traffc engineering in wireless mesh networks",
+    "year": 2020,
+    "venue": "",
+    "publicationType": "dissertation",
+    "doi": "10.5821/dissertation-2117-191258",
+    "citations": 0,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      37
+    ],
+    "id": "ecmc-orcid-3067569d108c9c97fd1fe456"
+  },
+  {
+    "title": "A Testbed Based Performance Evaluation of Smart Grid Wireless Neighborhood Area Networks Routing Protocols",
+    "year": 2020,
+    "venue": "Ambient Intelligence and Smart Environments",
+    "publicationType": "book-chapter",
+    "doi": "10.3233/aise200054",
+    "citations": 0,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      38
+    ],
+    "id": "ecmc-orcid-9f78b69f40b75c79e0eccb55"
+  },
+  {
+    "title": "Predictive Traffic Control and Differentiation on Smart Grid Neighborhood Area Networks",
+    "year": 2020,
+    "venue": "IEEE Access",
+    "publicationType": "journal-article",
+    "doi": "10.1109/access.2020.3041690",
+    "citations": 22,
+    "sjrQuartile": "Q1",
+    "sjrScore": 0.587,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      39
+    ],
+    "id": "ecmc-orcid-67e5b924120cda6cc4ac4fa6"
+  },
+  {
+    "title": "Emergency aware congestion control for smart grid neighborhood area networks",
+    "year": 2019,
+    "venue": "Ad Hoc Networks",
+    "publicationType": "journal-article",
+    "doi": "10.1016/j.adhoc.2019.101898",
+    "citations": 12,
+    "sjrQuartile": "Q1",
+    "sjrScore": 0.847,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      40
+    ],
+    "id": "ecmc-orcid-0004de369e010b7d1b668180"
+  },
+  {
+    "title": "Towards a Distributed Congestion Control mechanism for Smart Grid Neighborhood Area Networks",
+    "year": 2019,
+    "venue": "Proceedings of the 16th ACM International Symposium on Performance Evaluation of Wireless Ad Hoc, Sensor, & Ubiquitous Networks",
+    "publicationType": "proceedings-article",
+    "doi": "10.1145/3345860.3361520",
+    "citations": 2,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      41
+    ],
+    "id": "ecmc-orcid-941b5d02f3022e0d26d02383"
+  },
+  {
+    "title": "A Joint Multi-Path and Multi-Channel Protocol for Traffic Routing in Smart Grid Neighborhood Area Networks",
+    "year": 2018,
+    "venue": "Sensors",
+    "publicationType": "journal-article",
+    "doi": "10.3390/s18114052",
+    "citations": 10,
+    "sjrQuartile": "Q2",
+    "sjrScore": 0.592,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      42
+    ],
+    "id": "ecmc-orcid-2e0b6df050cde5ca8d73335c"
+  },
+  {
+    "title": "Multi Channel Allocation and Congestion Control for Smart Grid Neighborhood Area Networks",
+    "year": 2018,
+    "venue": "Proceedings of the 15th ACM International Symposium on Performance Evaluation of Wireless Ad Hoc, Sensor, & Ubiquitous Networks",
+    "publicationType": "proceedings-article",
+    "doi": "10.1145/3243046.3243050",
+    "citations": 1,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Juan Astudillo León",
+        "orcid": "0000-0002-7291-3584"
+      }
+    ],
+    "sourceRows": [
+      43
+    ],
+    "id": "ecmc-orcid-bed4b8a6ef3f39c84538b0d6"
+  },
+  {
+    "title": "Automated Diagnosis of Diabetic Retinopathy and Age-Related Macular Degeneration from Fundus Images",
+    "year": 2027,
+    "venue": "Lecture Notes in Networks and Systems",
+    "publicationType": "book-chapter",
+    "doi": "10.1007/978-3-032-14287-0_34",
+    "citations": 0,
+    "sjrQuartile": "Q4",
+    "sjrScore": 0.165,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      44
+    ],
+    "id": "ecmc-orcid-1d2a480be5dcb4d5f7f357b7"
+  },
+  {
+    "title": "Multi AI Agents for Solving Complex Business Tasks: A Case Study",
+    "year": 2027,
+    "venue": "Lecture Notes in Networks and Systems",
+    "publicationType": "book-chapter",
+    "doi": "10.1007/978-3-032-14287-0_23",
+    "citations": 0,
+    "sjrQuartile": "Q4",
+    "sjrScore": 0.165,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      45
+    ],
+    "id": "ecmc-orcid-9119f26db9fadb508390dac3"
+  },
+  {
+    "title": "Adaptation Dynamics of Galápagos Finches: Evolutionary Responses to Climate Variation Explored through Machine Learning",
+    "year": 2025,
+    "venue": "Communications in Computer and Information Science",
+    "publicationType": "book-chapter",
+    "doi": "10.1007/978-3-031-75431-9_15",
+    "citations": 0,
+    "sjrQuartile": "Q4",
+    "sjrScore": 0.181,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      49
+    ],
+    "id": "ecmc-orcid-888efa89816037518c594183"
+  },
+  {
+    "title": "Correlation Between Depression-Associated Genes and Cancer Types: Predicting Cancer Based on Mutation Frequencies",
+    "year": 2025,
+    "venue": "IEEE Access",
+    "publicationType": "journal-article",
+    "doi": "10.1109/access.2025.3556798",
+    "citations": 1,
+    "sjrQuartile": "Q1",
+    "sjrScore": 0.884,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      50
+    ],
+    "id": "ecmc-orcid-a9812fc398637ed2eb086212"
+  },
+  {
+    "title": "Image Classification of Peach Leaves Using a Siamese Neural Network",
+    "year": 2025,
+    "venue": "Communications in Computer and Information Science",
+    "publicationType": "book-chapter",
+    "doi": "10.1007/978-3-031-75431-9_1",
+    "citations": 0,
+    "sjrQuartile": "Q4",
+    "sjrScore": 0.181,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      51
+    ],
+    "id": "ecmc-orcid-155a9a675665e4efea1b3ae3"
+  },
+  {
+    "title": "Legal AI for All: Reducing Perplexity and Boosting Accuracy in Normative Texts With Fine-Tuned LLMs and RAG",
+    "year": 2025,
+    "venue": "IEEE Access",
+    "publicationType": "journal-article",
+    "doi": "10.1109/access.2025.3622138",
+    "citations": 2,
+    "sjrQuartile": "Q1",
+    "sjrScore": 0.884,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      52
+    ],
+    "id": "ecmc-orcid-e62edf74a0a0f0b238af17b5"
+  },
+  {
+    "title": "Pancreas Segmentation Using SRGAN Combined with U-Net Neural Network",
+    "year": 2025,
+    "venue": "Communications in Computer and Information Science",
+    "publicationType": "book-chapter",
+    "doi": "10.1007/978-3-031-75431-9_2",
+    "citations": 3,
+    "sjrQuartile": "Q4",
+    "sjrScore": 0.181,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      53
+    ],
+    "id": "ecmc-orcid-f4f6e47960d5fdad8d5b15d9"
+  },
+  {
+    "title": "Predictive Modeling for Fetal Health: A Comparative Study of PCA, LDA, and KPCA for Dimensionality Reduction",
+    "year": 2025,
+    "venue": "IEEE Access",
+    "publicationType": "journal-article",
+    "doi": "10.1109/access.2025.3553110",
+    "citations": 10,
+    "sjrQuartile": "Q1",
+    "sjrScore": 0.884,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      54
+    ],
+    "id": "ecmc-orcid-628b47d713feacf1ab3b51d6"
+  },
+  {
+    "title": "Continual learning, deep reinforcement learning, and microcircuits: a novel method for clever game playing",
+    "year": 2024,
+    "venue": "Multimedia Tools and Applications",
+    "publicationType": "journal-article",
+    "doi": "10.1007/s11042-024-18925-2",
+    "citations": 3,
+    "sjrQuartile": "Q1",
+    "sjrScore": 0.777,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      55
+    ],
+    "id": "ecmc-orcid-da6307e06ea5c19f121adf53"
+  },
+  {
+    "title": "A Study of ConvNeXt Architectures for Enhanced Image Captioning",
+    "year": 2024,
+    "venue": "IEEE Access",
+    "publicationType": "journal-article",
+    "doi": "10.1109/access.2024.3356551",
+    "citations": 46,
+    "sjrQuartile": "Q1",
+    "sjrScore": 0.849,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      57
+    ],
+    "id": "ecmc-orcid-9fe2da0a6006ab6fd8348afd"
+  },
+  {
+    "title": "Analysis of Diffusion Models for the Prediction of the Septorhinoplasty Surgeries Results",
+    "year": 2024,
+    "venue": "Lecture Notes in Networks and Systems",
+    "publicationType": "book-chapter",
+    "doi": "10.1007/978-3-031-70760-5_36",
+    "citations": 0,
+    "sjrQuartile": "Q4",
+    "sjrScore": 0.166,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      58
+    ],
+    "id": "ecmc-orcid-484e58d7e70acb540d14cdcf"
+  },
+  {
+    "title": "Deep Reinforcement Learning for Efficient Digital Pap Smear Analysis",
+    "year": 2023,
+    "venue": "Computation",
+    "publicationType": "journal-article",
+    "doi": "10.3390/computation11120252",
+    "citations": 3,
+    "sjrQuartile": "Q2",
+    "sjrScore": 0.409,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      59
+    ],
+    "id": "ecmc-orcid-e27ffd490a670ad05523b03f"
+  },
+  {
+    "title": "Hyperparameter Tuning in a Dual Channel U-Net for Medical Image Segmentation",
+    "year": 2023,
+    "venue": "Communications in Computer and Information Science",
+    "publicationType": "book-chapter",
+    "doi": "10.1007/978-3-031-45438-7_23",
+    "citations": 4,
+    "sjrQuartile": "Q4",
+    "sjrScore": 0.203,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      60
+    ],
+    "id": "ecmc-orcid-b832811440b14e30d849a479"
+  },
+  {
+    "title": "Mask R-CNN and YOLOv8 Comparison to Perform Tomato Maturity Recognition Task",
+    "year": 2023,
+    "venue": "Communications in Computer and Information Science",
+    "publicationType": "book-chapter",
+    "doi": "10.1007/978-3-031-45438-7_26",
+    "citations": 18,
+    "sjrQuartile": "Q4",
+    "sjrScore": 0.203,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      61
+    ],
+    "id": "ecmc-orcid-2e60a4167beac58920fe9952"
+  },
+  {
+    "title": "Unraveling the Power of 4D Residual Blocks and Transfer Learning in Violence Detection",
+    "year": 2023,
+    "venue": "Communications in Computer and Information Science",
+    "publicationType": "book-chapter",
+    "doi": "10.1007/978-3-031-45438-7_14",
+    "citations": 0,
+    "sjrQuartile": "Q4",
+    "sjrScore": 0.203,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      62
+    ],
+    "id": "ecmc-orcid-caa2f53f3e8e6cce4241ce28"
+  },
+  {
+    "title": "A Computer Vision Model to Identify the Incorrect Use of Face Masks for COVID-19 Awareness",
+    "year": 2022,
+    "venue": "Applied Sciences",
+    "publicationType": "journal-article",
+    "doi": "10.3390/app12146924",
+    "citations": 10,
+    "sjrQuartile": "Q2",
+    "sjrScore": 0.492,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      63
+    ],
+    "id": "ecmc-orcid-8e0329511c9f04a8522971bd"
+  },
+  {
+    "title": "An optimal location strategy for multiple drone base stations in massive MIMO",
+    "year": 2022,
+    "venue": "ICT Express",
+    "publicationType": "journal-article",
+    "doi": "10.1016/j.icte.2021.08.010",
+    "citations": 17,
+    "sjrQuartile": "Q1",
+    "sjrScore": 1.204,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      64
+    ],
+    "id": "ecmc-orcid-f2f082b30a7291a7356e262b"
+  },
+  {
+    "title": "Predicting target data rates for dynamic spectrum allocation using Gaussian process regression",
+    "year": 2022,
+    "venue": "ICT Express",
+    "publicationType": "journal-article",
+    "doi": "10.1016/j.icte.2021.08.011",
+    "citations": 1,
+    "sjrQuartile": "Q1",
+    "sjrScore": 1.204,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      65
+    ],
+    "id": "ecmc-orcid-1a3d9adc49339fc7934c6175"
+  },
+  {
+    "title": "FACTORES DE RIESGO ASOCIADOS A LA MORTALIDAD Y PESO AL NACER DE PACIENTES NEONATOS, CASO DE ESTUDIO: HOSPITAL PEDIÁTRICO BACA ORTIZ",
+    "year": 2022,
+    "venue": "Enfermería Investiga",
+    "publicationType": "journal-article",
+    "doi": "10.31243/ei.uta.v7i1.1473.2022",
+    "citations": 0,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      66
+    ],
+    "id": "ecmc-orcid-9c851e4915ca5a88681b3a55"
+  },
+  {
+    "title": "Comparative Study of Image Degradation and Restoration Techniques",
+    "year": 2022,
+    "venue": "Communications in Computer and Information Science",
+    "publicationType": "book-chapter",
+    "doi": "10.1007/978-3-031-18272-3_17",
+    "citations": 1,
+    "sjrQuartile": "Q4",
+    "sjrScore": 0.194,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      67
+    ],
+    "id": "ecmc-orcid-9d50ceb01fb9cc1ce71040f5"
+  },
+  {
+    "title": "Deep Learning Approaches Based on Transformer Architectures for Image Captioning Tasks",
+    "year": 2022,
+    "venue": "IEEE Access",
+    "publicationType": "journal-article",
+    "doi": "10.1109/access.2022.3161428",
+    "citations": 57,
+    "sjrQuartile": "Q1",
+    "sjrScore": 0.926,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      68
+    ],
+    "id": "ecmc-orcid-33350edf038efae9429faace"
+  },
+  {
+    "title": "Implementation of a Lightweight CNN for American Sign Language Classification",
+    "year": 2022,
+    "venue": "Communications in Computer and Information Science",
+    "publicationType": "book-chapter",
+    "doi": "10.1007/978-3-031-18347-8_16",
+    "citations": 0,
+    "sjrQuartile": "Q4",
+    "sjrScore": 0.194,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      69
+    ],
+    "id": "ecmc-orcid-07df72b84b0d435a7329f1b9"
+  },
+  {
+    "title": "Parkinson’s Disease Diagnosis Through Electroencephalographic Signal Processing and Sub-optimal Feature Extraction",
+    "year": 2022,
+    "venue": "Lecture Notes in Networks and Systems",
+    "publicationType": "book-chapter",
+    "doi": "10.1007/978-3-030-96293-7_12",
+    "citations": 3,
+    "sjrQuartile": "Q4",
+    "sjrScore": 0.151,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      70
+    ],
+    "id": "ecmc-orcid-d6af77d0eb7fc6c21a8f5c82"
+  },
+  {
+    "title": "Plant Disease Classification and Severity Estimation: A Comparative Study of Multitask Convolutional Neural Networks and First Order Optimizers",
+    "year": 2022,
+    "venue": "Communications in Computer and Information Science",
+    "publicationType": "book-chapter",
+    "doi": "10.1007/978-3-031-04447-2_21",
+    "citations": 5,
+    "sjrQuartile": "Q4",
+    "sjrScore": 0.194,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      71
+    ],
+    "id": "ecmc-orcid-40c042da72a53080515d4d6c"
+  },
+  {
+    "title": "The Evolution and Takeoff of the Ecuadorian Economic Groups",
+    "year": 2021,
+    "venue": "Economies",
+    "publicationType": "journal-article",
+    "doi": "10.3390/economies9040188",
+    "citations": 12,
+    "sjrQuartile": "Q2",
+    "sjrScore": 0.435,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      72
+    ],
+    "id": "ecmc-orcid-eec6db0e104f159e67a7e1ed"
+  },
+  {
+    "title": "BLER performance evaluation of an enhanced channel autoencoder",
+    "year": 2021,
+    "venue": "Computer Communications",
+    "publicationType": "journal-article",
+    "doi": "10.1016/j.comcom.2021.05.026",
+    "citations": 5,
+    "sjrQuartile": "Q1",
+    "sjrScore": 1.301,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      73
+    ],
+    "id": "ecmc-orcid-d2d86c68012c60bdda1e0a80"
+  },
+  {
+    "title": "Addressing the Data Acquisition Paradigm in the Early Detection of Pediatric Foot Deformities",
+    "year": 2021,
+    "venue": "Sensors",
+    "publicationType": "journal-article",
+    "doi": "10.3390/s21134422",
+    "citations": 8,
+    "sjrQuartile": "Q1",
+    "sjrScore": 0.803,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      74
+    ],
+    "id": "ecmc-orcid-4e198df895c68f192b4db49c"
+  },
+  {
+    "title": "CGDNet: Efficient Hybrid Deep Learning Model for Robust Automatic Modulation Recognition",
+    "year": 2021,
+    "venue": "IEEE Networking Letters",
+    "publicationType": "journal-article",
+    "doi": "10.1109/lnet.2021.3057637",
+    "citations": 136,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      75
+    ],
+    "id": "ecmc-orcid-2322236182606c4bccee54b4"
+  },
+  {
+    "title": "Pattern recognition of soldier uniforms with dilated convolutions and a modified encoder-decoder neural network architecture",
+    "year": 2021,
+    "venue": "Applied Artificial Intelligence",
+    "publicationType": "journal-article",
+    "doi": "10.1080/08839514.2021.1902124",
+    "citations": 5,
+    "sjrQuartile": "Q3",
+    "sjrScore": 0.506,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      76
+    ],
+    "id": "ecmc-orcid-bc2216ac584ff55e92c03d7c"
+  },
+  {
+    "title": "Increasing the Segmentation Accuracy of Aerial Images with Dilated Spatial Pyramid Pooling",
+    "year": 2021,
+    "venue": "ELCVIA Electronic Letters on Computer Vision and Image Analysis",
+    "publicationType": "journal-article",
+    "doi": "10.5565/rev/elcvia.1337",
+    "citations": 1,
+    "sjrQuartile": "Q4",
+    "sjrScore": 0.222,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      77
+    ],
+    "id": "ecmc-orcid-5130c84f13fa2cdc628d38a3"
+  },
+  {
+    "title": "Hyperparameter Tuning over an Attention Model for Image Captioning",
+    "year": 2021,
+    "venue": "Communications in Computer and Information Science",
+    "publicationType": "book-chapter",
+    "doi": "10.1007/978-3-030-89941-7_13",
+    "citations": 2,
+    "sjrQuartile": "Q4",
+    "sjrScore": 0.209,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      78
+    ],
+    "id": "ecmc-orcid-afd3519425a99d91f80bf513"
+  },
+  {
+    "title": "Lateral confinement of high‐impedance surface‐waves through reinforcement learning",
+    "year": 2020,
+    "venue": "Electronics Letters",
+    "publicationType": "journal-article",
+    "doi": "10.1049/el.2020.1977",
+    "citations": 6,
+    "sjrQuartile": "Q2",
+    "sjrScore": 0.375,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      79
+    ],
+    "id": "ecmc-orcid-65647fec2f5d24ffe2c614ff"
+  },
+  {
+    "title": "Transfer Learning CNN American Sign Language",
+    "year": 2020,
+    "venue": "IEEE DataPort",
+    "publicationType": "data-set",
+    "doi": "10.21227/4dz0-xv55",
+    "citations": null,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      80
+    ],
+    "id": "ecmc-orcid-cdae19cf1fef99480002a365"
+  },
+  {
+    "title": "Learning to Communicate with Autoencoders: Rethinking Wireless Systems with Deep Learning",
+    "year": 2020,
+    "venue": "2020 International Conference on Artificial Intelligence in Information and Communication (ICAIIC)",
+    "publicationType": "proceedings-article",
+    "doi": "10.1109/icaiic48513.2020.9065246",
+    "citations": 12,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      81
+    ],
+    "id": "ecmc-orcid-445cb9bb4a2eb7315f23cebf"
+  },
+  {
+    "title": "Accelerating wireless channel autoencoders for short coherence-time communications",
+    "year": 2020,
+    "venue": "Journal of Communications and Networks",
+    "publicationType": "journal-article",
+    "doi": "10.1109/jcn.2020.000011",
+    "citations": 13,
+    "sjrQuartile": "Q2",
+    "sjrScore": 0.609,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      82
+    ],
+    "id": "ecmc-orcid-34d18a6e9976b7d6093aae09"
+  },
+  {
+    "title": "Breaking Wireless Propagation Environmental Uncertainty With Deep Learning",
+    "year": 2020,
+    "venue": "IEEE Transactions on Wireless Communications",
+    "publicationType": "journal-article",
+    "doi": "10.1109/twc.2020.2986202",
+    "citations": 27,
+    "sjrQuartile": "Q1",
+    "sjrScore": 2.01,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      83
+    ],
+    "id": "ecmc-orcid-d68cc508588bbc7235037546"
+  },
+  {
+    "title": "Machine Learning to Improve Multi-Hop Searching and Extended Wireless Reachability in V2X",
+    "year": 2020,
+    "venue": "IEEE Communications Letters",
+    "publicationType": "journal-article",
+    "doi": "10.1109/lcomm.2020.2982887",
+    "citations": 24,
+    "sjrQuartile": "Q1",
+    "sjrScore": 0.929,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      84
+    ],
+    "id": "ecmc-orcid-6109ab2d92cd53fbd5111d76"
+  },
+  {
+    "title": "Fine-tuning a pre-trained Convolutional Neural Network Model to translate American Sign Language in Real-time",
+    "year": 2019,
+    "venue": "2019 International Conference on Computing, Networking and Communications (ICNC)",
+    "publicationType": "proceedings-article",
+    "doi": "10.1109/iccnc.2019.8685536",
+    "citations": 27,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      85
+    ],
+    "id": "ecmc-orcid-0e6108e4d69d1224948be307"
+  },
+  {
+    "title": "Machine Learning for 5G/B5G Mobile and Wireless Communications: Potential, Limitations, and Future Directions",
+    "year": 2019,
+    "venue": "IEEE Access",
+    "publicationType": "journal-article",
+    "doi": "10.1109/access.2019.2942390",
+    "citations": 389,
+    "sjrQuartile": "Q1",
+    "sjrScore": 0.775,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      86
+    ],
+    "id": "ecmc-orcid-f04e8920d1c070d694df032b"
+  },
+  {
+    "title": "Artificial Intelligence in 5G Technology: A Survey",
+    "year": 2018,
+    "venue": "2018 International Conference on Information and Communication Technology Convergence (ICTC)",
+    "publicationType": "proceedings-article",
+    "doi": "10.1109/ictc.2018.8539642",
+    "citations": 73,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      87
+    ],
+    "id": "ecmc-orcid-95a58b07132de832a7647a84"
+  },
+  {
+    "title": "An artificially structured step-index metasurface for 10GHz leaky waveguides and antennas",
+    "year": 2018,
+    "venue": "2018 IEEE 4th World Forum on Internet of Things (WF-IoT)",
+    "publicationType": "proceedings-article",
+    "doi": "10.1109/wf-iot.2018.8355195",
+    "citations": 7,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      88
+    ],
+    "id": "ecmc-orcid-4c85b3c1bbba9dfa3143bd82"
+  },
+  {
+    "title": "Using body-measurement indices and wrist-type photoplethysmography signals to categorize consumer electronic users' health state through a smartwatch application",
+    "year": 2018,
+    "venue": "2018 International Conference on Electronics, Information, and Communication (ICEIC)",
+    "publicationType": "proceedings-article",
+    "doi": "10.23919/elinfocom.2018.8330573",
+    "citations": 3,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      89
+    ],
+    "id": "ecmc-orcid-c65c567748ea678e762be6b9"
+  },
+  {
+    "title": "Integration of a triple-play platform service to the GPON infrastructure of the National Telecommunications Corporation of Ecuador",
+    "year": 2014,
+    "venue": "2014 IEEE ANDESCON",
+    "publicationType": "proceedings-article",
+    "doi": "10.1109/andescon.2014.7098573",
+    "citations": 0,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Manuel Eugenio Morocho-Cayamcela",
+        "orcid": "0000-0002-4705-7923"
+      }
+    ],
+    "sourceRows": [
+      90
+    ],
+    "id": "ecmc-orcid-bed2381685dad1939567bb9e"
+  },
+  {
+    "title": "Generalized binary utility functions and fair allocations",
+    "year": 2023,
+    "venue": "Mathematical Social Sciences",
+    "publicationType": "journal-article",
+    "doi": "10.1016/j.mathsocsci.2022.10.003",
+    "citations": 7,
+    "sjrQuartile": "Q2",
+    "sjrScore": 0.309,
+    "researchers": [
+      {
+        "name": "Rigoberto Fonseca-Delgado",
+        "orcid": "0000-0002-8890-3911"
+      }
+    ],
+    "sourceRows": [
+      91
+    ],
+    "id": "ecmc-orcid-3f08cae1bef20fe1b95e19b1"
+  },
+  {
+    "title": "COVID-19 Fake News Detection Using Joint Doc2Vec and Text Features with PCA",
+    "year": 2022,
+    "venue": "Communications in Computer and Information Science",
+    "publicationType": "book-chapter",
+    "doi": "10.1007/978-3-031-20319-0_24",
+    "citations": 2,
+    "sjrQuartile": "Q4",
+    "sjrScore": 0.194,
+    "researchers": [
+      {
+        "name": "Rigoberto Fonseca-Delgado",
+        "orcid": "0000-0002-8890-3911"
+      }
+    ],
+    "sourceRows": [
+      92
+    ],
+    "id": "ecmc-orcid-25d59ad943a5595f53dc6262"
+  },
+  {
+    "title": "Analysis of factors that influence the performance of biometric systems based on EEG signals",
+    "year": 2021,
+    "venue": "Expert Systems with Applications",
+    "publicationType": "journal-article",
+    "doi": "10.1016/j.eswa.2020.113967",
+    "citations": 37,
+    "sjrQuartile": "Q1",
+    "sjrScore": 2.07,
+    "researchers": [
+      {
+        "name": "Rigoberto Fonseca-Delgado",
+        "orcid": "0000-0002-8890-3911"
+      }
+    ],
+    "sourceRows": [
+      93
+    ],
+    "id": "ecmc-orcid-53c3d071c8f2999d93db3bcd"
+  },
+  {
+    "title": "BIOMEX-DB: A Cognitive Audiovisual Dataset for Unimodal and Multimodal Biometric Systems",
+    "year": 2021,
+    "venue": "IEEE Access",
+    "publicationType": "journal-article",
+    "doi": "10.1109/access.2021.3100035",
+    "citations": 12,
+    "sjrQuartile": "Q1",
+    "sjrScore": 0.927,
+    "researchers": [
+      {
+        "name": "Rigoberto Fonseca-Delgado",
+        "orcid": "0000-0002-8890-3911"
+      }
+    ],
+    "sourceRows": [
+      94
+    ],
+    "id": "ecmc-orcid-8fb8e0df34966be191604a6c"
+  },
+  {
+    "title": "Beyond identical utilities: Buyer utility functions and fair allocations",
+    "year": 2021,
+    "venue": "arXiv",
+    "publicationType": "other",
+    "doi": null,
+    "citations": null,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Rigoberto Fonseca-Delgado",
+        "orcid": "0000-0002-8890-3911"
+      }
+    ],
+    "sourceRows": [
+      95
+    ],
+    "id": "ecmc-orcid-74d577f5b4647d7cfb053c06"
+  },
+  {
+    "title": "EBAPy: A Python framework for analyzing the factors that have an influence in the performance of EEG-based applications",
+    "year": 2021,
+    "venue": "Software Impacts",
+    "publicationType": "journal-article",
+    "doi": "10.1016/j.simpa.2021.100062",
+    "citations": 2,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Rigoberto Fonseca-Delgado",
+        "orcid": "0000-0002-8890-3911"
+      }
+    ],
+    "sourceRows": [
+      96
+    ],
+    "id": "ecmc-orcid-c16e1ec8ef1dff0d034fc7fc"
+  },
+  {
+    "title": "Implementation of MPC and PID Control Algorithms to the Artificial Pancreas for Diabetes Mellitus Type 1",
+    "year": 2021,
+    "venue": "2021 IEEE International Conference on Machine Learning and Applied Network Technologies (ICMLANT)",
+    "publicationType": "proceedings-article",
+    "doi": "10.1109/icmlant53170.2021.9690529",
+    "citations": 25,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Rigoberto Fonseca-Delgado",
+        "orcid": "0000-0002-8890-3911"
+      }
+    ],
+    "sourceRows": [
+      97
+    ],
+    "id": "ecmc-orcid-105d4d03afe2ed3a5c336923"
+  },
+  {
+    "title": "Allocation of resources with efficiency and weak justice in the utilitarian social welfare,Asignación de recursos con eficiencia y justicia débil en el bienestar social utilitario",
+    "year": 2020,
+    "venue": "RISTI - Revista Iberica de Sistemas e Tecnologias de Informacao",
+    "publicationType": "journal-article",
+    "doi": null,
+    "citations": null,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Rigoberto Fonseca-Delgado",
+        "orcid": "0000-0002-8890-3911"
+      }
+    ],
+    "sourceRows": [
+      98
+    ],
+    "id": "ecmc-orcid-b38b0b7a62098b2fc7e56af8"
+  },
+  {
+    "title": "Alzheimer’s disease diagnosis system using electroencephalograms and machine learning models",
+    "year": 2020,
+    "venue": "RISTI - Revista Iberica de Sistemas e Tecnologias de Informacao",
+    "publicationType": "journal-article",
+    "doi": null,
+    "citations": null,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Rigoberto Fonseca-Delgado",
+        "orcid": "0000-0002-8890-3911"
+      }
+    ],
+    "sourceRows": [
+      99
+    ],
+    "id": "ecmc-orcid-0590a7061bcaddc896924de2"
+  },
+  {
+    "title": "RAPL: A Domain Specific Language for Resource Allocation of Indivisible Goods",
+    "year": 2020,
+    "venue": "Communications in Computer and Information Science",
+    "publicationType": "book-chapter",
+    "doi": "10.1007/978-3-030-62833-8_35",
+    "citations": 1,
+    "sjrQuartile": "Q4",
+    "sjrScore": 0.16,
+    "researchers": [
+      {
+        "name": "Rigoberto Fonseca-Delgado",
+        "orcid": "0000-0002-8890-3911"
+      }
+    ],
+    "sourceRows": [
+      100
+    ],
+    "id": "ecmc-orcid-119e24b690b7e5c10799b11a"
+  },
+  {
+    "title": "A method for studying how much time of EEG recording is needed to have a good user identification",
+    "year": 2019,
+    "venue": "2019 IEEE Latin American Conference on Computational Intelligence (LA-CCI)",
+    "publicationType": "proceedings-article",
+    "doi": "10.1109/la-cci47412.2019.9037054",
+    "citations": 6,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Rigoberto Fonseca-Delgado",
+        "orcid": "0000-0002-8890-3911"
+      }
+    ],
+    "sourceRows": [
+      101
+    ],
+    "id": "ecmc-orcid-c745f66a0d5f58e533bb612f"
+  },
+  {
+    "title": "Design decisions under object-oriented approach",
+    "year": 2019,
+    "venue": "Proceedings of the 8th Computer Science Education Research Conference",
+    "publicationType": "proceedings-article",
+    "doi": "10.1145/3375258.3375269",
+    "citations": 4,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Rigoberto Fonseca-Delgado",
+        "orcid": "0000-0002-8890-3911"
+      }
+    ],
+    "sourceRows": [
+      102
+    ],
+    "id": "ecmc-orcid-a93b5d89d38aafe6fda3be05"
+  },
+  {
+    "title": "Long-Term Prediction of a Sine Function Using a LSTM Neural Network",
+    "year": 2017,
+    "venue": "Studies in Computational Intelligence",
+    "publicationType": "book-chapter",
+    "doi": "10.1007/978-3-319-47054-2_10",
+    "citations": 4,
+    "sjrQuartile": "Q4",
+    "sjrScore": 0.184,
+    "researchers": [
+      {
+        "name": "Rigoberto Fonseca-Delgado",
+        "orcid": "0000-0002-8890-3911"
+      }
+    ],
+    "sourceRows": [
+      103
+    ],
+    "id": "ecmc-orcid-e6f811e5b94b804ac33dd8e1"
+  },
+  {
+    "title": "Automatic Model Selection in Ensembles for Time Series Forecasting",
+    "year": 2016,
+    "venue": "IEEE Latin America Transactions",
+    "publicationType": "journal-article",
+    "doi": "10.1109/tla.2016.7786368",
+    "citations": 6,
+    "sjrQuartile": "Q2",
+    "sjrScore": 0.227,
+    "researchers": [
+      {
+        "name": "Rigoberto Fonseca-Delgado",
+        "orcid": "0000-0002-8890-3911"
+      }
+    ],
+    "sourceRows": [
+      104
+    ],
+    "id": "ecmc-orcid-e68b2490cee43cdb8c97774a"
+  },
+  {
+    "title": "Modeling Diversity in Ensembles for Time-Series Prediction Based on Self-Organizing Maps",
+    "year": 2016,
+    "venue": "Advances in Intelligent Systems and Computing",
+    "publicationType": "book-chapter",
+    "doi": "10.1007/978-3-319-28518-4_10",
+    "citations": 1,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Rigoberto Fonseca-Delgado",
+        "orcid": "0000-0002-8890-3911"
+      }
+    ],
+    "sourceRows": [
+      105
+    ],
+    "id": "ecmc-orcid-788c13570e63871ab898e9ad"
+  },
+  {
+    "title": "Selecting and combining models with self-organizing maps for long-term forecasting of chaotic time series",
+    "year": 2014,
+    "venue": "2014 International Joint Conference on Neural Networks (IJCNN)",
+    "publicationType": "proceedings-article",
+    "doi": "10.1109/ijcnn.2014.6889454",
+    "citations": 5,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Rigoberto Fonseca-Delgado",
+        "orcid": "0000-0002-8890-3911"
+      }
+    ],
+    "sourceRows": [
+      106
+    ],
+    "id": "ecmc-orcid-43c4353ff1f0f7e162aa89cd"
+  },
+  {
+    "title": "Temporal Validated Meta-Learning for Long-Term Forecasting of Chaotic Time Series Using Monte Carlo Cross-Validation",
+    "year": 2014,
+    "venue": "Studies in Computational Intelligence",
+    "publicationType": "book-chapter",
+    "doi": "10.1007/978-3-319-05170-3_24",
+    "citations": 1,
+    "sjrQuartile": "Q4",
+    "sjrScore": 0.217,
+    "researchers": [
+      {
+        "name": "Rigoberto Fonseca-Delgado",
+        "orcid": "0000-0002-8890-3911"
+      }
+    ],
+    "sourceRows": [
+      107
+    ],
+    "id": "ecmc-orcid-9242b9996db044cc2f0c692a"
+  },
+  {
+    "title": "An assessment of ten-fold and Monte Carlo cross validations for time series forecasting",
+    "year": 2013,
+    "venue": "2013 10th International Conference on Electrical Engineering, Computing Science and Automatic Control (CCE)",
+    "publicationType": "proceedings-article",
+    "doi": "10.1109/iceee.2013.6676075",
+    "citations": 17,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Rigoberto Fonseca-Delgado",
+        "orcid": "0000-0002-8890-3911"
+      }
+    ],
+    "sourceRows": [
+      108
+    ],
+    "id": "ecmc-orcid-c8f96fb78081758b540bd356"
+  },
+  {
+    "title": "Finding patterns in labeled graphs using spectrum feature vectors in a SOM network",
+    "year": 2011,
+    "venue": "The 2011 International Joint Conference on Neural Networks",
+    "publicationType": "proceedings-article",
+    "doi": "10.1109/ijcnn.2011.6033358",
+    "citations": 0,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Rigoberto Fonseca-Delgado",
+        "orcid": "0000-0002-8890-3911"
+      }
+    ],
+    "sourceRows": [
+      109
+    ],
+    "id": "ecmc-orcid-143a4111871bd5852dde8759"
+  },
+  {
+    "title": "Systemic Governance Artifact Supplementary Materials",
+    "year": 2026,
+    "venue": "figshare",
+    "publicationType": "data-set",
+    "doi": "10.6084/m9.figshare.33942226",
+    "citations": null,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      110
+    ],
+    "id": "ecmc-orcid-4aae7a879e72de115d29ce2b"
+  },
+  {
+    "title": "Scoping Review",
+    "year": 2026,
+    "venue": "figshare",
+    "publicationType": "data-set",
+    "doi": "10.6084/m9.figshare.33442693",
+    "citations": null,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      111
+    ],
+    "id": "ecmc-orcid-1f3946399a3a94fc3687cb4f"
+  },
+  {
+    "title": "Analyzing Communication and Migration Perceptions Using Machine Learning: A Feature-Based Approach",
+    "year": 2025,
+    "venue": "Journalism and Media",
+    "publicationType": "journal-article",
+    "doi": "10.3390/journalmedia6030112",
+    "citations": 0,
+    "sjrQuartile": "Q1",
+    "sjrScore": 0.672,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      113
+    ],
+    "id": "ecmc-orcid-78dde6a79429bdf29cebc362"
+  },
+  {
+    "title": "AnaMarcillo/Arab-African-Perception-Survey-on-Migration-in-Spain: Arab-African-Perception-Survey-on-Migration-in-Spain",
+    "year": 2025,
+    "venue": "Zenodo",
+    "publicationType": "software",
+    "doi": "10.5281/zenodo.15807902",
+    "citations": null,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      114
+    ],
+    "id": "ecmc-orcid-52f931ec72cbed09ba942ed6"
+  },
+  {
+    "title": "El discurso como práctica ética necesaria en la formación pedagógica",
+    "year": 2025,
+    "venue": "Filosofía, ética y educación para la ciudadanía en la era digital",
+    "publicationType": "book-chapter",
+    "doi": "10.17163/abyaups.119.1026",
+    "citations": 0,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      115
+    ],
+    "id": "ecmc-orcid-b8a86239580b2fd093228f80"
+  },
+  {
+    "title": "Filosofía de la educación. Transformaciones, desafíos y prácticas pedagógicas",
+    "year": 2025,
+    "venue": "",
+    "publicationType": "edited-book",
+    "doi": "10.17163/abyaups.112",
+    "citations": 0,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      116
+    ],
+    "id": "ecmc-orcid-60cddefb06d0ce396a541e3e"
+  },
+  {
+    "title": "Transformaciones y adaptación educativa en la era de la inteligencia artificial",
+    "year": 2025,
+    "venue": "Filosofía de la educación. Transformaciones, desafíos y prácticas pedagógicas",
+    "publicationType": "book-chapter",
+    "doi": "10.17163/abyaups.112.933",
+    "citations": 0,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      117
+    ],
+    "id": "ecmc-orcid-b9888e34b04e4327a495ca77"
+  },
+  {
+    "title": "Innovación en estrategias pedagógicas mediante herramientas de inteligencia artificial: Revisión sistemática",
+    "year": 2025,
+    "venue": "Revista Andina de Educación",
+    "publicationType": "journal-article",
+    "doi": "10.32719/26312816.5432",
+    "citations": 8,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      118
+    ],
+    "id": "ecmc-orcid-00907efb21295099a4c65369"
+  },
+  {
+    "title": "Rugby como alternativa dentro de los procesos de reinserción social del Colectivo Calle, Paz y Respeto",
+    "year": 2024,
+    "venue": "Revista  de  Ciencias  Sociales",
+    "publicationType": "journal-article",
+    "doi": "10.31876/rcs.v30i1.41658",
+    "citations": 0,
+    "sjrQuartile": "Q2",
+    "sjrScore": 0.306,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      119
+    ],
+    "id": "ecmc-orcid-8b544ecca1708c6b018ac645"
+  },
+  {
+    "title": "Modelos de aprendizaje en la transición hacia la complejidad como un desafío a la simplicidad",
+    "year": 2024,
+    "venue": "Sophía",
+    "publicationType": "journal-article",
+    "doi": "10.17163/soph.n36.2024.02",
+    "citations": 11,
+    "sjrQuartile": "Q2",
+    "sjrScore": 0.216,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      120
+    ],
+    "id": "ecmc-orcid-2e02ec76faceed8815c27550"
+  },
+  {
+    "title": "Reflexiones sobre Justicia Social: Aportes de la Teología Católica y la Filosofía Personalista en Latinoamérica",
+    "year": 2023,
+    "venue": "Ciencia Latina Revista Científica Multidisciplinar",
+    "publicationType": "journal-article",
+    "doi": "10.37811/cl_rcm.v7i4.7627",
+    "citations": 0,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      121
+    ],
+    "id": "ecmc-orcid-3bd69b284bcba62755de6ae1"
+  },
+  {
+    "title": "Plan Educativo Covid-19. Análisis de la realidad de las comunidades indígenas a partir del caso Tzalarón",
+    "year": 2023,
+    "venue": "Religación. Revista de Ciencias Sociales y Humanidades",
+    "publicationType": "journal-article",
+    "doi": "10.46652/rgn.v8i35.1006",
+    "citations": 3,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      122
+    ],
+    "id": "ecmc-orcid-cd004ab33cf25d81728a6153"
+  },
+  {
+    "title": "Filosofía de la educación, transdisciplinariedad y formación docente",
+    "year": 2023,
+    "venue": "Formación docente desde la filosofía educativa transdisciplinaria",
+    "publicationType": "book-chapter",
+    "doi": null,
+    "citations": null,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      123
+    ],
+    "id": "ecmc-orcid-1516d82793f557601bb88fad"
+  },
+  {
+    "title": "Aproximaciones filosófico-antropológicas a la fiesta",
+    "year": 2022,
+    "venue": "Voces de carnaval Ritualidad festiva, resignificación cultural y mercantilismo 2022",
+    "publicationType": "book-chapter",
+    "doi": null,
+    "citations": null,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      124
+    ],
+    "id": "ecmc-orcid-8ee757bcba9de2a26a789d79"
+  },
+  {
+    "title": "Alternativa radiofónica: una propuesta para garantizar el acceso a la educación en tiempos de pandemia",
+    "year": 2022,
+    "venue": "Horizontes. Revista de Investigación en Ciencias de la Educación",
+    "publicationType": "journal-article",
+    "doi": "10.33996/revistahorizontes.v6i24.409",
+    "citations": 1,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      125
+    ],
+    "id": "ecmc-orcid-608d3fc423802f9b18839cb4"
+  },
+  {
+    "title": "Aportes de Leonidas Proaño para la interpretación de la crisis educativa",
+    "year": 2022,
+    "venue": "Experiencias docentes en tiempo de pandemia",
+    "publicationType": "book-chapter",
+    "doi": "10.7476/9789978108222.0006",
+    "citations": 2,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      126
+    ],
+    "id": "ecmc-orcid-6a30064765882e068ba1b19c"
+  },
+  {
+    "title": "El ideal de progreso y sus implicaciones en una educación cosmopolita desde el pensamiento kantiano",
+    "year": 2022,
+    "venue": "Revista de Humanidades de Valparaíso",
+    "publicationType": "journal-article",
+    "doi": "10.22370/rhv2022iss20pp311-334",
+    "citations": 1,
+    "sjrQuartile": "Q3",
+    "sjrScore": 0.118,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      127
+    ],
+    "id": "ecmc-orcid-d9a49c8455a30ce3fefae1f6"
+  },
+  {
+    "title": "Contribuciones del pensamiento ilustrado y la teoría crítica a la filosofía de la innovación educativa",
+    "year": 2020,
+    "venue": "Filosofía de la innovación y de la tecnología educativa: Tomo I Filosofía de la innovación",
+    "publicationType": "book-chapter",
+    "doi": null,
+    "citations": null,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      128
+    ],
+    "id": "ecmc-orcid-e083eae1a59b40bad1ee1fef"
+  },
+  {
+    "title": "Editorial. Filosofía, tecnología e innovación en la educación",
+    "year": 2020,
+    "venue": "Sophía",
+    "publicationType": "journal-issue",
+    "doi": "10.17163/soph.n28",
+    "citations": 0,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      129
+    ],
+    "id": "ecmc-orcid-e6dd7114d06fe1bfd9445c65"
+  },
+  {
+    "title": "Editorial",
+    "year": 2020,
+    "venue": "Sophia(Ecuador)",
+    "publicationType": "journal-article",
+    "doi": null,
+    "citations": null,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      130
+    ],
+    "id": "ecmc-orcid-613ceba2386718ed198b19db"
+  },
+  {
+    "title": "Metacomprensión lectora y rendimiento académico en estudiantes universitarios iniciales",
+    "year": 2019,
+    "venue": "El Modelo Pedagógico Salesiano Memorias del Congreso de Educación Salesiana Quito",
+    "publicationType": "book-chapter",
+    "doi": null,
+    "citations": null,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      131
+    ],
+    "id": "ecmc-orcid-5c15ed618fd555bbef1a2069"
+  },
+  {
+    "title": "Fundamentos ontológicos del sistema educativo finlandés como referente para superar problemáticas en contextos emergentes",
+    "year": 2019,
+    "venue": "Sophía",
+    "publicationType": "journal-article",
+    "doi": "10.17163/soph.n27.2019.08",
+    "citations": 2,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      132
+    ],
+    "id": "ecmc-orcid-7baedf359b23e236998a0c16"
+  },
+  {
+    "title": "Aplicación de estrategias didácticas para el desarrollo de las operaciones mentales en el sujeto que aprende.",
+    "year": 2019,
+    "venue": "Experiencias Educativas Iberoamericanas Reflexiones desde la Perspectiva de la Profesión Docente",
+    "publicationType": "book-chapter",
+    "doi": null,
+    "citations": null,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      133
+    ],
+    "id": "ecmc-orcid-f66f155fc807f4c639807f2d"
+  },
+  {
+    "title": "Reflexiones sobre la práctica de la ética y los valores en el quehacer universitario ecuatoriano",
+    "year": 2019,
+    "venue": "Educación en valores en las Instituciones Educativas ¿Aspiración educativa o realidad posible?",
+    "publicationType": "book-chapter",
+    "doi": null,
+    "citations": null,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      134
+    ],
+    "id": "ecmc-orcid-9a0416e74292a62dada28a05"
+  },
+  {
+    "title": "Editorial. Biología y educación: la neuroeducación",
+    "year": 2019,
+    "venue": "Sophía",
+    "publicationType": "journal-issue",
+    "doi": "10.17163/soph.n26",
+    "citations": 0,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      135
+    ],
+    "id": "ecmc-orcid-aa8b8cd788b125bef6260bbf"
+  },
+  {
+    "title": "Enfoques y perspectivas del pensamiento pedagógico latinoamericano",
+    "year": 2019,
+    "venue": "Editorial Universitaria Abya-Yala",
+    "publicationType": "edited-book",
+    "doi": null,
+    "citations": null,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      136
+    ],
+    "id": "ecmc-orcid-e16953966d5b31fd043c6f40"
+  },
+  {
+    "title": "Diálogo de saberes en las ciencias humanas",
+    "year": 2019,
+    "venue": "ArtyHum",
+    "publicationType": "journal-article",
+    "doi": null,
+    "citations": null,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      137
+    ],
+    "id": "ecmc-orcid-95011bc6b210f87114281bfa"
+  },
+  {
+    "title": "EDITORIAL",
+    "year": 2019,
+    "venue": "Sophia, Coleccion de Filosofia de la Educacion",
+    "publicationType": "journal-article",
+    "doi": null,
+    "citations": null,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      138
+    ],
+    "id": "ecmc-orcid-1e1f357b2869764b7fa9a279"
+  },
+  {
+    "title": "Editorial",
+    "year": 2019,
+    "venue": "Sophia(Ecuador)",
+    "publicationType": "journal-article",
+    "doi": null,
+    "citations": null,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      139
+    ],
+    "id": "ecmc-orcid-3eb5467b0641b6197bed81e3"
+  },
+  {
+    "title": "La didáctica como solución para el desarrollo del pensamiento crítico en la educación superior",
+    "year": 2018,
+    "venue": "II Congreso Internacional Modelo Didáctico Integrador de la Educación Superior",
+    "publicationType": "book-chapter",
+    "doi": null,
+    "citations": null,
+    "sjrQuartile": null,
+    "sjrScore": null,
+    "researchers": [
+      {
+        "name": "Jefferson Alexander Moreno-Guaicha",
+        "orcid": "0000-0002-0380-4739"
+      }
+    ],
+    "sourceRows": [
+      140
+    ],
+    "id": "ecmc-orcid-cfdbc2d275cc49f363f15d98"
+  }
+]

@@ -1,0 +1,820 @@
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("./assets/fonts/bricolage-grotesque-latin-wght-normal.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+@font-face {
+  font-family: "Source Sans 3";
+  src: url("./assets/fonts/source-sans-3-latin-wght-normal.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+@font-face {
+  font-family: "Bricolage Grotesque Fallback";
+  src: local("Arial");
+  size-adjust: 101.82%;
+  ascent-override: 93%;
+  descent-override: 27%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Source Sans 3 Fallback";
+  src: local("Arial");
+  size-adjust: 92.18%;
+  ascent-override: 102.4%;
+  descent-override: 40%;
+  line-gap-override: 0%;
+}
+
+:root {
+  --font-display: "Bricolage Grotesque", "Bricolage Grotesque Fallback", Arial, sans-serif;
+  --font-body: "Source Sans 3", "Source Sans 3 Fallback", Arial, sans-serif;
+  --font-sans: var(--font-body);
+  --ink: #252321;
+  --muted: #64615e;
+  --paper: #faf9f6;
+  --line: #ded9d2;
+  --surface-radius: 6px;
+  --accent: var(--school-ink, #252321);
+  --type-small: clamp(.875rem, .84rem + .1vw, .9375rem);
+  --type-body: clamp(1rem, .98rem + .12vw, 1.0625rem);
+  --type-h3: clamp(1.25rem, calc(1.216rem + .15vw), 1.333rem);
+  --type-h2: clamp(1.563rem, calc(1.479rem + .372vw), 1.777rem);
+  --type-h1: clamp(1.953rem, calc(1.79rem + .724vw), 2.369rem);
+}
+
+body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--font-body); font-size:var(--type-body); line-height:1.55; font-feature-settings:"kern" 1; font-kerning:normal; }
+button, summary { cursor:pointer; }
+button, input, select { min-height:44px; }
+button, input, select, textarea, dialog, [role="dialog"], .project-tracking-modal, .product-detail-modal, .notifications-popover { border-radius:var(--surface-radius); }
+button { touch-action:manipulation; }
+button:disabled { cursor:wait; }
+:focus-visible { outline:3px solid var(--school-ink, #252321) !important; outline-offset:4px; }
+.skip-link { position:fixed; top:-100px; left:24px; z-index:100; background:white; padding:16px; }
+.skip-link:focus { top:12px; }
+/* SIMAPC institutional landing and one-time intro choreography */
+.institutional-landing {
+  --landing-header-height: 76px;
+  --landing-surface: var(--paper);
+  --landing-ink: var(--ink);
+  --landing-muted: #585b5e;
+  --landing-brand: var(--yt-blue, #24618e);
+  --landing-rule: color-mix(in srgb, var(--landing-ink) 14%, transparent);
+  --landing-content-width: 1320px;
+  --landing-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --landing-intro-words-ms: 600ms;
+  --landing-logo-form-ms: 200ms;
+  --landing-transition-ms: 800ms;
+  --landing-logo-travel-ms: 600ms;
+  --landing-curtain-ms: 600ms;
+  --landing-content-start-ms: 1150ms;
+  --landing-content-stagger-ms: 70ms;
+  --landing-emblems-start-ms: 1250ms;
+  --landing-emblem-stagger-ms: 50ms;
+  --landing-total-ms: 1600ms;
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100svh;
+  overflow-x: clip;
+  background: var(--landing-surface);
+  color: var(--landing-ink);
+  isolation: isolate;
+}
+
+.institutional-landing *,
+.institutional-landing *::before,
+.institutional-landing *::after { box-sizing: border-box; }
+
+.institutional-landing-header {
+  position: sticky;
+  z-index: 10;
+  top: 0;
+  height: var(--landing-header-height);
+  width: 100%;
+  border-top: 4px solid var(--landing-brand);
+  border-bottom: 1px solid var(--landing-rule);
+  background: var(--landing-surface);
+}
+
+.institutional-landing-header-space {
+  display: flex;
+  width: min(var(--landing-content-width), calc(100% - 48px));
+  height: 100%;
+  align-items: center;
+  justify-content: flex-end;
+  margin-inline: auto;
+}
+
+.institutional-landing-header-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 4px;
+  color: var(--landing-brand);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 250ms var(--landing-ease), color 180ms ease;
+}
+
+.institutional-landing.is-done .institutional-landing-header-link,
+.institutional-landing.is-reduced .institutional-landing-header-link {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.institutional-landing-header-link:hover { color: color-mix(in srgb, var(--landing-brand) 76%, #17191c); }
+
+.institutional-landing-brand-logo {
+  position: fixed;
+  z-index: 32;
+  top: 0;
+  left: 50%;
+  display: block;
+  width: min(164px, 48vw);
+  height: auto;
+  max-height: 58px;
+  object-fit: contain;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(-50%, calc(50vh - 50%), 0) scale(.64);
+  filter: brightness(0) invert(1);
+  transform-origin: center;
+}
+
+.institutional-landing.is-logo .institutional-landing-brand-logo {
+  opacity: 1;
+  transform: translate3d(-50%, calc(50vh - 50%), 0) scale(1.35);
+  transition: opacity var(--landing-logo-form-ms) var(--landing-ease), transform var(--landing-logo-form-ms) var(--landing-ease);
+}
+
+.institutional-landing.is-transition .institutional-landing-brand-logo,
+.institutional-landing.is-done .institutional-landing-brand-logo,
+.institutional-landing.is-reduced .institutional-landing-brand-logo {
+  opacity: 1;
+  transform: translate3d(calc(-50vw + max(24px, (100vw - var(--landing-content-width)) / 2)), calc(var(--landing-header-height) / 2 - 50%), 0) scale(1);
+  filter: none;
+}
+
+.institutional-landing.is-transition .institutional-landing-brand-logo {
+  transition: transform var(--landing-logo-travel-ms) var(--landing-ease), opacity var(--landing-logo-travel-ms) var(--landing-ease), filter var(--landing-logo-travel-ms) var(--landing-ease);
+}
+
+.institutional-landing.is-done .institutional-landing-brand-logo,
+.institutional-landing.is-reduced .institutional-landing-brand-logo { transition: none; }
+
+.institutional-landing-curtain {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  background: var(--yt-blue, #24618e);
+  transform: translateY(0);
+  pointer-events: none;
+}
+
+.institutional-landing.is-transition .institutional-landing-curtain {
+  transform: translateY(calc(-100% + var(--landing-header-height)));
+  transition: transform var(--landing-curtain-ms) var(--landing-ease);
+}
+
+.institutional-landing-intro-words {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: #fff;
+  font-family:var(--font-display);
+  font-size: clamp(27px, 5vw, 54px);
+  font-weight: 900;
+  letter-spacing: .09em;
+  line-height: 1;
+  text-align: center;
+}
+
+.institutional-landing-intro-words > span {
+  opacity: 0;
+  transform: translateY(14px);
+  animation: institutional-intro-word-in 200ms var(--landing-ease) forwards;
+}
+
+.institutional-landing-intro-words > span:nth-child(2) { animation-delay: 180ms; }
+.institutional-landing-intro-words > small {
+  margin-top: 12px;
+  font: 700 12px/1 sans-serif;
+  letter-spacing: .35em;
+  opacity: 0;
+  animation: institutional-intro-word-in 200ms var(--landing-ease) 370ms forwards;
+}
+
+.institutional-landing.is-logo .institutional-landing-intro-words,
+.institutional-landing.is-transition .institutional-landing-intro-words { opacity: 0; transition: opacity 200ms var(--landing-ease); }
+
+@keyframes institutional-intro-word-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.institutional-landing-skip {
+  position: fixed;
+  z-index: 40;
+  right: 22px;
+  bottom: 18px;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid rgb(255 255 255 / 45%);
+  background: rgb(17 47 70 / 30%);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.institutional-landing-skip span { color: rgb(255 255 255 / 75%); }
+.institutional-landing :focus-visible { outline: 3px solid #17191c; outline-offset: 4px; }
+.institutional-landing-skip:focus-visible { outline-color: #fff; }
+
+.institutional-landing-hero {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: min(720px, calc(100svh - var(--landing-header-height)));
+  align-items: center;
+  padding: 64px max(24px, calc((100vw - var(--landing-content-width)) / 2)) 72px;
+  overflow: clip;
+  background:
+    radial-gradient(ellipse 42% 74% at 82% 50%, color-mix(in srgb, var(--landing-brand) 7%, transparent), transparent 74%),
+    var(--landing-surface);
+  opacity: 1;
+  transition: opacity 350ms var(--landing-ease);
+}
+
+.institutional-landing-hero::before {
+  position: absolute;
+  z-index: 0;
+  inset: 5% 0 4% 51%;
+  background-image: radial-gradient(color-mix(in srgb, var(--landing-brand) 12%, transparent) .8px, transparent .9px);
+  background-position: center;
+  background-size: 20px 20px;
+  content: "";
+  mask-image: radial-gradient(ellipse at 55% 50%, #000 0%, rgb(0 0 0 / .55) 48%, transparent 78%);
+  pointer-events: none;
+}
+.institutional-landing-hero-copy {
+  position: relative;
+  z-index: 2;
+  width: min(660px, 54vw);
+  margin-left: 0;
+}
+
+.institutional-landing-mascot-scene {
+  position: absolute;
+  z-index: 1;
+  right: clamp(0px, 2vw, 28px);
+  bottom: -2%;
+  display: block;
+  width: min(37vw, 460px);
+  max-height: 92%;
+  aspect-ratio: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.institutional-landing-mascot-orbit {
+  position: absolute;
+  z-index: 0;
+  border: 1px solid color-mix(in srgb, var(--landing-brand) 19%, transparent);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.institutional-landing-mascot-orbit-primary {
+  inset: -11% -8% -6%;
+  border-right-color: color-mix(in srgb, var(--landing-brand) 8%, transparent);
+  transform: rotate(-13deg) scaleX(.86);
+}
+
+.institutional-landing-mascot-orbit-primary::before,
+.institutional-landing-mascot-orbit-primary::after {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border: 1px solid color-mix(in srgb, var(--landing-brand) 38%, transparent);
+  border-radius: 50%;
+  background: var(--landing-surface);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--landing-brand) 7%, transparent);
+  content: "";
+}
+
+.institutional-landing-mascot-orbit-primary::before { top: 12%; left: 25%; }
+.institutional-landing-mascot-orbit-primary::after { right: 15%; bottom: 14%; }
+
+.institutional-landing-mascot-orbit-secondary {
+  inset: 4% -17% 5% -15%;
+  border-color: color-mix(in srgb, var(--landing-brand) 9%, transparent);
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+  transform: rotate(21deg) scaleX(.8);
+}
+
+.institutional-landing-desktop-mascot {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 92%;
+  object-fit: contain;
+  object-position: bottom center;
+  filter: contrast(1.06) saturate(.9) drop-shadow(0 18px 18px rgb(29 43 54 / 16%));
+}
+
+.institutional-landing-eyebrow,
+.institutional-landing-section-heading > p,
+.institutional-landing-school-code {
+  margin: 0 0 18px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .2em;
+  line-height: 1.4;
+}
+.institutional-landing .institutional-landing-eyebrow,
+.research-stage .research-stage-eyebrow,
+.school-selector-eyebrow { display: none !important; }
+
+.institutional-landing .institutional-landing-eyebrow {
+  display: block !important;
+  margin-bottom: 17px;
+  color: var(--landing-brand);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .025em;
+}
+
+.institutional-landing-title {
+  margin: 0;
+  color: var(--ink);
+  font-family:var(--font-display);
+  font-size: clamp(52px, 6.1vw, 88px);
+  font-weight: 800;
+  letter-spacing: -.04em;
+  line-height: 1.04;
+  text-transform: none;
+}
+
+.institutional-landing-title-mask { display: block; overflow: hidden; padding: .05em .05em .1em 0; }
+.institutional-landing-blue-word { color: var(--ink); }
+
+.landing-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 350ms var(--landing-ease), transform 350ms var(--landing-ease);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.has-revealed-content .landing-reveal { opacity: 1; transform: translateY(0); }
+
+.institutional-landing-subtitle {
+  max-width: 560px;
+  margin: 20px 0 0;
+  color: var(--landing-muted);
+  font-size: clamp(18px, 1.55vw, 21px);
+  line-height: 1.5;
+}
+
+.institutional-landing-entry-guide {
+  display: grid;
+  width: min(610px, 100%);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 25px;
+  padding-top: 14px;
+  border-top: 1px solid var(--landing-rule);
+}
+
+.institutional-landing-entry-item { display: grid; align-content: start; gap: 4px; min-width: 0; }
+.institutional-landing-entry-item strong { color: var(--landing-brand); font-size: 14px; font-weight: 750; }
+.institutional-landing-entry-item span { color: var(--landing-muted); font-size: 13px; line-height: 1.4; }
+
+.institutional-landing-hero-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  min-height: 52px;
+  margin-top: 23px;
+  padding: 0 19px;
+  border: 1px solid var(--landing-brand);
+  border-radius: var(--surface-radius);
+  background: var(--landing-brand);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 750;
+  text-decoration: none;
+  transition: background-color 180ms ease, transform 180ms ease;
+}
+
+.institutional-landing-hero-link:hover { background: color-mix(in srgb, var(--landing-brand) 88%, #000); transform: translateY(-1px); }
+.institutional-landing-hero-link:active { transform: translateY(0); }
+
+.institutional-landing-hero-emblems { position: absolute; z-index: 1; inset: 0; pointer-events: none; }
+.institutional-school-stage-fallback { overflow: clip; }
+.institutional-school-stage-fallback-card { visibility: hidden; }
+
+.institutional-landing-hero-emblem {
+  position: absolute;
+  display: block;
+  width: var(--emblem-size);
+  aspect-ratio: 1;
+  opacity: 0;
+  transform: translate3d(calc(-50% + var(--entry-x)), calc(-50% + 30px), 0) rotate(var(--entry-rotation));
+  transition: opacity 350ms var(--landing-ease), transform 350ms var(--landing-ease);
+}
+
+.institutional-landing-hero-emblem.is-visible {
+  opacity: .94;
+  transform: translate3d(-50%, -50%, 0) rotate(var(--emblem-rotation));
+}
+
+.institutional-landing-hero-emblem-parallax,
+.institutional-landing-hero-emblem-float { display: block; width: 100%; height: 100%; }
+.institutional-landing-hero-emblem-float { aspect-ratio: 1; background: transparent; }
+.institutional-landing-hero-emblem.is-visible .institutional-landing-hero-emblem-float.is-floating { animation: institutional-emblem-float 6.5s var(--landing-ease) var(--float-delay, 0s) infinite; animation-play-state: paused; }
+.institutional-landing-hero[data-in-view="true"] .institutional-landing-hero-emblem-parallax { will-change: transform; }
+.institutional-landing-hero[data-in-view="true"] .institutional-landing-hero-emblem.is-visible .institutional-landing-hero-emblem-float.is-floating { animation-play-state: running; will-change: transform; }
+.institutional-landing-hero-emblem.is-visible .institutional-landing-emblem-image {
+  animation: institutional-emblem-pop 620ms cubic-bezier(.34, 1.48, .64, 1) var(--arrival-delay, 0ms) both;
+  transform-origin: center;
+}
+.institutional-landing-emblem-image { display: grid; max-width: 100%; max-height: 100%; place-items: center; color: var(--school-accent); }
+.institutional-landing-emblem-image .login-school-emblem-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.institutional-landing-emblem-ecmc { display: grid; place-items: center; }
+.institutional-landing-emblem-ecmc > svg { display: block; }
+
+@media (min-width: 761px) {
+  .institutional-landing-hero-emblem { width: clamp(96px, 8.8vw, 132px); height: clamp(96px, 8.8vw, 132px); }
+  .institutional-landing-hero-emblem[data-school="ECBI"] { left: 95% !important; top: 14% !important; }
+  .institutional-landing-hero-emblem[data-school="ECFN"] { left: 65% !important; top: 44% !important; }
+  .institutional-landing-hero-emblem[data-school="ECTEA"] { left: 95% !important; top: 47% !important; }
+  .institutional-landing-hero-emblem[data-school="ECMC"] { left: 66% !important; top: 74% !important; }
+  .institutional-landing-hero-emblem[data-school="ECQI"] { left: 95% !important; top: 74% !important; }
+  .institutional-landing-hero-emblem[data-school="YTLC"] { left: 92% !important; top: 84% !important; }
+}
+
+@keyframes institutional-emblem-pop {
+  0% { scale: .82; }
+  62% { scale: 1.09; }
+  82% { scale: .97; }
+  100% { scale: 1; }
+}
+
+@keyframes institutional-emblem-settle {
+  0% { transform: translateY(12px) scale(.94); }
+  72% { transform: translateY(-2px) scale(1.015); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes institutional-emblem-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+.institutional-landing-section-heading {
+  width: min(1320px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 60px 0 12px;
+}
+
+.institutional-landing-section-heading > p { margin-bottom: 10px; }
+.institutional-landing-section-heading h2 {
+  margin: 0;
+  color: var(--ink);
+  font-family:var(--font-display);
+  font-size: clamp(40px, 6vw, 74px);
+  font-weight: 800;
+  letter-spacing: -.035em;
+  line-height: 1.08;
+  text-transform: none;
+}
+
+.institutional-landing-section-heading h2 span { color: var(--ink); }
+.institutional-landing-scenes { width: 100%; }
+
+.institutional-landing-school-scene {
+  position: relative;
+  display: grid;
+  width: min(1320px, calc(100% - 48px));
+  min-height: min(760px, 90svh);
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr);
+  align-items: center;
+  gap: clamp(28px, 7vw, 112px);
+  margin: 0 auto;
+  padding: 76px 0;
+  isolation: isolate;
+  scroll-margin-top: calc(var(--landing-header-height) + 24px);
+}
+
+.institutional-landing-school-scene.is-reversed { grid-template-columns: minmax(320px, .9fr) minmax(0, 1.1fr); }
+.institutional-landing-school-scene.is-reversed .institutional-landing-school-art { grid-column: 1; grid-row: 1; }
+.institutional-landing-school-scene.is-reversed .institutional-landing-school-copy { grid-column: 2; grid-row: 1; }
+
+.institutional-landing-school-copy { position: relative; z-index: 2; min-width: 0; }
+.institutional-landing-school-code { margin-bottom: 18px; color: var(--school-ink); }
+.institutional-landing-school-copy h2 {
+  max-width: 740px;
+  margin: 0;
+  color: var(--ink);
+  font-family:var(--font-display);
+  font-size: clamp(42px, 5.2vw, 72px);
+  font-weight: 800;
+  letter-spacing: -.035em;
+  line-height: 1.08;
+  text-transform: none;
+}
+
+.institutional-landing-highlight { color: var(--ink); }
+.institutional-landing-school-description { max-width: 620px; margin: 24px 0; color: #45494e; font-size: 19px; line-height: 1.55; }
+.institutional-landing-lines { display: flex; flex-wrap: wrap; gap: 9px; margin: 0; padding: 0; list-style: none; }
+.institutional-landing-lines li { max-width: 100%; padding: 9px 13px; border: 1px solid #e4e5e7; background: #fff; color: #34383d; font-size: 14px; line-height: 1.35; }
+
+.institutional-landing-progress {
+  display: flex;
+  width: min(410px, 100%);
+  align-items: center;
+  gap: 12px;
+  margin-top: 34px;
+  color: var(--school-ink);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  letter-spacing: .1em;
+}
+
+.institutional-landing-progress-track { display: block; flex: 1; height: 3px; overflow: hidden; background: #e7e8e9; }
+.institutional-landing-progress-track > span { display: block; height: 100%; background: var(--school-accent); }
+
+.institutional-landing-school-button {
+  display: inline-flex;
+  min-height: 54px;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 28px;
+  padding: 13px 20px;
+  border: 1px solid var(--school-ink);
+  background: var(--school-ink);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: transform 350ms var(--landing-ease);
+}
+
+.institutional-landing-school-button:hover { transform: translateY(-2px); background-color: color-mix(in srgb, var(--school-ink) 88%, #000); }
+.institutional-landing-school-button:active { transform: translateY(0); }
+
+.institutional-landing-school-art {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 430px;
+  place-items: center;
+  transform: translateY(var(--parallax-y, 0px));
+  will-change: transform;
+}
+
+.institutional-landing-school-wash {
+  position: absolute;
+  z-index: -1;
+  width: min(440px, 90%);
+  aspect-ratio: 1;
+  background: var(--school-wash);
+}
+
+.institutional-landing-school-emblem-float { display: grid; place-items: center; }
+.institutional-landing.is-done .institutional-landing-school-emblem-float { animation: institutional-emblem-float 6s var(--landing-ease) infinite; animation-play-state: paused; }
+.institutional-landing-school-emblem-float > .institutional-landing-emblem-image { width: min(360px, 36vw) !important; height: min(360px, 36vw) !important; }
+.institutional-landing-school-emblem-float > .institutional-landing-emblem-ecmc { width: min(320px, 34vw) !important; height: auto; }
+
+.institutional-landing-footer {
+  width: 100%;
+  margin-top: 12px;
+  background: #f1efeb;
+  color: #303942;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 350ms var(--landing-ease), transform 350ms var(--landing-ease);
+}
+
+.institutional-landing-footer[data-revealed="true"] { opacity: 1; transform: translateY(0); }
+
+.institutional-landing-footer-ribbon { display: flex; height: 9px; }
+.institutional-landing-footer-ribbon span { flex: 1 1 0; }
+.institutional-landing-footer-content,
+.institutional-landing-footer-bottom { width: min(1320px, calc(100% - 64px)); margin-inline: auto; }
+.institutional-landing-footer-content { display: grid; grid-template-columns: 1.1fr .78fr 1.05fr 1.08fr; gap: clamp(24px, 4vw, 64px); padding: 54px 0 42px; }
+.institutional-landing-footer-brand img { display: block; width: min(220px, 100%); height: auto; object-fit: contain; object-position: left center; }
+.institutional-landing-footer-brand p { max-width: 300px; margin: 24px 0 0; color: #414b54; font-size: 15px; line-height: 1.55; }
+.institutional-landing-footer-group h2 { margin: 0 0 24px; color: #17191c; font-family:var(--font-display); font-size: 22px; line-height: 1.2; }
+.institutional-landing-footer-group ul { display: grid; gap: 13px; padding: 0; margin: 0; list-style: none; }
+.institutional-landing-footer-group a { color: #24618e; font-size: 15px; line-height: 1.45; text-decoration: none; }
+.institutional-landing-footer-group a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.institutional-landing-footer-group a:focus-visible { outline: 3px solid #17191c; outline-offset: 4px; }
+.institutional-landing-footer-social ul { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px 9px; }
+.institutional-landing-footer-social a { display: flex; min-height: 40px; align-items: center; gap: 9px; }
+.institutional-landing-footer-social a > span:first-child { display: grid; width: 32px; height: 32px; flex: 0 0 32px; place-items: center; background: #24618e; color: #fff; font-size: 13px; font-weight: 800; }
+.institutional-landing-footer-bottom { display: flex; min-height: 58px; align-items: center; justify-content: space-between; gap: 20px; border-top: 1px solid #d5e0e5; color: #4b5056; font-size: 12px;
+}
+
+.institutional-landing.is-reduced .institutional-landing-hero,
+.institutional-landing.is-reduced .institutional-landing-section-heading,
+.institutional-landing.is-reduced .institutional-landing-school-scene { animation: none; }
+
+@keyframes institutional-reduced-fade { from { opacity: 0; } to { opacity: 1; } }
+
+@media (max-width: 900px) {
+  .institutional-landing { --landing-header-height: calc(64px + env(safe-area-inset-top)); }
+  .institutional-landing-hero { height: calc(100svh - var(--landing-header-height)); min-height: 0; }
+  .institutional-landing-hero-copy { width: min(720px, 78vw); }
+  .institutional-landing-school-scene,
+  .institutional-landing-school-scene.is-reversed { min-height: 650px; grid-template-columns: minmax(0, 1.1fr) minmax(240px, .9fr); gap: 26px; }
+  .institutional-landing-school-scene.is-reversed .institutional-landing-school-art { grid-column: 2; }
+  .institutional-landing-school-scene.is-reversed .institutional-landing-school-copy { grid-column: 1; }
+  .institutional-landing-school-art { min-height: 340px; }
+  .institutional-landing-footer-content { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .institutional-landing-footer-brand { grid-column: 1 / -1; }
+}
+
+@media (max-width: 600px) {
+  .institutional-landing { --landing-header-height: calc(64px + env(safe-area-inset-top)); }
+  .institutional-landing-brand-logo { width: min(150px, 52vw); max-height: 52px; }
+  .institutional-landing-hero { height: calc(100svh - var(--landing-header-height)); min-height: 0; align-items: center; padding: 70px 20px 88px; }
+  .institutional-landing-hero-copy { width: 100%; margin: 0; }
+  .institutional-landing-eyebrow,
+  .institutional-landing-section-heading > p,
+  .institutional-landing-school-code { font-size: 11px; letter-spacing: .15em; }
+  .institutional-landing-title { font-size: clamp(47px, 13.5vw, 72px); }
+  .institutional-landing-subtitle { max-width: 440px; margin-top: 18px; font-size: 18px; }
+  .institutional-landing-hero-link { margin-top: 24px; font-size: 15px; }
+  .institutional-landing-hero-emblem { width: min(112px, 28vw); height: min(112px, 28vw); opacity: 0; }
+  .institutional-landing-hero-emblem.is-visible { opacity: .18; }
+  .institutional-landing-hero-emblem[data-school="ECIAA"] { left: 72% !important; top: 15% !important; }
+  .institutional-landing-hero-emblem[data-school="ECBI"] { left: 94% !important; top: 24% !important; }
+  .institutional-landing-hero-emblem[data-school="ECFN"] { left: 84% !important; top: 42% !important; }
+  .institutional-landing-hero-emblem[data-school="ECTEA"] { left: 96% !important; top: 61% !important; }
+  .institutional-landing-hero-emblem[data-school="ECMC"] { left: 76% !important; top: 76% !important; }
+  .institutional-landing-hero-emblem[data-school="ECQI"] { left: 94% !important; top: 91% !important; }
+  .institutional-landing-hero-emblem[data-school="YTLC"] { left: 61% !important; top: 88% !important; }
+  .institutional-landing-section-heading,
+  .institutional-landing-school-scene { width: calc(100% - 40px); }
+  .institutional-landing-section-heading { padding: 42px 0 8px; }
+  .institutional-landing-section-heading h2 { font-size: clamp(38px, 10vw, 54px); }
+  .institutional-landing-school-scene,
+  .institutional-landing-school-scene.is-reversed { min-height: 0; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 68px 0 76px; }
+  .institutional-landing-school-scene.is-reversed .institutional-landing-school-art,
+  .institutional-landing-school-scene.is-reversed .institutional-landing-school-copy { grid-column: 1; grid-row: auto; }
+  .institutional-landing-school-copy h2 { font-size: clamp(40px, 11vw, 58px); }
+  .institutional-landing-school-description { margin: 17px 0; font-size: 17px; }
+  .institutional-landing-lines { gap: 7px; }
+  .institutional-landing-lines li { padding: 8px 11px; font-size: 13px; }
+  .institutional-landing-progress { margin-top: 27px; }
+  .institutional-landing-school-button { width: 100%; margin-top: 22px; }
+  .institutional-landing-school-art { min-height: 260px; grid-row: 2; }
+  .institutional-landing-school-wash { width: min(270px, 82%); }
+  .institutional-landing-school-emblem-float > .institutional-landing-emblem-image { width: min(240px, 64vw) !important; height: min(240px, 64vw) !important; }
+  .institutional-landing-school-emblem-float > .institutional-landing-emblem-ecmc { width: min(220px, 58vw) !important; }
+  .institutional-landing-footer-content,
+  .institutional-landing-footer-bottom { width: calc(100% - 40px); }
+  .institutional-landing-footer-content { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 34px 20px; padding: 38px 0 30px; }
+  .institutional-landing-footer-brand { grid-column: 1 / -1; }
+  .institutional-landing-footer-brand img { width: min(190px, 70vw); }
+  .institutional-landing-footer-brand p { margin-top: 16px; font-size: 14px; }
+  .institutional-landing-footer-group h2 { margin-bottom: 17px; font-size: 19px; }
+  .institutional-landing-footer-group ul { gap: 11px; }
+  .institutional-landing-footer-group a { font-size: 14px; }
+  .institutional-landing-footer-social { grid-column: 1 / -1; }
+  .institutional-landing-footer-social ul { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .institutional-landing-footer-social a { gap: 7px; font-size: 13px; }
+  .institutional-landing-footer-social a > span:first-child { width: 30px; height: 30px; flex-basis: 30px; }
+  .institutional-landing-footer-bottom { min-height: 68px; align-items: flex-start; justify-content: center; flex-direction: column; gap: 6px; padding: 12px 0; font-size: 11px; }
+  .institutional-landing-skip { right: 12px; bottom: 12px; font-size: 12px; }
+}
+
+@media (max-width: 760px) {
+  .institutional-landing .institutional-landing-mascot-scene { display: none !important; }
+  .institutional-landing .institutional-landing-header-link { display: none !important; }
+  .institutional-landing-hero-emblem-float { background: transparent; }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .institutional-landing { --landing-header-height: calc(48px + env(safe-area-inset-top)); }
+}
+
+@media (width < 760px) {
+  footer.institutional-landing-footer {
+    font-family: inherit;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+  footer.institutional-landing-footer :is(h2, h3, h4) {
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+  footer.institutional-landing-footer .institutional-landing-footer-group ul { row-gap: 12px; }
+  footer.institutional-landing-footer .institutional-landing-footer-group a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  footer.institutional-landing-footer .institutional-landing-footer-brand img { width: min(187px, 85%); }
+}
+
+@media (width <= 600px) {
+  footer.institutional-landing-footer .institutional-landing-footer-brand img { width: min(161.5px, 59.5vw); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .institutional-landing:not(.is-reduced) .institutional-landing-curtain { display: none; }
+  .institutional-landing-brand-logo,
+  .institutional-landing-hero-emblem,
+  .institutional-landing-hero-emblem-float,
+  .institutional-landing-emblem-image,
+  .institutional-landing-school-emblem-float,
+  .institutional-landing-school-button,
+  .landing-reveal { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  .institutional-landing-hero { transition: none; }
+  .institutional-landing-hero-emblem-parallax { transform: none !important; will-change: auto !important; }
+  .institutional-landing.is-reduced .institutional-landing-hero,
+  .institutional-landing.is-reduced .institutional-landing-section-heading,
+  .institutional-landing.is-reduced .institutional-landing-school-scene { animation: none; }
+  .institutional-landing-footer { opacity: 1; transform: none; transition: none; }
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 901px) and (max-width: 1100px) {
+  .institutional-landing .mascot-handoff-logos .institutional-landing-hero-emblem {
+    --emblem-size: clamp(64px, 7vw, 76px) !important;
+    width: var(--emblem-size) !important;
+    height: var(--emblem-size) !important;
+  }
+  .institutional-landing .mascot-handoff-logos .institutional-landing-hero-emblem.is-visible { opacity: .34; }
+  .institutional-landing .mascot-handoff-logos .institutional-landing-hero-emblem:nth-child(1) { left: 67% !important; top: 28% !important; }
+  .institutional-landing .mascot-handoff-logos .institutional-landing-hero-emblem:nth-child(2) { left: 82% !important; top: 22% !important; }
+  .institutional-landing .mascot-handoff-logos .institutional-landing-hero-emblem:nth-child(3) { left: 95% !important; top: 39% !important; }
+  .institutional-landing .mascot-handoff-logos .institutional-landing-hero-emblem:nth-child(4) { left: 68% !important; top: 57% !important; }
+  .institutional-landing .mascot-handoff-logos .institutional-landing-hero-emblem:nth-child(5) { left: 94% !important; top: 64% !important; }
+  .institutional-landing .mascot-handoff-logos .institutional-landing-hero-emblem:nth-child(6) { left: 77% !important; top: 83% !important; }
+  .institutional-landing .mascot-handoff-logos .institutional-landing-hero-emblem:nth-child(7) { left: 94% !important; top: 89% !important; }
+}
+.portal-app .welcome-seal .school-icon-crop { transform: scale(.9); transform-origin: center; }
+.portal-app .featured-paper-card[data-theme] { --feature-line-color: var(--accent); --feature-glow: color-mix(in srgb, var(--accent) 15%, transparent); }
+.portal-app .sidebar-link.active,
+.portal-app .sidebar-profile-button.is-current,
+.portal-app .secondary-tools button[aria-current="page"] { color: var(--accent); background: color-mix(in srgb, var(--accent) 9%, white); }
+.portal-app .sidebar-link.active { border-left-color: var(--accent); }
+.portal-app .sidebar-profile-button.is-current { }
+.portal-app .home-actions button:hover { background: color-mix(in srgb, var(--accent) 5%, white); }
+.portal-app .welcome-public svg { color: var(--accent); }
+.portal-app .primary-button:hover,
+.portal-app .featured-paper-link:hover,
+.portal-app .featured-paper-controls > .featured-paper-pause:hover { background: color-mix(in srgb, var(--accent) 86%, black); }
+.portal-app .featured-paper-controls > .featured-paper-pause { border-color: var(--accent); background: var(--accent); }
+@media(max-width:760px) {
+  .portal-app .welcome-seal .school-icon-crop { transform: scale(.64); }
+  .school-selector-logo { height: 70px; margin-bottom: 8px; }
+}
+.school-accent-text { color: var(--accent) !important; }
+.school-accent-hover:hover { border-color: var(--accent) !important; color: var(--accent) !important; }
+.school-accent-checkbox { accent-color: var(--accent); }
+
+.portal-loading {
+  display: grid;
+  min-height: 100svh;
+  place-content: center;
+  justify-items: center;
+  gap: 20px;
+  padding: 24px;
+  background: #f7f4ef;
+  color: #292522;
+  font-size: 16px;
+  text-align: center;
+}
+.portal-loading img { display: block; width: min(112px, 34vw); height: auto; }

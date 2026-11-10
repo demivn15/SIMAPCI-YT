@@ -1,0 +1,16 @@
+.featured-paper-backdrop.research-line-backdrop {
+  animation-timing-function: cubic-bezier(.22, 1, .36, 1);
+}
+
+[data-background-motion='true'][data-motion-paused='true'],
+[data-background-motion='true'][data-motion-paused='true'] * {
+  animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-background-motion='true'],
+  [data-background-motion='true'] * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

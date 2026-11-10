@@ -1,0 +1,33 @@
+/* Keep the logo journey outside the hero's clipping boundary. Geometry is
+   measured on resize; only transform and opacity change during scrolling. */
+.institutional-landing > .institutional-landing-hero { z-index: auto; }
+.institutional-landing > .mascot-handoff-logos {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100svh;
+  z-index: 1;
+  right: auto;
+  bottom: auto;
+  transform-origin: top left;
+  pointer-events: none;
+  overflow: visible;
+}
+.mascot-handoff-logos .institutional-landing-hero-emblem { mix-blend-mode: normal; }
+.mascot-handoff-logos .institutional-landing-emblem-image { mix-blend-mode: normal; }
+.mascot-handoff-logos[data-assets-ready="false"] { visibility: hidden; }
+.mascot-handoff-logos .institutional-landing-hero-emblem-float { background: transparent; }
+.mascot-handoff-logos[data-in-view="true"] .institutional-landing-hero-emblem-parallax,
+.mascot-handoff-logos[data-in-view="true"] .institutional-landing-hero-emblem.is-visible .institutional-landing-hero-emblem-float.is-floating {
+  animation-play-state: running;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mascot-handoff-logos .institutional-landing-hero-emblem-parallax,
+  .mascot-handoff-logos .institutional-landing-hero-emblem-float {
+    animation: none !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+}

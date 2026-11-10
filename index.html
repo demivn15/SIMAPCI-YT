@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <link rel="preload" href="./src/assets/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="./src/assets/fonts/source-sans-3-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <script>
+      (() => {
+        const root = document.documentElement;
+        const introKey = 'simapc-institutional-intro-started';
+        let signedIn = false;
+        let seen = false;
+        try {
+          signedIn = Boolean(localStorage.getItem('red_papers_current_user_v1'));
+          seen = sessionStorage.getItem(introKey) === 'started';
+        } catch { /* Continue with the first-visit welcome when storage is unavailable. */ }
+        if (signedIn) {
+          root.dataset.simapcStartup = 'portal';
+          window.__SIMAPC_STARTUP_END_AT = performance.now();
+          return;
+        }
+        if (seen || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          root.dataset.simapcIntroSkipped = 'true';
+          root.dataset.simapcStartup = 'welcome-pending';
+          window.__SIMAPC_STARTUP_END_AT = performance.now();
+          return;
+        }
+        try { sessionStorage.setItem(introKey, 'started'); } catch { /* The page still runs without session storage. */ }
+        root.dataset.simapcStartup = 'intro';
+        // Identifies the startup shell to React; its visible deadline is set below.
+        window.__SIMAPC_STARTUP_END_AT = performance.now() + 800;
+      })();
+    </script>
+    <style>
+      html, body { font-family: var(--font-body, "Source Sans 3", Arial, sans-serif); }
+      *, *::before, *::after { font-family: inherit; }
+      #simapc-startup { position:fixed; inset:0; z-index:1000; overflow:hidden; background:#faf9f6; color:#252321; font-family:var(--font-body, "Source Sans 3", Arial, sans-serif); }
+      #simapc-startup[hidden], html[data-simapc-startup="portal"] #simapc-startup { display:none; }
+      #simapc-startup-header { position:absolute; z-index:2; inset:0 0 auto; height:86px; display:grid; place-items:center; background:#24618e; }
+      #simapc-startup-header img { display:block; width:180px; max-height:62px; height:auto; object-fit:contain; filter:brightness(0) invert(1); opacity:0; transform:translateY(42px) scale(.64); }
+      html[data-simapc-startup="intro"] #simapc-startup-header img { animation:simapc-startup-logo 200ms cubic-bezier(.22,1,.36,1) 600ms forwards; }
+      html[data-simapc-startup="welcome"] #simapc-startup-header { z-index:4; }
+      html[data-simapc-startup="welcome"] #simapc-startup-header img { opacity:1; transform:translateY(0) scale(1); }
+      #simapc-startup-hero { position:absolute; inset:86px 0 0; display:flex; align-items:center; padding:72px max(24px,calc((100vw - 1320px)/2)) 88px; opacity:0; transition:opacity 350ms cubic-bezier(.22,1,.36,1); }
+      html[data-simapc-startup="welcome"] #simapc-startup-hero { opacity:1; }
+      #simapc-startup-copy { position:relative; z-index:1; width:min(790px,62vw); }
+      #simapc-startup-eyebrow { display:none; }
+      #simapc-startup-title { margin:0; font-family:var(--font-display, "Bricolage Grotesque", Arial, sans-serif); font-size:clamp(64px,8vw,120px); font-weight:800; letter-spacing:-.025em; line-height:.98; text-transform:uppercase; }
+      #simapc-startup-title span { display:block; }
+      #simapc-startup-title span:last-child { color:#252321; }
+      #simapc-startup-subtitle { max-width:720px; margin:28px 0 0; color:#4a5056; font-size:clamp(20px,2.1vw,30px); line-height:1.55; }
+      #simapc-startup-link { display:inline-flex; align-items:center; gap:18px; margin-top:34px; min-height:48px; color:#174e78; font-size:17px; font-weight:750; text-decoration:none; }
+      #simapc-startup-link span { display:none; }
+      #simapc-startup-logos { position:absolute; z-index:0; inset:0; overflow:hidden; pointer-events:none; }
+      #simapc-startup-logos img { position:absolute; display:block; width:clamp(120px,14vw,200px); height:auto; aspect-ratio:1; object-fit:contain; opacity:0; transform:translate(-50%,-50%); mix-blend-mode:multiply; }
+      html[data-simapc-startup="welcome"] #simapc-startup-logos img { opacity:.32; animation:simapc-startup-float 6.5s cubic-bezier(.22,1,.36,1) infinite; }
+      #simapc-startup-logos img:nth-child(1) { left:68%; top:18%; }
+      #simapc-startup-logos img:nth-child(2) { left:85%; top:20%; animation-delay:-1s; }
+      #simapc-startup-logos img:nth-child(3) { left:70%; top:44%; animation-delay:-2s; }
+      #simapc-startup-logos img:nth-child(4) { left:86%; top:48%; animation-delay:-3s; }
+      #simapc-startup-logos img:nth-child(5) { left:64%; top:72%; animation-delay:-4s; }
+      #simapc-startup-logos img:nth-child(6) { left:83%; top:75%; animation-delay:-5s; }
+      #simapc-startup-logos img:nth-child(7) { left:93%; top:91%; animation-delay:-6s; }
+      #simapc-startup-curtain { position:absolute; z-index:3; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:24px; overflow:hidden; background:#24618e; color:#fff; font-family:var(--font-display, "Bricolage Grotesque", Arial, sans-serif); font-size:clamp(27px,5vw,54px); font-weight:800; letter-spacing:.02em; line-height:1.05; text-align:center; transition:transform 600ms cubic-bezier(.22,1,.36,1); }
+      html[data-simapc-intro-skipped="true"] #simapc-startup-curtain { display:none; }
+      #simapc-startup-curtain span { opacity:0; transform:translateY(14px); animation:simapc-startup-word 200ms cubic-bezier(.22,1,.36,1) forwards; }
+      #simapc-startup-curtain span:nth-child(2) { animation-delay:180ms; }
+      #simapc-startup-curtain small { margin-top:12px; font:600 12px/1 var(--font-body, "Source Sans 3", Arial, sans-serif); letter-spacing:.08em; opacity:0; animation:simapc-startup-word 200ms cubic-bezier(.22,1,.36,1) 370ms forwards; }
+      html[data-simapc-startup="welcome"] #simapc-startup-curtain { transform:translateY(-100%); }
+      html[data-simapc-startup="welcome-pending"] #simapc-startup-curtain span,
+      html[data-simapc-startup="welcome-pending"] #simapc-startup-curtain small { opacity:0; transition:opacity 250ms cubic-bezier(.22,1,.36,1); }
+      html[data-simapc-startup="welcome"] #simapc-startup-curtain span,
+      html[data-simapc-startup="welcome"] #simapc-startup-curtain small { opacity:0; transition:opacity 350ms cubic-bezier(.22,1,.36,1); }
+      #simapc-startup.is-leaving { opacity:0; pointer-events:none; transition:opacity 250ms cubic-bezier(.22,1,.36,1); }
+      @keyframes simapc-startup-word { to { opacity:1; transform:translateY(0); } }
+      @keyframes simapc-startup-logo { 0% { opacity:0; transform:translateY(42px) scale(.64); } 100% { opacity:1; transform:translateY(0) scale(1); } }
+      @keyframes simapc-startup-float { 0%,100% { translate:0 0; } 50% { translate:0 -7px; } }
+      @media (max-width:1024px) {
+        #simapc-startup-header { height:64px; }
+        #simapc-startup-header img { width:150px; max-height:48px; }
+        #simapc-startup-hero { inset:64px 0 0; align-items:stretch; flex-direction:column; justify-content:flex-start; padding:26px max(20px,env(safe-area-inset-left)) 12px; }
+        #simapc-startup-copy { flex:0 0 auto; }
+        #simapc-startup-copy { width:100%; }
+        #simapc-startup-eyebrow { font-size:11px; letter-spacing:.12em; margin-bottom:18px; }
+        #simapc-startup-title { font-size:clamp(40px,10.8vw,76px); letter-spacing:-.01em; line-height:.98; }
+        #simapc-startup-subtitle { margin:22px 0 16px; font-size:16px; line-height:1.45; }
+        #simapc-startup-link { margin-top:4px; font-size:16px; }
+        #simapc-startup-logos { position:relative; inset:auto; display:grid; width:calc(100% + 40px); flex:1 1 auto; min-height:0; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(4,minmax(0,1fr)); place-items:start center; margin:48px -20px 0; overflow:hidden; }
+        #simapc-startup-logos img { position:relative; width:74px; height:74px; opacity:0; transform:none; }
+        #simapc-startup-logos img:nth-child(n) { left:auto; top:auto; }
+        #simapc-startup-logos img:nth-child(1) { grid-column:1; grid-row:1; }
+        #simapc-startup-logos img:nth-child(2) { grid-column:2; grid-row:1; }
+        #simapc-startup-logos img:nth-child(3) { grid-column:1; grid-row:2; }
+        #simapc-startup-logos img:nth-child(4) { grid-column:2; grid-row:2; }
+        #simapc-startup-logos img:nth-child(5) { grid-column:1; grid-row:3; }
+        #simapc-startup-logos img:nth-child(6) { grid-column:2; grid-row:3; }
+        #simapc-startup-logos img:nth-child(7) { grid-column:1 / -1; grid-row:4; }
+        html[data-simapc-startup="welcome"] #simapc-startup-logos img { opacity:.68; }
+      html[data-simapc-startup="welcome"] #simapc-startup-curtain { transform:translateY(-100%); }
+      }
+      @media (max-width:380px) {
+        #simapc-startup-hero { padding-top:22px; }
+        #simapc-startup-title { font-size:40px; }
+        #simapc-startup-subtitle { font-size:15px; }
+        #simapc-startup-curtain { font-size:27px; }
+      }
+      @media (max-width:760px) {
+        #simapc-startup-hero { padding-top:26px; }
+        #simapc-startup-title { font-size:clamp(30px,9.8vw,56px); letter-spacing:-.035em; line-height:1.02; }
+        #simapc-startup-title span { padding:.05em .05em .1em 0; }
+        #simapc-startup-subtitle { margin:18px 0 16px; font-size:16px; line-height:1.5; }
+      }
+      @media (prefers-reduced-motion:reduce) {
+        #simapc-startup-curtain, #simapc-startup-header img, #simapc-startup-logos img { animation:none!important; transition:none!important; }
+        html[data-simapc-startup="intro"] #simapc-startup { visibility:hidden; }
+        html[data-simapc-startup="welcome"] #simapc-startup-curtain { transform:translateY(-100%); }
+      }
+    </style>
+    <link rel="preload" as="image" href="%BASE_URL%logos/ecaa.webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="%BASE_URL%logos/ecbi.webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="%BASE_URL%logos/ecfn.webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="%BASE_URL%logos/ectea.webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="%BASE_URL%logos/ecmc.webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="%BASE_URL%logos/ecqi.webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="%BASE_URL%logos/ytlc.webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="%BASE_URL%mascot-optimized/base.webp" fetchpriority="low" />
+    <link rel="preload" as="image" href="%BASE_URL%mascot-optimized/ecaa.webp" fetchpriority="low" />
+    <title>SIMAPC - Producción Científica · Universidad Yachay Tech</title>
+    <meta name="description" content="Sistema de Información, Monitoreo y Administración de la Producción Científica de las escuelas de la Universidad Yachay Tech." />
+    <meta property="og:title" content="SIMAPC - Producción Científica · Universidad Yachay Tech" />
+    <meta property="og:description" content="Sistema de Información, Monitoreo y Administración de la Producción Científica de las escuelas de la Universidad Yachay Tech." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <div id="simapc-startup" aria-live="polite">
+      <header id="simapc-startup-header"><img src="%BASE_URL%assets/yachay-logo-clean.svg" width="731" height="252" alt="Universidad Yachay Tech" fetchpriority="low" /></header>
+      <section id="simapc-startup-hero" aria-label="Bienvenida a SIMAPC">
+        <div id="simapc-startup-copy">
+          <p id="simapc-startup-eyebrow">UNIVERSIDAD YACHAY TECH · SIMAPC</p>
+          <h1 id="simapc-startup-title"><span>¡BIENVENIDOS!</span><span>SIMAPC</span></h1>
+          <p id="simapc-startup-subtitle">La producción científica y la comunidad investigadora de Yachay Tech, en un solo lugar.</p>
+          <a id="simapc-startup-link" href="#escuelas">Explora nuestras escuelas <span aria-hidden="true">↓</span></a>
+        </div>
+        <div id="simapc-startup-logos" aria-hidden="true">
+          <img src="%BASE_URL%logos/ecaa.webp" width="224" height="224" alt="" />
+          <img src="%BASE_URL%logos/ecbi.webp" width="184" height="184" alt="" />
+          <img src="%BASE_URL%logos/ecfn.webp" width="220" height="220" alt="" />
+          <img src="%BASE_URL%logos/ectea.webp" width="204" height="204" alt="" />
+          <img src="%BASE_URL%logos/ecmc.webp" width="204" height="204" alt="" />
+          <img src="%BASE_URL%logos/ecqi.webp" width="190" height="190" alt="" />
+          <img src="%BASE_URL%logos/ytlc.webp" width="176" height="176" alt="" />
+        </div>
+      </section>
+      <div id="simapc-startup-curtain" aria-hidden="true"><span>UNIVERSIDAD</span><span>YACHAY TECH</span><small>SIMAPC</small></div>
+    </div>
+    <script>
+      (() => {
+        const root = document.documentElement;
+        if (root.dataset.simapcStartup === 'intro') {
+          // Start the clock after the mounted curtain has had a painted frame,
+          // rather than spending its visible duration waiting for styles to load.
+          window.__SIMAPC_STARTUP_PAINTED = new Promise((resolve) => {
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+              window.__SIMAPC_STARTUP_END_AT = performance.now() + 800;
+              window.setTimeout(() => {
+                root.dataset.simapcStartup = root.dataset.simapcLogosReady === 'true' ? 'welcome' : 'welcome-pending';
+              }, 800);
+              resolve();
+            }));
+          });
+        }
+        const logos = Array.from(document.querySelectorAll('#simapc-startup-logos img'));
+        Promise.all(logos.map((image) => image.decode())).then(() => {
+          root.dataset.simapcLogosReady = 'true';
+          if (root.dataset.simapcStartup === 'welcome-pending') root.dataset.simapcStartup = 'welcome';
+        }).catch(() => { /* Keep the welcome covered until all seven critical marks decode. */ });
+      })();
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
