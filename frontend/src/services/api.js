@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 export const api = axios.create({
-    baseURL: 'http://localhost:8000/api/v1', // FastAPI backend URL
+    // FastAPI backend URL. En el despliegue se define VITE_API_URL; en local se usa el valor por defecto
+    baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api/v1',
     withCredentials: true, // CRITICAL: Sends and receives cookies cross-origin
     headers: {
         'Content-Type': 'application/json',

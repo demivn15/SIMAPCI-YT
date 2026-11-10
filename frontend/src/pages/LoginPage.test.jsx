@@ -68,7 +68,7 @@ describe('T-HU01-06 · confirmación del registro en el primer acceso (CA01)', (
 
     await iniciarSesion(usuario);
 
-    expect(await screen.findByText(/Welcome back/)).toBeInTheDocument();
+    expect(await screen.findByText(/Hola, María García/)).toBeInTheDocument();
     expect(screen.queryByText(ACCOUNT_CREATED_MESSAGE)).not.toBeInTheDocument();
   });
 });
