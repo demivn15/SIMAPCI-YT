@@ -5,8 +5,11 @@ Description: Hold security guards. Protect endpoints.
 """
 
 from app.core.security import decode_access_token
+from app.db.session import SessionLocal  # Adjust if your session factory is named differently
 from fastapi import HTTPException, status, Depends
 from fastapi.security import APIKeyCookie
+from sqlalchemy.orm import Session
+from typing import Generator
 
 # Tells FastAPI to automatically extract the "access_token" cookie from requests
 cookie_scheme = APIKeyCookie(name = "access_token", auto_error = False)
@@ -45,3 +48,14 @@ def get_current_professor(token: str | None = Depends(cookie_scheme)) -> dict:
         "email": payload.get("email"),
         "role": payload.get("role")
     }
+
+def get_db() -> Generator[Session, None, None]:
+    """
+    Dependency that creates a new SQLAlchemy database session for each request
+    and closes it when the request is finished.
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

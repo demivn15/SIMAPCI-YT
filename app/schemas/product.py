@@ -80,3 +80,13 @@ class ProductCreate(BaseModel):
             self.project_code = None
             self.project_status = None
         return self
+
+class ProductResponse(ProductCreate):
+    """
+    Schema for returning product data including database ID and ownership.
+    """
+    id: int
+    user_id: int
+
+    class Config:
+        from_attributes = True
