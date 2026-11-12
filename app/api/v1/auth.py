@@ -6,7 +6,6 @@ Description: Expose login endpoint; receive user credentials, run them through L
 
 import re
 from app.api.deps import get_current_professor
-from app.api.deps import get_current_account
 from app.core.config import settings
 from app.core.security import create_access_token
 from app.db.session import get_db
