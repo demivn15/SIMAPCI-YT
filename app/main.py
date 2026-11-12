@@ -9,6 +9,8 @@ from app.api.v1.integrations import router as integrations_router
 from app.core.config import settings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.api.v1.products import router as products_router
+
 
 app = FastAPI(title="Institutional Professor Portal API")
 
@@ -24,6 +26,7 @@ app.add_middleware(
 # Include authentication routes
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(integrations_router, prefix="/api/v1")
+app.include_router(products_router, prefix="/api/v1")
 
 @app.get("/")
 def health_check():
