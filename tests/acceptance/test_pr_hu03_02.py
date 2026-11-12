@@ -13,7 +13,7 @@ frontend/src/pages/RegisterProductPage.test.jsx.
 
 from urllib.parse import quote
 
-import httpx
+import httpx2
 import pytest
 from fastapi.testclient import TestClient
 
@@ -38,8 +38,8 @@ def profesor(monkeypatch):
 
 
 CAIDAS = {
-    "tiempo de espera agotado": lanza(httpx.ReadTimeout),
-    "sin conexión": lanza(httpx.ConnectError),
+    "tiempo de espera agotado": lanza(httpx2.ReadTimeout),
+    "sin conexión": lanza(httpx2.ConnectError),
     "error 500": estado(500),
     "error 503": estado(503),
     "demasiadas peticiones 429": estado(429),
@@ -59,7 +59,7 @@ def test_cp01_ambos_servicios_caidos_se_informa_con_503(profesor, falla):
 
 def test_cp02_mensaje_de_caida_no_expone_detalles_internos(profesor):
     """CP-02 · CA08: el mensaje no muestra URLs, proveedores ni trazas internas."""
-    instalar_red(RedSimulada(crossref=lanza(httpx.ConnectError), openalex=estado(500)))
+    instalar_red(RedSimulada(crossref=lanza(httpx2.ConnectError), openalex=estado(500)))
 
     detalle = profesor.get(URL).json()["detail"].lower()
 
@@ -68,7 +68,7 @@ def test_cp02_mensaje_de_caida_no_expone_detalles_internos(profesor):
 
 def test_cp03_una_caida_no_se_confunde_con_doi_inexistente(profesor):
     """CP-03 · CA08: Crossref caído y OpenAlex sin datos -> 503 (no se afirma que el DOI no exista)."""
-    instalar_red(RedSimulada(crossref=lanza(httpx.ReadTimeout), openalex=estado(404)))
+    instalar_red(RedSimulada(crossref=lanza(httpx2.ReadTimeout), openalex=estado(404)))
 
     assert profesor.get(URL).status_code == 503
 
@@ -85,7 +85,7 @@ def test_cp04_doi_sin_datos_se_informa_con_404(profesor):
 
 def test_cp05_respuesta_corrupta_se_trata_como_servicio_no_disponible(profesor):
     """CP-05 · CA08: el servicio responde algo que no es JSON -> 503, sin error interno."""
-    no_json = lambda request: httpx.Response(200, text="<html>Mantenimiento</html>")  # noqa: E731
+    no_json = lambda request: httpx2.Response(200, text="<html>Mantenimiento</html>")  # noqa: E731
     instalar_red(RedSimulada(crossref=no_json, openalex=no_json))
 
     assert profesor.get(URL).status_code == 503

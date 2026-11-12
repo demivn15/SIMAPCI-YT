@@ -8,7 +8,7 @@ Un ORCID identifica a una PERSONA: el adaptador devuelve la lista de sus obras.
 La importación de esas obras como productos corresponde a HU12.
 """
 
-import httpx
+import httpx2
 from app.core.config import settings
 from app.integrations.base import OrcidWork, clean_text, get_json
 from app.utils.identifiers import is_valid_doi, normalize_doi
@@ -50,7 +50,7 @@ def _to_work(summary: dict) -> OrcidWork | None:
 
 
 class OrcidClient:
-    def __init__(self, client: httpx.Client, base_url: str | None = None):
+    def __init__(self, client: httpx2.Client, base_url: str | None = None):
         self._client = client
         self._base_url = (base_url or settings.ORCID_API_URL).rstrip("/")
 

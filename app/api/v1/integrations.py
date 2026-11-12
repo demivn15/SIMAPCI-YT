@@ -10,7 +10,7 @@ abierto hacia Crossref, OpenAlex y ORCID para cualquiera.
 
 from collections.abc import Iterator
 
-import httpx
+import httpx2
 from app.api.deps import get_current_professor
 from app.integrations.base import (
     ExternalNotFoundError,
@@ -51,16 +51,16 @@ class OrcidWorkOut(BaseModel):
 
 # --- Dependencias (las pruebas las reemplazan por clientes simulados) -----------
 
-def get_http_client() -> Iterator[httpx.Client]:
+def get_http_client() -> Iterator[httpx2.Client]:
     with build_http_client() as client:
         yield client
 
 
-def get_doi_lookup_service(client: httpx.Client = Depends(get_http_client)) -> DoiLookupService:
+def get_doi_lookup_service(client: httpx2.Client = Depends(get_http_client)) -> DoiLookupService:
     return DoiLookupService([CrossrefClient(client), OpenAlexClient(client)])
 
 
-def get_orcid_client(client: httpx.Client = Depends(get_http_client)) -> OrcidClient:
+def get_orcid_client(client: httpx2.Client = Depends(get_http_client)) -> OrcidClient:
     return OrcidClient(client)
 
 

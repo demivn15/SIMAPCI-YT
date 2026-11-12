@@ -8,7 +8,7 @@ Documentación: https://api.crossref.org/swagger-ui/index.html
 import re
 from urllib.parse import quote
 
-import httpx
+import httpx2
 from app.core.config import settings
 from app.integrations.base import DoiMetadata, clean_text, first, get_json
 
@@ -38,7 +38,7 @@ def _authors(message: dict) -> list[str]:
 
 
 class CrossrefClient:
-    def __init__(self, client: httpx.Client, base_url: str | None = None):
+    def __init__(self, client: httpx2.Client, base_url: str | None = None):
         self._client = client
         self._base_url = (base_url or settings.CROSSREF_API_URL).rstrip("/")
 

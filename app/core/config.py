@@ -48,6 +48,8 @@ class Settings(BaseSettings):
     # Authorization Filter for Professors
     LDAP_PROFESSOR_GROUP_CN: str # Common Name of the professor group
 
+    COOKIE_SECURE: bool
+
     # Tell Pydantic to load variables from a local .env file if present
     model_config = SettingsConfigDict(
         env_file = ".env",

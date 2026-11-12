@@ -14,7 +14,7 @@ import logging
 import re
 from dataclasses import dataclass, field
 
-import httpx
+import httpx2
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ class OrcidWork:
 
 # --- Cliente HTTP ---------------------------------------------------------------
 
-def build_http_client() -> httpx.Client:
+def build_http_client() -> httpx2.Client:
     """Cliente HTTP con tiempo de espera y una identificación del sistema.
 
     Crossref y OpenAlex piden que cada aplicación se identifique en el User-Agent
@@ -67,21 +67,21 @@ def build_http_client() -> httpx.Client:
     contact = settings.INTEGRATIONS_CONTACT_EMAIL
     user_agent = "SIMAPCI/1.0 (https://github.com/demivn15/SIMAPCI-YT"
     user_agent += f"; mailto:{contact})" if contact else ")"
-    return httpx.Client(
+    return httpx2.Client(
         timeout=settings.INTEGRATIONS_TIMEOUT_SECONDS,
         headers={"User-Agent": user_agent, "Accept": "application/json"},
         follow_redirects=True,
     )
 
 
-def get_json(client: httpx.Client, url: str, service: str, **kwargs) -> dict:
+def get_json(client: httpx2.Client, url: str, service: str, **kwargs) -> dict:
     """GET que traduce cualquier falla de red o HTTP a los dos errores del adaptador."""
     try:
         response = client.get(url, **kwargs)
-    except httpx.TimeoutException as exc:
+    except httpx2.TimeoutException as exc:
         logger.warning("%s no respondió a tiempo: %s", service, url)
         raise ExternalServiceUnavailableError(f"{service}: tiempo de espera agotado") from exc
-    except httpx.HTTPError as exc:
+    except httpx2.HTTPError as exc:
         logger.warning("%s no disponible (%s): %s", service, type(exc).__name__, url)
         raise ExternalServiceUnavailableError(f"{service}: error de conexión") from exc
 

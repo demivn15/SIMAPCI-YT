@@ -1,7 +1,7 @@
 alembic>=1.13
 cryptography
 fastapi
-httpx
+httpx2
 ldap3
 pydantic-settings
 PyJWT
