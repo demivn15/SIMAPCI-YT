@@ -1,74 +1,58 @@
-import React, { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
+/**
+ * File: LoginPage.jsx
+ * Description: Login screen providing institutional access and public platform information (CA06).
+ */
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
-import { getLoginErrorMessage } from '../utils/loginMessages';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const { isAuthenticated } = useAuth();
+  const { refetch } = useAuth();
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setIsLoading(true);
+    setLoading(true);
 
     try {
-      // Send credentials to FastAPI backend
-      const { data } = await api.post('/auth/login', { username, password });
-
-      // Vuelve a consultar /auth/me para que AuthContext tenga al usuario antes de
-      // navegar; sin esto, ProtectedRoute aún ve "sin sesión" y regresa al login
-      await queryClient.invalidateQueries({ queryKey: ['authUser'] });
-
-      // T-HU01-06 (PGPCECMC-23), CA01: en el primer acceso el backend crea la cuenta
-      // (account_created = true) y el panel muestra la confirmación del registro
-      navigate('/dashboard', { replace: true, state: { accountCreated: data?.account_created === true } });
+      await api.post('/auth/login', { username, password });
+      await refetch();
+      navigate('/dashboard', { replace: true });
     } catch (err) {
-      // Mensaje propio según el código HTTP; no se muestra el texto del backend (CA05)
-      setError(getLoginErrorMessage(err));
+      setError(err.response?.data?.detail || 'An error occurred during login. Please try again.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
-
-  // Si ya hay una sesión activa, no tiene sentido mostrar el formulario
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900">
-          Portal institucional de profesores
+        <h2 className="text-center text-3xl font-extrabold text-slate-900">
+          SIMAPCI-YT
         </h2>
         <p className="mt-2 text-center text-sm text-slate-600">
-          Inicia sesión con tus credenciales institucionales
+          Scientific Production Management System for the School of Mathematical and Computational Sciences (ECMC) - Yachay Tech.
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-slate-200">
-          
-          {/* Error Alert */}
           {error && (
-            <div className="mb-4 bg-red-50 border-l-4 border-red-400 p-4 text-sm text-red-700" role="alert">
-              <p>{error}</p>
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
+              {error}
             </div>
           )}
 
-          <form className="space-y-6" onSubmit={handleLogin}>
+          <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Usuario institucional
-              </label>
+              <label className="block text-sm font-medium text-slate-700">Institutional Username</label>
               <div className="mt-1">
                 <input
                   type="text"
@@ -76,15 +60,13 @@ export default function LoginPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="p. ej., jperez"
+                  placeholder="e.g., mgarcia"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Contraseña
-              </label>
+              <label className="block text-sm font-medium text-slate-700">Password</label>
               <div className="mt-1">
                 <input
                   type="password"
@@ -100,10 +82,10 @@ export default function LoginPage() {
             <div>
               <button
                 type="submit"
-                disabled={isLoading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors"
+                disabled={loading}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
               >
-                {isLoading ? 'Verificando credenciales...' : 'Iniciar sesión'}
+                {loading ? 'Authenticating...' : 'Sign In'}
               </button>
             </div>
           </form>
