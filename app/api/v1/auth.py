@@ -10,6 +10,7 @@ from app.api.deps import get_current_account
 from app.core.config import settings
 from app.core.security import create_access_token
 from app.db.session import get_db
+from app.models.user import User
 from app.services.ldap_service import LDAPService
 from app.services.user_service import (
     EmailAlreadyRegisteredError,
