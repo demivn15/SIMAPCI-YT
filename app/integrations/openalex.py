@@ -5,7 +5,7 @@ Description: Adaptador de OpenAlex (respaldo para DOI) - T-HU03-02 (PGPCECMC-33)
 Documentación: https://docs.openalex.org/api-entities/works
 """
 
-import httpx
+import httpx2
 from app.core.config import settings
 from app.integrations.base import DoiMetadata, clean_text, get_json
 
@@ -22,7 +22,7 @@ def rebuild_abstract(inverted_index: dict | None) -> str | None:
 
 
 class OpenAlexClient:
-    def __init__(self, client: httpx.Client, base_url: str | None = None):
+    def __init__(self, client: httpx2.Client, base_url: str | None = None):
         self._client = client
         self._base_url = (base_url or settings.OPENALEX_API_URL).rstrip("/")
 

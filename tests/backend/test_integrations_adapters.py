@@ -1,9 +1,9 @@
 """
 Pruebas de los adaptadores Crossref, OpenAlex y ORCID y del respaldo (PGPCECMC-33).
-httpx.MockTransport reemplaza la red: cada prueba decide qué responde cada servicio.
+httpx2.MockTransport reemplaza la red: cada prueba decide qué responde cada servicio.
 """
 
-import httpx
+import httpx2
 import pytest
 
 from app.integrations.base import ExternalNotFoundError, ExternalServiceUnavailableError, clean_text
@@ -26,9 +26,9 @@ ORCID_API = "https://pub.orcid.test/v3.0"
 
 
 def make_client(crossref=None, openalex=None, orcid=None, calls=None):
-    """Cliente HTTP falso. Cada argumento es un httpx.Response o una excepción."""
+    """Cliente HTTP falso. Cada argumento es un httpx2.Response o una excepción."""
 
-    def handler(request: httpx.Request):
+    def handler(request: httpx2.Request):
         host = request.url.host
         if calls is not None:
             calls.append(request)
@@ -37,18 +37,18 @@ def make_client(crossref=None, openalex=None, orcid=None, calls=None):
             raise result
         return result
 
-    return httpx.Client(transport=httpx.MockTransport(handler))
+    return httpx2.Client(transport=httpx2.MockTransport(handler))
 
 
 def lookup_service(client):
     return DoiLookupService([CrossrefClient(client, CROSSREF), OpenAlexClient(client, OPENALEX)])
 
 
-OK_CROSSREF = httpx.Response(200, json=CROSSREF_WORK)
-OK_OPENALEX = httpx.Response(200, json=OPENALEX_WORK)
-NOT_FOUND = httpx.Response(404, text="Resource not found.")
-SERVER_ERROR = httpx.Response(503, text="Service Unavailable")
-TIMEOUT = httpx.ReadTimeout("timeout")
+OK_CROSSREF = httpx2.Response(200, json=CROSSREF_WORK)
+OK_OPENALEX = httpx2.Response(200, json=OPENALEX_WORK)
+NOT_FOUND = httpx2.Response(404, text="Resource not found.")
+SERVER_ERROR = httpx2.Response(503, text="Service Unavailable")
+TIMEOUT = httpx2.ReadTimeout("timeout")
 
 
 # --- Crossref ----------------------------------------------------------------
@@ -68,7 +68,7 @@ def test_crossref_maps_metadata_to_internal_format():
 
 
 def test_crossref_tolerates_missing_fields():
-    metadata = CrossrefClient(make_client(crossref=httpx.Response(200, json=CROSSREF_WORK_MINIMAL)), CROSSREF).fetch(DOI)
+    metadata = CrossrefClient(make_client(crossref=httpx2.Response(200, json=CROSSREF_WORK_MINIMAL)), CROSSREF).fetch(DOI)
     assert metadata.title == ""
     assert metadata.authors == []
     assert metadata.year == 2021
@@ -80,10 +80,10 @@ def test_crossref_tolerates_missing_fields():
     [
         (NOT_FOUND, ExternalNotFoundError),
         (SERVER_ERROR, ExternalServiceUnavailableError),
-        (httpx.Response(429, text="Too Many Requests"), ExternalServiceUnavailableError),
-        (httpx.Response(200, text="<html>not json</html>"), ExternalServiceUnavailableError),
+        (httpx2.Response(429, text="Too Many Requests"), ExternalServiceUnavailableError),
+        (httpx2.Response(200, text="<html>not json</html>"), ExternalServiceUnavailableError),
         (TIMEOUT, ExternalServiceUnavailableError),
-        (httpx.ConnectError("no route"), ExternalServiceUnavailableError),
+        (httpx2.ConnectError("no route"), ExternalServiceUnavailableError),
     ],
 )
 def test_crossref_translates_failures(response, error):
@@ -148,7 +148,7 @@ def test_lookup_unavailable_when_a_provider_could_not_answer(crossref, openalex)
 
 def test_orcid_lists_works_once_per_group_newest_first():
     calls = []
-    works = OrcidClient(make_client(orcid=httpx.Response(200, json=ORCID_WORKS), calls=calls), ORCID_API).fetch_works(ORCID)
+    works = OrcidClient(make_client(orcid=httpx2.Response(200, json=ORCID_WORKS), calls=calls), ORCID_API).fetch_works(ORCID)
 
     assert [w.title for w in works] == ["Secure Aggregation for Federated Learning", "Older paper", "Undated report"]
     newest = works[0]
