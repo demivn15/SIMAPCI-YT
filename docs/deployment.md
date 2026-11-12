@@ -11,7 +11,7 @@ Para desplegarlo: Render → New → Blueprint → seleccionar este repositorio 
 - **El login depende de un servidor LDAP.** El LDAP de pruebas (`docker-compose.yml`, `rroemhild/test-openldap`) corre solo en local. Los planes gratuitos no incluyen un LDAP ni permiten levantar contenedores adicionales, así que en Render se desplegaría la API, pero `POST /api/v1/auth/login` devolvería error 5xx/503 hasta apuntar `LDAP_SERVER_URI` a un directorio accesible por internet.
 - Lo que sí funciona sin LDAP: `GET /` (health check) y la validación de entrada (422).
 - El plan gratuito de Render duerme el servicio tras inactividad (primer request lento) y `secure=False` en la cookie debe pasar a `True` al servir por HTTPS.
-- El frontend estático ya se despliega en GitHub Pages con `.github/workflows/pages.yml`.
+- El prototipo estático RED PAPERS se despliega en GitHub Pages desde la rama `prototype` (`.github/workflows/pages.yml` de esa rama).
 
 ## Evidencia de CI
 

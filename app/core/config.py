@@ -18,6 +18,22 @@ class Settings(BaseSettings):
         default=["http://localhost:5173", "http://localhost:3000"]
     )
 
+    # Database Settings (MySQL 8, utf8mb4). La URL real va en .env; este valor
+    # por defecto apunta al contenedor MySQL de docker-compose.yml.
+    DATABASE_URL: str = "mysql+pymysql://simapci:simapci@localhost:3306/simapci?charset=utf8mb4"
+    # Imprime el SQL generado en consola (solo para depurar en local)
+    DATABASE_ECHO: bool = False
+
+    # External integrations (T-HU03-02, PGPCECMC-33)
+    CROSSREF_API_URL: str = "https://api.crossref.org"
+    OPENALEX_API_URL: str = "https://api.openalex.org"
+    ORCID_API_URL: str = "https://pub.orcid.org/v3.0"
+    # Correo de contacto para el "polite pool" de Crossref y OpenAlex (atienden
+    # más rápido y con menos bloqueos a quien se identifica). Opcional.
+    INTEGRATIONS_CONTACT_EMAIL: str = ""
+    # Tiempo máximo de espera por servicio externo, en segundos
+    INTEGRATIONS_TIMEOUT_SECONDS: float = 5.0
+
     # LDAP Connection Settings
     LDAP_SERVER_URI: str # e.g., ldaps://ldap.institution.edu:636
     
@@ -31,6 +47,8 @@ class Settings(BaseSettings):
     
     # Authorization Filter for Professors
     LDAP_PROFESSOR_GROUP_CN: str # Common Name of the professor group
+
+    COOKIE_SECURE: bool
 
     # Tell Pydantic to load variables from a local .env file if present
     model_config = SettingsConfigDict(
