@@ -128,7 +128,7 @@ def logout(response: Response):
 @router.post("/refresh")
 def refresh_session(
     response: Response,
-    current_user: dict = Depends(get_current_account),
+    current_user: dict = Depends(get_current_professor),
     db: Session = Depends(get_db),
 ):
     """
