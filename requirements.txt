@@ -1,10 +1,12 @@
+PyJWT
 alembic>=1.13
+bcrypt
 cryptography
 fastapi
 httpx2
 ldap3
+passlib 
 pydantic-settings
-PyJWT
 pymysql>=1.1
 pytest
 python-dotenv
