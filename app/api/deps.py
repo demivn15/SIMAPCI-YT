@@ -36,6 +36,7 @@ def get_current_user(token: str | None = Depends(cookie_scheme)) -> dict:
 
     # Return user details payload to be injected into the route function
     return {
+        "user_id": payload.get("user_id"),
         "username": payload.get("sub"),
         "name": payload.get("name"),
         "email": payload.get("email"),
@@ -62,3 +63,28 @@ def require_roles(*allowed_roles: str):
 
 # Guard for professor-only (private) functions
 get_current_professor = require_roles("professor")
+
+def get_db() -> Generator[Session, None, None]:
+    """
+    Dependency that creates a new SQLAlchemy database session for each request
+    and closes it when the request is finished.
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+def require_roles(allowed_roles: List[str]) -> Callable:
+    """
+    Dependency factory that checks if the current user has one of the allowed roles.
+    """
+    def role_verifier(current_user: dict = Depends(get_current_user)) -> dict:
+        user_role = current_user.get("role")
+        if user_role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not enough permissions"
+            )
+        return current_user
+    return role_verifier

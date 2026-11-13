@@ -4,7 +4,7 @@ Author: Demian Viteri
 Description: Application Settings: app name, secret key, api-cors config, ldap config, variable-loading from .env file.
 """
 
-from pydantic import Field
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     
     # Service Account (Used by the backend to search for users/groups)
     LDAP_BIND_DN: str # e.g., cn=admin,dc=institution,dc=edu
-    LDAP_BIND_PASSWORD: str
+    LDAP_BIND_PASSWORD: SecretStr  # masked in repr()/logs; read with .get_secret_value()
 
     # Directory Structure
     LDAP_USER_BASE_DN: str # e.g., ou=people,dc=institution,dc=edu

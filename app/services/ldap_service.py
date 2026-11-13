@@ -8,6 +8,7 @@ from app.core.config import settings
 from fastapi import HTTPException, status
 from ldap3 import Server, Connection, ALL, SUBTREE
 from ldap3.core.exceptions import LDAPException, LDAPSocketOpenError
+from ldap3.utils.conv import escape_filter_chars
 
 class LDAPService:
     @staticmethod
@@ -22,7 +23,7 @@ class LDAPService:
             conn = Connection(
                 server,
                 user=settings.LDAP_BIND_DN,
-                password=settings.LDAP_BIND_PASSWORD,
+                password=settings.LDAP_BIND_PASSWORD.get_secret_value(),
                 auto_bind=True
             )
 
@@ -47,11 +48,17 @@ class LDAPService:
         Returns user details dictionary if successful, or None/raises an error if it fails.
         """
 
+        # Reject blank credentials up front: an empty password turns into an anonymous
+        # (unauthenticated) LDAP bind, which many servers accept as "success".
+        if not username or not username.strip() or not password:
+            return None
+
         try:
             # Step 1: Search for the user using the service account
             with cls._get_service_connection() as conn:
                 # Common filters: (uid={username}) for OpenLDAP or (sAMAccountName={username}) for Active Directory
-                search_filter = f"(uid={username})"
+                # The username is escaped so characters like * ( ) \ cannot alter the filter (LDAP injection).
+                search_filter = f"(uid={escape_filter_chars(username)})"
                 
                 conn.search(
                     search_base = settings.LDAP_USER_BASE_DN,
@@ -118,7 +125,7 @@ class LDAPService:
         try:
             with cls._get_service_connection() as conn:
                 # Search for the group object and check if the user is listed in its members
-                group_filter = f"(&(objectClass=group)(cn={settings.LDAP_PROFESSOR_GROUP_CN})(member={user_dn}))"
+                group_filter = f"(&(objectClass=group)(cn={escape_filter_chars(settings.LDAP_PROFESSOR_GROUP_CN)})(member={escape_filter_chars(user_dn)}))"
                 conn.search(
                     search_base = settings.LDAP_GROUP_BASE_DN,
                     search_filter = group_filter,
