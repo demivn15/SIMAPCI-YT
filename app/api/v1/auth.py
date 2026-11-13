@@ -88,12 +88,9 @@ def login(credentials: LoginRequest, response: Response, db: Session = Depends(g
     
     access_token = create_access_token(data = token_payload)
     
-<<<<<<< HEAD
     # 3. Set token in a secure HttpOnly cookie
     # secure ensures it only transmits over HTTPS (COOKIE_SECURE=true in production; false only for local http testing)
-=======
     # 4. Set token in a secure HttpOnly cookie
->>>>>>> main
     response.set_cookie(
         key = "access_token",
         value = access_token,

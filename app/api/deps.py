@@ -43,7 +43,6 @@ def get_current_user(token: str | None = Depends(cookie_scheme)) -> dict:
         "role": payload.get("role")
     }
 
-<<<<<<< HEAD
 def require_roles(*allowed_roles: str):
     """
     Dependency factory enforcing Role-Based Access Control (RBAC).
@@ -63,7 +62,6 @@ def require_roles(*allowed_roles: str):
 
 # Guard for professor-only (private) functions
 get_current_professor = require_roles("professor")
-=======
 def get_db() -> Generator[Session, None, None]:
     """
     Dependency that creates a new SQLAlchemy database session for each request
@@ -74,7 +72,6 @@ def get_db() -> Generator[Session, None, None]:
         yield db
     finally:
         db.close()
->>>>>>> main
 
 def require_roles(allowed_roles: List[str]) -> Callable:
     """
