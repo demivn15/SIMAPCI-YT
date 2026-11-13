@@ -3,9 +3,10 @@ File: product.py
 Description: Product creation schema and input validations (T-HU03-04, PGPCECMC-35).
 """
 
-from datetime import date
+import re
+from datetime import date, datetime
 from typing import Literal
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 MIN_YEAR = 1900
 RESEARCH_LINES = (
@@ -61,6 +62,17 @@ class ProductCreate(BaseModel):
             raise ValueError("Research line is not valid.")
         return value
 
+    @field_validator("doi")
+    @classmethod
+    def doi_in_canonical_form(cls, value: str | None) -> str | None:
+        # Misma regla que normalizeDoi() del frontend: sin "https://doi.org/" ni "doi:",
+        # en minúsculas. Así "10.1000/ABC" y "https://doi.org/10.1000/abc" son el mismo DOI.
+        if value is None:
+            return None
+        value = re.sub(r"^https?://(?:dx\.)?doi\.org/", "", value.strip().lower())
+        value = re.sub(r"^doi:\s*", "", value).rstrip("/")
+        return value or None
+
     @field_validator("abstract", "venue", "project_code")
     @classmethod
     def empty_as_none(cls, value: str | None) -> str | None:
@@ -81,12 +93,27 @@ class ProductCreate(BaseModel):
             self.project_status = None
         return self
 
-class ProductResponse(ProductCreate):
+class ProductResponse(BaseModel):
     """
-    Schema for returning product data including database ID and ownership.
+    Producto guardado, tal como queda en la base de datos (incluye dueño y estado).
+    No hereda las validaciones de entrada: lo que se lee de la BD no se vuelve a validar.
     """
-    id: int
-    user_id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    owner_id: str
+    school: str
+    status: str
+    type: str
+    title: str
+    authors: list[str]
+    year: int
+    research_line: str
+    abstract: str | None = None
+    doi: str | None = None
+    venue: str | None = None
+    project_code: str | None = None
+    project_status: str | None = None
+    created_at: datetime
+    updated_at: datetime
