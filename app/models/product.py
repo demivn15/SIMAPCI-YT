@@ -26,16 +26,17 @@ class Product(Base):
     type: Mapped[str] = mapped_column(String(20), nullable=False)
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     authors: Mapped[list[str]] = mapped_column(JSON, nullable=False)
-    year: Mapped[Integer] = mapped_column(Integer, nullable=False)
+    year: Mapped[int] = mapped_column(Integer, nullable=False)
     research_line: Mapped[str] = mapped_column(String(255), nullable=False)
     abstract: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Publications only fields
-    doi: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    # Único (los NULL no cuentan): un mismo DOI no puede registrarse dos veces (409)
+    doi: Mapped[str | None] = mapped_column(String(255), nullable=True, unique=True, index=True)
     venue: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Projects only fields
-    project_code: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    project_code: Mapped[str | None] = mapped_column(String(64), nullable=True, unique=True, index=True)
     project_status: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="cargado", server_default="cargado")

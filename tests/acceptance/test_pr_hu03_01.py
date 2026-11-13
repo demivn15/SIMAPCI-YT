@@ -8,9 +8,8 @@ Resultado esperado (Jira): los campos se precargan y el producto queda asociado 
 profesor con estado «cargado».
 
 Servicios simulados: directorio LDAP (sesión real) y red de Crossref/OpenAlex.
-Estado: la precarga (CA07) se puede probar; el guardado (CA09) está BLOQUEADO porque
-POST /api/v1/products todavía no existe (T-HU03-03, T-HU03-04 y T-HU03-05:
-PGPCECMC-34, 35 y 36, sin terminar).
+Estado: precarga (CA07) y guardado (CA09) cubiertos; POST /api/v1/products persiste el
+producto en la base de datos (T-HU03-05).
 """
 
 from urllib.parse import quote
@@ -94,7 +93,7 @@ PRODUCTO = {
     "title": "Secure Aggregation for Federated Learning & Edge Devices",
     "authors": ["María García", "Juan Pérez"],
     "year": 2023,
-    "research_line": "Ciencias de la computación",
+    "research_line": "Ciencia de datos",
     "abstract": None,
     "doi": DOI,
     "venue": "ACM CCS 2023",
@@ -103,15 +102,20 @@ PRODUCTO = {
 }
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="BLOQUEADA: POST /api/v1/products no existe en main (responde 404). Depende de "
-    "T-HU03-03/04/05 (PGPCECMC-34, 35 y 36, asignadas a Demian Viteri, en 'Tareas por hacer'). "
-    "El contrato lo define frontend/src/services/productService.js (201 con status 'cargado').",
-)
-def test_cp05_producto_confirmado_queda_asociado_con_estado_cargado(profesor):
-    """CP-05 · CA09: al guardar el producto precargado -> 201, estado «cargado», dueño = profesor."""
+def test_cp05_producto_confirmado_queda_asociado_con_estado_cargado(profesor, db_session):
+    """CP-05 · CA09: al guardar el producto precargado -> 201, estado «cargado», dueño = profesor
+    y el producto queda guardado en la base de datos."""
+    from app.models.product import Product
+    from app.models.user import User
+
     response = profesor.post("/api/v1/products", json=PRODUCTO)
 
     assert response.status_code == 201
-    assert response.json()["status"] == "cargado"
+    cuerpo = response.json()
+    assert cuerpo["status"] == "cargado"
+
+    dueno = db_session.query(User).filter_by(username=PROFESOR["uid"]).one()
+    assert cuerpo["owner_id"] == dueno.id
+    guardado = db_session.get(Product, cuerpo["id"])
+    assert guardado is not None
+    assert guardado.owner_id == dueno.id and guardado.doi == DOI.lower()
