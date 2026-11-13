@@ -10,6 +10,7 @@ from fastapi import HTTPException, status, Depends
 from fastapi.security import APIKeyCookie
 from sqlalchemy.orm import Session
 from typing import Generator
+from typing import Callable, List
 
 # Tells FastAPI to automatically extract the "access_token" cookie from requests
 cookie_scheme = APIKeyCookie(name = "access_token", auto_error = False)
@@ -73,3 +74,17 @@ def get_db() -> Generator[Session, None, None]:
         yield db
     finally:
         db.close()
+
+def require_roles(allowed_roles: List[str]) -> Callable:
+    """
+    Dependency factory that checks if the current user has one of the allowed roles.
+    """
+    def role_verifier(current_user: dict = Depends(get_current_user)) -> dict:
+        user_role = current_user.get("role")
+        if user_role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not enough permissions"
+            )
+        return current_user
+    return role_verifier
