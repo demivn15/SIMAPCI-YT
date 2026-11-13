@@ -28,8 +28,9 @@ export function AuthProvider({ children }) {
   // 2. Logout mutation
   const logoutMutation = useMutation({
     mutationFn: logoutApi,
-    onSuccess: () => {
-      // Clear user data from cache
+    // Clear local session state even if the request fails (e.g. server unreachable),
+    // so the user is never left looking logged in on this device.
+    onSettled: () => {
       queryClient.setQueryData(['authUser'], null);
     },
   });

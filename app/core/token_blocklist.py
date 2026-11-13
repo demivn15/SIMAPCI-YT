@@ -1,19 +1,30 @@
 """
-File: app/core/token_blocklist.py
-Description: In-memory or database-backed token blocklist for tracking logged-out tokens.
+File: token_blocklist.py
+Description: In-memory registry of revoked JWT identifiers (jti). Entries are dropped once the token would have expired anyway.
+Process-local: with several workers/instances or after a restart, revocations are lost; use a shared store (e.g. Redis) before scaling out.
 """
-blacklisted_tokens: set[str] = set()
 
+import time
+from threading import Lock
 
-def add_to_blocklist(token: str) -> None:
-    blacklisted_tokens.add(token)
+_revoked: dict[str, float] = {}
+_lock = Lock()
 
+def revoke(jti: str, expires_at: float) -> None:
+    """Marks a token as revoked until its natural expiration (unix timestamp)."""
 
-def is_token_blacklisted(token: str) -> bool:
-    return token in blacklisted_tokens
+    now = time.time()
+    with _lock:
+        for stale in [key for key, exp in _revoked.items() if exp <= now]:
+            del _revoked[stale]
+        _revoked[jti] = expires_at
 
-_blocklist = set() # or your existing token storage variable
+def is_revoked(jti: str) -> bool:
+    with _lock:
+        return jti in _revoked
 
-def reset():
-    """Clears the blocklist for testing purposes."""
-    _blocklist.clear()
+def reset() -> None:
+    """Clears the registry (used by tests)."""
+
+    with _lock:
+        _revoked.clear()
