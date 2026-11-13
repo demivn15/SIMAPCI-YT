@@ -5,12 +5,11 @@ Description: Hold security guards. Protect endpoints.
 """
 
 from app.core.security import decode_access_token
-from app.db.session import SessionLocal  # Adjust if your session factory is named differently
+# get_db se re-exporta desde app.db.session: debe ser LA MISMA función para que
+# app.dependency_overrides[get_db] (tests/conftest.py) también aplique a /products.
+from app.db.session import get_db  # noqa: F401
 from fastapi import HTTPException, status, Depends
 from fastapi.security import APIKeyCookie
-from sqlalchemy.orm import Session
-from typing import Generator
-from typing import Callable, List
 
 # Tells FastAPI to automatically extract the "access_token" cookie from requests
 cookie_scheme = APIKeyCookie(name = "access_token", auto_error = False)
@@ -60,29 +59,6 @@ def require_roles(*allowed_roles: str):
 
     return role_guard
 
+
 # Guard for professor-only (private) functions
 get_current_professor = require_roles("professor")
-def get_db() -> Generator[Session, None, None]:
-    """
-    Dependency that creates a new SQLAlchemy database session for each request
-    and closes it when the request is finished.
-    """
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-def require_roles(allowed_roles: List[str]) -> Callable:
-    """
-    Dependency factory that checks if the current user has one of the allowed roles.
-    """
-    def role_verifier(current_user: dict = Depends(get_current_user)) -> dict:
-        user_role = current_user.get("role")
-        if user_role not in allowed_roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not enough permissions"
-            )
-        return current_user
-    return role_verifier
