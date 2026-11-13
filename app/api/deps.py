@@ -5,8 +5,11 @@ Description: Hold security guards. Protect endpoints.
 """
 
 from app.core.security import decode_access_token
+from app.db.session import SessionLocal  # Adjust if your session factory is named differently
 from fastapi import HTTPException, status, Depends
 from fastapi.security import APIKeyCookie
+from sqlalchemy.orm import Session
+from typing import Generator
 
 # Tells FastAPI to automatically extract the "access_token" cookie from requests
 cookie_scheme = APIKeyCookie(name = "access_token", auto_error = False)
@@ -39,6 +42,7 @@ def get_current_user(token: str | None = Depends(cookie_scheme)) -> dict:
         "role": payload.get("role")
     }
 
+<<<<<<< HEAD
 def require_roles(*allowed_roles: str):
     """
     Dependency factory enforcing Role-Based Access Control (RBAC).
@@ -58,3 +62,15 @@ def require_roles(*allowed_roles: str):
 
 # Guard for professor-only (private) functions
 get_current_professor = require_roles("professor")
+=======
+def get_db() -> Generator[Session, None, None]:
+    """
+    Dependency that creates a new SQLAlchemy database session for each request
+    and closes it when the request is finished.
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+>>>>>>> main

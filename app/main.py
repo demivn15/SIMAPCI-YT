@@ -7,9 +7,12 @@ Description: FastAPI application entry point.
 from app.api.v1.auth import router as auth_router
 from app.api.v1.professor import router as professor_router
 from app.api.v1.registration import router as registration_router
+from app.api.v1.integrations import router as integrations_router
 from app.core.config import settings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.api.v1.products import router as products_router
+
 
 app = FastAPI(title="Institutional Professor Portal API")
 
@@ -25,7 +28,12 @@ app.add_middleware(
 # Include authentication routes
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(registration_router, prefix="/api/v1")
+<<<<<<< HEAD
 app.include_router(professor_router, prefix="/api/v1")
+=======
+app.include_router(integrations_router, prefix="/api/v1")
+app.include_router(products_router, prefix="/api/v1")
+>>>>>>> main
 
 @app.get("/")
 def health_check():
