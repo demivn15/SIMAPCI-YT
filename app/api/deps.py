@@ -37,6 +37,7 @@ def get_current_user(token: str | None = Depends(cookie_scheme)) -> dict:
 
     # Return user details payload to be injected into the route function
     return {
+        "user_id": payload.get("user_id"),
         "username": payload.get("sub"),
         "name": payload.get("name"),
         "email": payload.get("email"),
@@ -62,6 +63,7 @@ def require_roles(*allowed_roles: str):
 
 # Guard for professor-only (private) functions
 get_current_professor = require_roles("professor")
+
 def get_db() -> Generator[Session, None, None]:
     """
     Dependency that creates a new SQLAlchemy database session for each request

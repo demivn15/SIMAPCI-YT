@@ -7,7 +7,7 @@ Description: Expose login endpoint; receive user credentials, run them through L
 import re
 from app.api.deps import get_current_professor
 from app.core.config import settings
-from app.core.security import create_access_token
+from app.core.security import create_access_token, revoke_access_token
 from app.db.session import get_db
 from app.models.user import User
 from app.services.ldap_service import LDAPService
@@ -18,7 +18,7 @@ from app.services.user_service import (
     LdapIdentity,
     UserService,
 )
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
@@ -121,10 +121,17 @@ def get_current_user_profile(current_user: dict = Depends(get_current_professor)
     }
 
 @router.post("/logout")
-def logout(response: Response):
-    """Clears the session cookie to log the user out."""
+def logout(response: Response, access_token: str | None = Cookie(default=None)):
+    """Revokes the current session token and clears the cookie. Harmless without a valid session."""
 
-    response.delete_cookie(key="access_token")
+    if access_token:
+        revoke_access_token(access_token)
+    response.delete_cookie(
+        key="access_token",
+        httponly=True,
+        secure=settings.COOKIE_SECURE,
+        samesite="lax",
+    )
     return {"message": "Successfully logged out"}
 
 @router.post("/refresh")

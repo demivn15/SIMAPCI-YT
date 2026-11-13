@@ -112,13 +112,6 @@ def test_cp07_logout_borra_la_cookie_y_deniega_el_acceso(sesion):
     assert sesion.get(FUNCIONES_PRIVADAS[0]).status_code == 401
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECTO D-03: en main el logout solo borra la cookie del navegador; el token sigue "
-    "siendo válido hasta que expira (8 h). T-HU02-05 (PGPCECMC-29) figura 'Finalizada' en Jira, "
-    "pero la invalidación (app/core/token_blocklist.py) está solo en la rama "
-    "feature/PGPCECMC-29-logout-token, que no se ha integrado a main.",
-)
 def test_cp08_token_copiado_antes_del_logout_deja_de_servir(sesion):
     """CP-08 · CA06: un token capturado antes del logout no debe volver a abrir la sesión."""
     token_anterior = sesion.cookies.get("access_token")

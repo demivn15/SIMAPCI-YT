@@ -12,6 +12,7 @@ Uso en una prueba:
     instalar_directorio(monkeypatch)
 """
 
+from pydantic import SecretStr
 from ldap3 import MOCK_SYNC, OFFLINE_SLAPD_2_4, Connection, Server
 from ldap3.core.exceptions import LDAPSocketOpenError
 
@@ -65,18 +66,19 @@ def instalar_directorio(monkeypatch, usuarios=USUARIOS_POR_DEFECTO) -> Server:
     """Hace que LDAPService hable con un directorio en memoria con estos usuarios."""
 
     for clave, valor in CONFIG_DIRECTORIO.items():
-        monkeypatch.setattr(settings, clave, valor)
+        # LDAP_BIND_PASSWORD es SecretStr en Settings: se respeta ese tipo en el doble
+        monkeypatch.setattr(settings, clave, SecretStr(valor) if clave == "LDAP_BIND_PASSWORD" else valor)
 
     servidor = Server("directorio-simulado", get_info=OFFLINE_SLAPD_2_4)
     carga = Connection(
         servidor,
         user=settings.LDAP_BIND_DN,
-        password=settings.LDAP_BIND_PASSWORD,
+        password=CONFIG_DIRECTORIO["LDAP_BIND_PASSWORD"],
         client_strategy=MOCK_SYNC,
     )
     # Cuenta de servicio con la que el backend busca usuarios (paso 1 del login)
     carga.strategy.add_entry(
-        settings.LDAP_BIND_DN, {"userPassword": settings.LDAP_BIND_PASSWORD, "sn": "admin"}
+        settings.LDAP_BIND_DN, {"userPassword": CONFIG_DIRECTORIO["LDAP_BIND_PASSWORD"], "sn": "admin"}
     )
     for usuario in usuarios:
         carga.strategy.add_entry(

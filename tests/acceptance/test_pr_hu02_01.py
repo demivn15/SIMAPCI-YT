@@ -115,13 +115,6 @@ def test_cp08_usuario_vacio_es_rechazado(cliente):
     assert "access_token" not in response.cookies
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECTO D-01: con contraseña vacía ldap3 lanza LDAPPasswordIsMandatoryError, "
-    "LDAPService la convierte en RuntimeError y la API responde 500 en vez de 401/422. "
-    "El frontend lo muestra como 'El servicio de acceso no responde' (mensaje inapropiado, CA05). "
-    "Relacionado con T-HU02-02 (PGPCECMC-26, validaciones de entrada).",
-)
 def test_cp09_contrasena_vacia_es_rechazada_sin_error_interno(cliente):
     """CP-09 · CA05: contraseña vacía -> 401/422, nunca 500."""
     response = _login(cliente, PROFESOR["uid"], "")
@@ -129,31 +122,32 @@ def test_cp09_contrasena_vacia_es_rechazada_sin_error_interno(cliente):
     assert response.status_code in (401, 422)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECTO D-02: el usuario se inserta sin escapar en el filtro LDAP (uid={username}). "
-    "'mgar*' encuentra a mgarcia, inicia sesión y crea una cuenta fantasma con username 'mgar*' "
-    "y el correo de mgarcia; después mgarcia ya no puede entrar (409). "
-    "El commit de PGPCECMC-22 dice 'harden LDAP queries', pero esa rama no modifica ldap_service.py.",
-)
 def test_cp10_comodin_en_el_usuario_no_inicia_sesion(cliente):
     """CP-10 · CA05: un comodín LDAP en el usuario no debe autenticar a nadie."""
     response = _login(cliente, "mgar*", PROFESOR["password"])
 
-    assert response.status_code == 401
+    # 422: la validación de entrada lo rechaza antes de llegar a LDAP; 401 si llegara
+    assert response.status_code in (401, 422)
     assert "access_token" not in response.cookies
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECTO D-02 (misma causa): caracteres especiales de LDAP en el usuario rompen "
-    "el filtro, ldap3 lanza una excepción y la API responde 500 en vez de 401.",
-)
 def test_cp11_caracteres_especiales_en_el_usuario_no_causan_error_interno(cliente):
     """CP-11 · CA05: 'mgarcia)(uid=*' -> 401, nunca 500."""
     response = _login(cliente, "mgarcia)(uid=*", PROFESOR["password"])
 
-    assert response.status_code == 401
+    assert response.status_code in (401, 422)
+    assert "access_token" not in response.cookies
+
+
+def test_cp11b_ldapservice_escapa_el_usuario_aunque_se_llame_directo(monkeypatch):
+    """Defensa en profundidad: LDAPService no depende de la validación del endpoint."""
+    from app.services.ldap_service import LDAPService
+
+    instalar_directorio(monkeypatch)
+    assert LDAPService.authenticate_and_authorize_professor("mgar*", PROFESOR["password"]) is None
+    assert LDAPService.authenticate_and_authorize_professor("mgarcia)(uid=*", PROFESOR["password"]) is None
+    assert LDAPService.authenticate_and_authorize_professor(PROFESOR["uid"], "") is None
+    assert LDAPService.authenticate_and_authorize_professor(PROFESOR["uid"], PROFESOR["password"]) is not None
 
 
 def test_cp12_directorio_caido_responde_503_sin_detalles_internos(monkeypatch):

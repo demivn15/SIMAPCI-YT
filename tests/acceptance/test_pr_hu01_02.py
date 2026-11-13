@@ -89,13 +89,6 @@ def test_cp06_la_cookie_de_sesion_no_es_accesible_desde_javascript(registro):
     assert "samesite=lax" in set_cookie
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECTO D-04: secure=False está fijo en app/api/v1/auth.py; en producción (HTTPS) la "
-    "cookie de sesión podría viajar por HTTP. La rama feature/PGPCECMC-22-proteger-credenciales "
-    "usa settings.COOKIE_SECURE, pero no está integrada a main y además no lo define en config.py "
-    "(en esa rama todo login exitoso falla con AttributeError).",
-)
 def test_cp07_la_cookie_se_puede_marcar_secure_para_produccion(monkeypatch):
     """CP-07 · RNF01: debe existir una configuración para marcar la cookie como Secure."""
     from app.core.config import settings
