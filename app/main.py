@@ -28,12 +28,9 @@ app.add_middleware(
 # Include authentication routes
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(registration_router, prefix="/api/v1")
-<<<<<<< HEAD
 app.include_router(professor_router, prefix="/api/v1")
-=======
 app.include_router(integrations_router, prefix="/api/v1")
 app.include_router(products_router, prefix="/api/v1")
->>>>>>> main
 
 @app.get("/")
 def health_check():
