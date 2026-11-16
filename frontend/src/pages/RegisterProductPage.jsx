@@ -12,6 +12,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PRODUCT_TYPES, PROJECT_STATUSES, RESEARCH_LINES } from '../constants/products';
 import { createProduct, isValidDoi, lookupDoi, normalizeDoi } from '../services/productService';
+import { validateFileClientSide } from '../utils/fileValidation';
+import { uploadAndExtractPdf } from '../services/productService';
 
 const EMPTY_FORM = {
   type: 'publicacion',
@@ -143,6 +145,11 @@ export default function RegisterProductPage() {
   const [prefilled, setPrefilled] = useState([]);
   // save: { status: 'idle' | 'saving' | 'saved' | 'error', message?: string }
   const [save, setSave] = useState({ status: 'idle' });
+  
+  // Nuevos estados para manejo de carga y extracción de archivos (T-HU04-03 / T-HU04-04)
+  const [fileMetadata, setFileMetadata] = useState(null);
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
   const isPublication = form.type === 'publicacion';
   const isSaving = save.status === 'saving';
@@ -170,6 +177,59 @@ export default function RegisterProductPage() {
     setForm((prev) => ({ ...prev, type }));
     setErrors({});
     setLookup({ status: 'idle' });
+    setFileMetadata(null);
+    setUploadError('');
+  };
+
+  // Manejador para la subida y extracción automática desde PDF (T-HU04-03 y T-HU04-04)
+  const handleFileUpload = async (event) => {
+    const selectedFile = event.target.files?.[0];
+    if (!selectedFile) return;
+
+    setUploadError('');
+
+    // 1. Validación del lado del cliente (T-HU04-03)
+    const validation = validateFileClientSide(selectedFile);
+    if (!validation.valid) {
+      setUploadError(validation.error);
+      return;
+    }
+
+    setIsExtracting(true);
+    try {
+      // 2. Envío al backend para validación estricta, integridad y extracción de PDF (T-HU04-03 y T-HU04-04)
+      const result = await uploadAndExtractPdf(selectedFile);
+      setFileMetadata(result.file);
+
+      const extracted = result.extracted_fields || {};
+      const values = toFormValues(extracted);
+
+      // Solo se llenan los campos VACÍOS: lo que ya se escribió no se pisa (respetando CA08)
+      const filled = AUTOFILL_FIELDS.filter((field) => values[field] && !form[field].trim());
+      const kept = AUTOFILL_FIELDS.filter((field) => values[field] && form[field].trim());
+
+      setForm((prev) => {
+        const next = { ...prev };
+        filled.forEach((field) => {
+          next[field] = values[field];
+        });
+        return next;
+      });
+      setPrefilled((prev) => Array.from(new Set([...prev, ...filled])));
+
+      let message =
+        filled.length > 0
+          ? `Se precargaron ${filled.length} campos desde el documento. Revísalos antes de guardar.`
+          : 'El documento no aportó datos nuevos para los campos vacíos.';
+      if (kept.length > 0) message += ' Los campos que ya habías escrito no se modificaron.';
+      
+      setLookup({ status: 'done', message });
+    } catch (error) {
+      const message = error.response?.data?.detail || 'Error al procesar el archivo. Verifica el formato e inténtalo de nuevo.';
+      setUploadError(message);
+    } finally {
+      setIsExtracting(false);
+    }
   };
 
   const handleAutocomplete = async () => {
@@ -247,6 +307,8 @@ export default function RegisterProductPage() {
     setPrefilled([]);
     setLookup({ status: 'idle' });
     setSave({ status: 'idle' });
+    setFileMetadata(null);
+    setUploadError('');
   };
 
   return (
@@ -259,8 +321,6 @@ export default function RegisterProductPage() {
       </nav>
 
       <main className="max-w-3xl mx-auto mt-10 mb-16 px-6">
-        {/* text-left: el index.css heredado de la plantilla de Vite centra todo el texto;
-            en un formulario las etiquetas y errores se leen mejor alineados a la izquierda */}
         <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-8 text-left">
           {save.status === 'saved' ? (
             /* ---------- Confirmación (CA09) ---------- */
@@ -293,7 +353,6 @@ export default function RegisterProductPage() {
                 Registra una publicación o un proyecto de investigación. Los campos con * son obligatorios.
               </p>
 
-              {/* El resumen de validación desaparece cuando ya no quedan campos con error */}
               {save.status === 'error' && (save.kind !== 'validation' || Object.values(errors).some(Boolean)) && (
                 <div className="mb-6">
                   <Notice kind="error">{save.message}</Notice>
@@ -329,6 +388,49 @@ export default function RegisterProductPage() {
                   </div>
                 </fieldset>
 
+                {/* ---------- Subida de archivo del proyecto / Extracción PDF (T-HU04-03 / T-HU04-04) ---------- */}
+                <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                  <label className={labelClass}>
+                    Cargar documento (PDF, DOCX, ZIP)
+                  </label>
+                  <p className="text-sm text-slate-500" id="file-hint">
+                    Sube el documento del proyecto para validar su integridad y extraer los campos automáticamente.
+                  </p>
+                  <div className="mt-2">
+                    <input
+                      type="file"
+                      accept=".pdf,.docx,.zip"
+                      onChange={handleFileUpload}
+                      disabled={isSaving || isExtracting}
+                      className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                    />
+                  </div>
+
+                  {isExtracting && (
+                    <p className="mt-2 text-sm text-blue-600 animate-pulse">
+                      Validando archivo y extrayendo campos del documento...
+                    </p>
+                  )}
+
+                  {uploadError && (
+                    <div className="mt-3">
+                      <Notice kind="error">{uploadError}</Notice>
+                    </div>
+                  )}
+
+                  {fileMetadata && !uploadError && (
+                    <p className="mt-2 text-xs text-green-700 font-medium">
+                      ✓ Archivo validado: <strong>{fileMetadata.filename}</strong> (SHA-256: {fileMetadata.integrity_sha256?.slice(0, 12)}...)
+                    </p>
+                  )}
+
+                  {(lookup.status === 'done' || lookup.status === 'error') && !uploadError && (
+                    <div className="mt-3">
+                      <Notice kind={lookup.status === 'done' ? 'info' : 'error'}>{lookup.message}</Notice>
+                    </div>
+                  )}
+                </div>
+
                 {/* ---------- Autocompletado por DOI (CA07, CA08) ---------- */}
                 {isPublication && (
                   <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
@@ -359,11 +461,6 @@ export default function RegisterProductPage() {
                       </button>
                     </div>
                     <FieldError id="doi-error" message={errors.doi} />
-                    {(lookup.status === 'done' || lookup.status === 'error') && (
-                      <div className="mt-3">
-                        <Notice kind={lookup.status === 'done' ? 'info' : 'error'}>{lookup.message}</Notice>
-                      </div>
-                    )}
                   </div>
                 )}
 

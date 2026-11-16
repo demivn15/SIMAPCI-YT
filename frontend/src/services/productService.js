@@ -47,3 +47,16 @@ export async function createProduct(product) {
   const { data } = await api.post('/products', product);
   return data;
 }
+
+export const uploadAndExtractPdf = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await api.post('/api/v1/integrations/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+
+  return response.data;
+};

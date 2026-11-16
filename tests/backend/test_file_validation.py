@@ -9,8 +9,21 @@ client = TestClient(app)
 ENDPOINT_URL = "/api/v1/integrations/upload"
 
 def test_upload_valid_pdf():
-    pdf_content = b"%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF"
+    # A structurally valid minimal PDF containing necessary catalog objects (/Root, /Pages)
+    pdf_content = (
+        b"%PDF-1.4\n"
+        b"1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
+        b"2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
+        b"3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]>>endobj\n"
+        b"xref\n0 4\n0000000000 65535 f \n"
+        b"0000000009 00000 n \n"
+        b"0000000056 00000 n \n"
+        b"0000000111 00000 n \n"
+        b"trailer<</Size 4/Root 1 0 R>>\n"
+        b"startxref\n178\n%%EOF"
+    )
     file_file = io.BytesIO(pdf_content)
+    file_file.seek(0)
 
     response = client.post(
         ENDPOINT_URL,
@@ -19,10 +32,11 @@ def test_upload_valid_pdf():
 
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["filename"] == "research_paper.pdf"
-    assert "integrity_sha256" in data
-    assert len(data["integrity_sha256"]) == 64
-
+    
+    assert "file" in data
+    assert data["file"]["filename"] == "research_paper.pdf"
+    assert "integrity_sha256" in data["file"]
+    assert len(data["file"]["integrity_sha256"]) == 64
 
 def test_upload_invalid_mime_type():
     fake_content = b"MZ\x90\x00\x03\x00\x00\x00Executable content disguised as PDF"

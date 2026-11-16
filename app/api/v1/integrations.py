@@ -16,6 +16,7 @@ from app.integrations.openalex import OpenAlexClient
 from app.integrations.orcid import OrcidClient
 from app.services.doi_lookup_service import DoiLookupService
 from app.utils.file_validation import validate_and_process_file
+from app.utils.pdf_extractor import extract_fields_from_pdf
 from app.utils.identifiers import is_valid_doi, is_valid_orcid, normalize_doi, normalize_orcid
 from collections.abc import Iterator
 from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
@@ -115,7 +116,20 @@ def list_orcid_works(
     return [OrcidWorkOut(**work.__dict__) for work in works]
 
 @router.post("/upload")
-async def upload_product_file(file: UploadFile = File(...)):
-    """Validates type, size, and integrity of the uploaded research product file."""
-    file_metadata = await validate_and_process_file(file)
-    return file_metadata
+async def upload_and_extract_product_file(file: UploadFile = File(...)):
+  """
+    Validates type, size, and integrity (T-HU04-03) and extracts metadata fields
+    from PDF project documents (T-HU04-04).
+    """
+  # 1. Validate type, size, magic numbers, and compute SHA-256 integrity hash
+  file_metadata = await validate_and_process_file(file)
+
+  # 2. Extract fields if the uploaded file is a PDF
+  extracted_fields = {}
+  if file.content_type == "application/pdf":
+    extracted_fields = await extract_fields_from_pdf(file)
+
+  return {
+      "file": file_metadata,
+      "extracted_fields": extracted_fields,
+  }
