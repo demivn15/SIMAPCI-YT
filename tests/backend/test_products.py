@@ -64,12 +64,12 @@ def test_publication_is_persisted_for_the_authenticated_professor(client, db_ses
     assert response.status_code == 201
     body = response.json()
     owner = db_session.query(User).filter_by(username="professor").one()
-    assert body["status"] == "cargado" and body["owner_id"] == owner.id and body["school"] == "ECMC"
+    assert body["status"] == "cargado" and body["source"] == "manual" and body["owner_id"] == owner.id and body["school"] == "ECMC"
 
     saved = db_session.get(Product, body["id"])
     assert saved.title == PUBLICACION["title"]
     assert saved.authors == PUBLICACION["authors"]
-    assert saved.owner_id == owner.id and saved.status == "cargado"
+    assert saved.owner_id == owner.id and saved.status == "cargado" and saved.source == "manual"
     assert db_session.query(Product).count() == 1
 
 
@@ -87,6 +87,7 @@ def test_project_is_persisted_with_uppercase_code(client, db_session):
 
     assert response.status_code == 201
     assert response.json()["project_code"] == "ECMC-2024-01"
+    assert response.json()["source"] == "manual"
     assert db_session.query(Product).filter_by(type="proyecto").count() == 1
 
 
