@@ -10,6 +10,7 @@ pydantic-settings
 pymysql>=1.1
 pytest
 python-dotenv
+python-multipart
 ruff
 sqlalchemy>=2.0
 uvicorn

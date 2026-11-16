@@ -8,25 +8,22 @@ Requieren sesión de profesor: sin esa protección, la API serviría de intermed
 abierto hacia Crossref, OpenAlex y ORCID para cualquiera.
 """
 
-from collections.abc import Iterator
 
-import httpx2
 from app.api.deps import get_current_professor
-from app.integrations.base import (
-    ExternalNotFoundError,
-    ExternalServiceUnavailableError,
-    build_http_client,
-)
+from app.integrations.base import ExternalNotFoundError, ExternalServiceUnavailableError, build_http_client
 from app.integrations.crossref import CrossrefClient
 from app.integrations.openalex import OpenAlexClient
 from app.integrations.orcid import OrcidClient
 from app.services.doi_lookup_service import DoiLookupService
+from app.utils.file_validation import validate_and_process_file
 from app.utils.identifiers import is_valid_doi, is_valid_orcid, normalize_doi, normalize_orcid
-from fastapi import APIRouter, Depends, HTTPException, status
+from collections.abc import Iterator
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
 from pydantic import BaseModel
 
-router = APIRouter(prefix="/integrations", tags=["Integrations"])
+import httpx2
 
+router = APIRouter(prefix="/integrations", tags=["Integrations"])
 
 # --- Esquemas de respuesta (contrato con el frontend) ---------------------------
 
@@ -63,7 +60,6 @@ def get_doi_lookup_service(client: httpx2.Client = Depends(get_http_client)) -> 
 def get_orcid_client(client: httpx2.Client = Depends(get_http_client)) -> OrcidClient:
     return OrcidClient(client)
 
-
 # --- Endpoints ----------------------------------------------------------------
 
 @router.get("/doi/{doi:path}", response_model=DoiMetadataOut)
@@ -92,7 +88,6 @@ def lookup_doi(
 
     return DoiMetadataOut(**metadata.__dict__)
 
-
 @router.get("/orcid/{orcid}/works", response_model=list[OrcidWorkOut])
 def list_orcid_works(
     orcid: str,
@@ -118,3 +113,9 @@ def list_orcid_works(
         ) from exc
 
     return [OrcidWorkOut(**work.__dict__) for work in works]
+
+@router.post("/upload")
+async def upload_product_file(file: UploadFile = File(...)):
+    """Validates type, size, and integrity of the uploaded research product file."""
+    file_metadata = await validate_and_process_file(file)
+    return file_metadata
