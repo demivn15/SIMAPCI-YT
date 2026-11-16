@@ -1,19 +1,13 @@
 /**
- * Formulario de registro de productos - T-HU03-01 (PGPCECMC-32).
- * HU03: registrar una publicación o un proyecto con autocompletado por identificador.
- *   CA07: con un DOI válido, el sistema precarga los campos disponibles para revisión.
- *   CA08: si no hay datos o el servicio externo falla, se informa, se permite el
- *         llenado manual y se conserva lo ya escrito.
- *   CA09: al guardar con los campos obligatorios, el producto queda asociado al
- *         profesor con estado «cargado» y se muestra una confirmación.
- * Estilo: el mismo de LoginPage y DashboardPage (Tailwind, grises y azul).
+ * Formulario de registro de productos - T-HU03-01 & T-HU07-04.
+ * Incluye validación de archivos, autocompletado por DOI y extracción de PDF,
+ * con mensajes claros de coincidencia y aviso de verificación no realizada (CA08).
  */
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PRODUCT_TYPES, PROJECT_STATUSES, RESEARCH_LINES } from '../constants/products';
-import { createProduct, isValidDoi, lookupDoi, normalizeDoi } from '../services/productService';
+import { createProduct, isValidDoi, lookupDoi, normalizeDoi, uploadAndExtractPdf } from '../services/productService';
 import { validateFileClientSide } from '../utils/fileValidation';
-import { uploadAndExtractPdf } from '../services/productService';
 
 const EMPTY_FORM = {
   type: 'publicacion',
@@ -28,9 +22,7 @@ const EMPTY_FORM = {
   projectStatus: 'activo',
 };
 
-// Campos que el autocompletado puede llenar, en el orden en que aparecen
 const AUTOFILL_FIELDS = ['title', 'authors', 'year', 'venue', 'abstract'];
-
 const CURRENT_YEAR = new Date().getFullYear();
 
 const inputClass = (hasError) =>
@@ -40,7 +32,6 @@ const inputClass = (hasError) =>
 
 const labelClass = 'block text-sm font-medium text-slate-700';
 
-/** Convierte la respuesta del DOI al formato del formulario (autores como texto). */
 function toFormValues(metadata) {
   return {
     title: metadata.title || '',
@@ -73,7 +64,6 @@ function validate(form) {
   return errors;
 }
 
-/** Arma el cuerpo de POST /products. El dueño y la Escuela los toma el backend de la sesión. */
 function toPayload(form) {
   const isPublication = form.type === 'publicacion';
   return {
@@ -91,11 +81,16 @@ function toPayload(form) {
 }
 
 function lookupErrorMessage(error) {
-  if (!error?.response) return 'No hay conexión con el servidor. Puedes completar los campos manualmente.';
-  if (error.response.status === 404) {
-    return 'No encontramos datos para este DOI. Revisa que esté bien escrito o completa los campos manualmente.';
+  if (!error?.response) {
+    return 'Verificación no realizada: No hay conexión con los servicios externos. Puedes completar los campos manualmente; tus datos se conservan.';
   }
-  return 'El servicio de consulta de DOI no está disponible ahora. Puedes completar los campos manualmente.';
+  if (error.response.status === 404) {
+    return 'No encontramos datos para este DOI. Puedes completar o corregir los campos manualmente.';
+  }
+  if (error.response.status === 503 || error.response.status === 504) {
+    return 'Verificación no realizada: El servicio externo no está disponible o excedió el tiempo de espera. Continúa llenando los campos manualmente.';
+  }
+  return 'El servicio de consulta externa no está disponible ahora. Puedes completar los campos manualmente.';
 }
 
 function saveErrorMessage(error) {
@@ -108,11 +103,12 @@ function saveErrorMessage(error) {
 const NOTICE_STYLES = {
   info: 'bg-blue-50 border-blue-400 text-blue-800',
   error: 'bg-red-50 border-red-400 text-red-700',
+  warning: 'bg-amber-50 border-amber-400 text-amber-800', // T-HU07-04: Aviso de verificación no realizada
 };
 
 function Notice({ kind, children }) {
   return (
-    <div className={`border-l-4 p-4 text-sm ${NOTICE_STYLES[kind]}`} role={kind === 'error' ? 'alert' : 'status'}>
+    <div className={`border-l-4 p-4 text-sm rounded-r-md ${NOTICE_STYLES[kind]}`} role={kind === 'error' ? 'alert' : 'status'}>
       {children}
     </div>
   );
@@ -127,7 +123,6 @@ function FieldError({ id, message }) {
   );
 }
 
-/** Lleva el foco al campo indicado (los campos usan su nombre como id). */
 function focusField(name) {
   document.getElementById(name)?.focus();
 }
@@ -140,16 +135,13 @@ function PrefilledBadge({ show }) {
 export default function RegisterProductPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
-  // lookup: { status: 'idle' | 'loading' | 'done' | 'error', message?: string }
   const [lookup, setLookup] = useState({ status: 'idle' });
   const [prefilled, setPrefilled] = useState([]);
-  // save: { status: 'idle' | 'saving' | 'saved' | 'error', message?: string }
   const [save, setSave] = useState({ status: 'idle' });
   
-  // Nuevos estados para manejo de carga y extracción de archivos (T-HU04-03 / T-HU04-04)
   const [fileMetadata, setFileMetadata] = useState(null);
   const [isExtracting, setIsExtracting] = useState(false);
-  const [uploadError, setUploadError] = useState('');
+  const [uploadNotice, setUploadNotice] = useState(null); // { kind: 'info' | 'warning' | 'error', message: '' }
 
   const isPublication = form.type === 'publicacion';
   const isSaving = save.status === 'saving';
@@ -158,7 +150,6 @@ export default function RegisterProductPage() {
   const setField = (name, value) => {
     setForm((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: undefined }));
-    // Si la persona edita un campo precargado, deja de marcarse como tal
     if (prefilled.includes(name)) setPrefilled((prev) => prev.filter((field) => field !== name));
   };
 
@@ -178,33 +169,30 @@ export default function RegisterProductPage() {
     setErrors({});
     setLookup({ status: 'idle' });
     setFileMetadata(null);
-    setUploadError('');
+    setUploadNotice(null);
   };
 
-  // Manejador para la subida y extracción automática desde PDF (T-HU04-03 y T-HU04-04)
+  // Subida de archivo y extracción con manejo de verificación no realizada (T-HU04-03 / T-HU04-04 / T-HU07-04)
   const handleFileUpload = async (event) => {
     const selectedFile = event.target.files?.[0];
     if (!selectedFile) return;
 
-    setUploadError('');
+    setUploadNotice(null);
 
-    // 1. Validación del lado del cliente (T-HU04-03)
     const validation = validateFileClientSide(selectedFile);
     if (!validation.valid) {
-      setUploadError(validation.error);
+      setUploadNotice({ kind: 'error', message: validation.error });
       return;
     }
 
     setIsExtracting(true);
     try {
-      // 2. Envío al backend para validación estricta, integridad y extracción de PDF (T-HU04-03 y T-HU04-04)
       const result = await uploadAndExtractPdf(selectedFile);
       setFileMetadata(result.file);
 
       const extracted = result.extracted_fields || {};
       const values = toFormValues(extracted);
 
-      // Solo se llenan los campos VACÍOS: lo que ya se escribió no se pisa (respetando CA08)
       const filled = AUTOFILL_FIELDS.filter((field) => values[field] && !form[field].trim());
       const kept = AUTOFILL_FIELDS.filter((field) => values[field] && form[field].trim());
 
@@ -219,14 +207,16 @@ export default function RegisterProductPage() {
 
       let message =
         filled.length > 0
-          ? `Se precargaron ${filled.length} campos desde el documento. Revísalos antes de guardar.`
-          : 'El documento no aportó datos nuevos para los campos vacíos.';
-      if (kept.length > 0) message += ' Los campos que ya habías escrito no se modificaron.';
+          ? `Coincidencia exitosa: Se precargaron ${filled.length} campos desde el documento. Revísalos antes de guardar.`
+          : 'Verificación completada: El documento no aportó datos nuevos para los campos vacíos.';
+      if (kept.length > 0) message += ' Los campos que ya habías escrito se conservaron.';
       
-      setLookup({ status: 'done', message });
+      setUploadNotice({ kind: 'info', message });
     } catch (error) {
-      const message = error.response?.data?.detail || 'Error al procesar el archivo. Verifica el formato e inténtalo de nuevo.';
-      setUploadError(message);
+      // Aviso de verificación no realizada (T-HU07-04) permitiendo llenado manual
+      const message = error.response?.data?.detail || 
+        'Verificación no realizada: No se pudo procesar el documento automáticamente. Puedes completar los campos manualmente; tu información se conserva.';
+      setUploadNotice({ kind: 'warning', message });
     } finally {
       setIsExtracting(false);
     }
@@ -246,7 +236,6 @@ export default function RegisterProductPage() {
     try {
       const values = toFormValues(await lookupDoi(doi));
 
-      // Solo se llenan los campos VACÍOS: lo que la persona ya escribió no se pisa (CA08)
       const filled = AUTOFILL_FIELDS.filter((field) => values[field] && !form[field].trim());
       const kept = AUTOFILL_FIELDS.filter((field) => values[field] && form[field].trim());
 
@@ -268,12 +257,12 @@ export default function RegisterProductPage() {
 
       let message =
         filled.length > 0
-          ? `Se precargaron ${filled.length} campos desde el DOI. Revísalos antes de guardar.`
+          ? `Coincidencia exitosa: Se precargaron ${filled.length} campos desde el DOI. Revísalos antes de guardar.`
           : 'El DOI no aportó datos nuevos para los campos vacíos.';
       if (kept.length > 0) message += ' Los campos que ya habías escrito no se modificaron.';
       setLookup({ status: 'done', message });
     } catch (error) {
-      // Lo ya ingresado se conserva: el formulario no se toca (CA08)
+      // Aviso de verificación no realizada (T-HU07-04)
       setLookup({ status: 'error', message: lookupErrorMessage(error) });
     }
   };
@@ -308,7 +297,7 @@ export default function RegisterProductPage() {
     setLookup({ status: 'idle' });
     setSave({ status: 'idle' });
     setFileMetadata(null);
-    setUploadError('');
+    setUploadNotice(null);
   };
 
   return (
@@ -323,7 +312,6 @@ export default function RegisterProductPage() {
       <main className="max-w-3xl mx-auto mt-10 mb-16 px-6">
         <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-8 text-left">
           {save.status === 'saved' ? (
-            /* ---------- Confirmación (CA09) ---------- */
             <div role="status">
               <h2 className="text-2xl font-semibold text-slate-900 mb-2">Producto registrado</h2>
               <p className="text-slate-600 mb-6">
@@ -360,7 +348,6 @@ export default function RegisterProductPage() {
               )}
 
               <form className="space-y-6" onSubmit={handleSubmit} noValidate aria-busy={isSaving}>
-                {/* ---------- Tipo de producto ---------- */}
                 <fieldset>
                   <legend className={labelClass}>Tipo de producto *</legend>
                   <div className="mt-2 grid gap-3 sm:grid-cols-2">
@@ -388,13 +375,13 @@ export default function RegisterProductPage() {
                   </div>
                 </fieldset>
 
-                {/* ---------- Subida de archivo del proyecto / Extracción PDF (T-HU04-03 / T-HU04-04) ---------- */}
+                {/* Subida de archivo y extracción con mensajes de coincidencia y aviso de verificación no realizada (T-HU07-04) */}
                 <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
                   <label className={labelClass}>
-                    Cargar documento (PDF, DOCX, ZIP)
+                    Cargar documento del proyecto (PDF, DOCX, ZIP)
                   </label>
                   <p className="text-sm text-slate-500" id="file-hint">
-                    Sube el documento del proyecto para validar su integridad y extraer los campos automáticamente.
+                    Sube el archivo del documento para validar su integridad y extraer los campos automáticamente.
                   </p>
                   <div className="mt-2">
                     <input
@@ -412,26 +399,20 @@ export default function RegisterProductPage() {
                     </p>
                   )}
 
-                  {uploadError && (
+                  {uploadNotice && (
                     <div className="mt-3">
-                      <Notice kind="error">{uploadError}</Notice>
+                      <Notice kind={uploadNotice.kind}>{uploadNotice.message}</Notice>
                     </div>
                   )}
 
-                  {fileMetadata && !uploadError && (
+                  {fileMetadata && !uploadNotice && (
                     <p className="mt-2 text-xs text-green-700 font-medium">
                       ✓ Archivo validado: <strong>{fileMetadata.filename}</strong> (SHA-256: {fileMetadata.integrity_sha256?.slice(0, 12)}...)
                     </p>
                   )}
-
-                  {(lookup.status === 'done' || lookup.status === 'error') && !uploadError && (
-                    <div className="mt-3">
-                      <Notice kind={lookup.status === 'done' ? 'info' : 'error'}>{lookup.message}</Notice>
-                    </div>
-                  )}
                 </div>
 
-                {/* ---------- Autocompletado por DOI (CA07, CA08) ---------- */}
+                {/* Autocompletado por DOI (CA07, CA08, T-HU07-04) */}
                 {isPublication && (
                   <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
                     <label htmlFor="doi" className={labelClass}>
@@ -461,10 +442,15 @@ export default function RegisterProductPage() {
                       </button>
                     </div>
                     <FieldError id="doi-error" message={errors.doi} />
+                    {(lookup.status === 'done' || lookup.status === 'error') && (
+                      <div className="mt-3">
+                        <Notice kind={lookup.status === 'done' ? 'info' : 'warning'}>{lookup.message}</Notice>
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {/* ---------- Datos comunes ---------- */}
+                {/* Datos comunes del formulario */}
                 <div>
                   <label htmlFor="title" className={labelClass}>
                     Título *<PrefilledBadge show={prefilled.includes('title')} />
@@ -503,7 +489,7 @@ export default function RegisterProductPage() {
                       Línea de investigación *
                     </label>
                     <div className="mt-1">
-                      <select {...fieldProps('researchLine')} disabled={isSaving} readOnly={undefined}>
+                      <select {...fieldProps('researchLine')} disabled={isSaving}>
                         <option value="">Selecciona una línea</option>
                         {RESEARCH_LINES.map((line) => (
                           <option key={line} value={line}>
@@ -516,7 +502,6 @@ export default function RegisterProductPage() {
                   </div>
                 </div>
 
-                {/* ---------- Datos según el tipo ---------- */}
                 {isPublication ? (
                   <div>
                     <label htmlFor="venue" className={labelClass}>
@@ -543,7 +528,7 @@ export default function RegisterProductPage() {
                         Estado del proyecto *
                       </label>
                       <div className="mt-1">
-                        <select {...fieldProps('projectStatus')} disabled={isSaving} readOnly={undefined}>
+                        <select {...fieldProps('projectStatus')} disabled={isSaving}>
                           {PROJECT_STATUSES.map((status) => (
                             <option key={status.value} value={status.value}>
                               {status.label}
