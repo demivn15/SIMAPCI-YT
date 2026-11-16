@@ -9,6 +9,7 @@ traduce a códigos de estado (igual que user_service.py).
 from app.models.product import Product
 from app.models.user import User
 from app.schemas.product import ProductCreate
+from app.services.notification_service import create_notification  # <-- Importamos el servicio de notificaciones
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -67,4 +68,14 @@ class ProductService:
             raise DuplicateProductError("This DOI or project code is already registered.") from exc
 
         db.refresh(product)
+
+        # T-HU08-04 & CA22: Generación automática de la notificación de carga exitosa
+        create_notification(
+            db=db,
+            user_id=owner.id,
+            title="Producto cargado exitosamente",
+            message=f"Tu producto «{product.title}» ha sido registrado correctamente y se encuentra en estado cargado.",
+            product_id=product.id,
+        )
+
         return product
