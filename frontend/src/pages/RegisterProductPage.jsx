@@ -2,9 +2,26 @@
  * Formulario de registro de productos - T-HU03-01 & T-HU07-04.
  * Incluye validación de archivos, autocompletado por DOI y extracción de PDF,
  * con mensajes claros de coincidencia y aviso de verificación no realizada (CA08).
+ *
+ * Se muestra como la ventana «Registrar publicación / Registrar proyecto» del prototipo,
+ * en un solo formulario (las pruebas de HU03, HU04 y HU07 lo usan así).
  */
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import {
+  AlertCircle,
+  AlertTriangle,
+  BookOpen,
+  CheckCircle2,
+  FileCheck2,
+  FolderGit2,
+  Info,
+  Plus,
+  Search,
+  Sparkles,
+  Upload,
+  X,
+} from 'lucide-react';
 import { PRODUCT_TYPES, PROJECT_STATUSES, RESEARCH_LINES } from '../constants/products';
 import { createProduct, isValidDoi, lookupDoi, normalizeDoi, uploadAndExtractPdf } from '../services/productService';
 import { validateFileClientSide } from '../utils/fileValidation';
@@ -25,12 +42,7 @@ const EMPTY_FORM = {
 const AUTOFILL_FIELDS = ['title', 'authors', 'year', 'venue', 'abstract'];
 const CURRENT_YEAR = new Date().getFullYear();
 
-const inputClass = (hasError) =>
-  'appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-slate-400 ' +
-  'focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ' +
-  (hasError ? 'border-red-400' : 'border-slate-300');
-
-const labelClass = 'block text-sm font-medium text-slate-700';
+const labelClass = 'field-label';
 
 function toFormValues(metadata) {
   return {
@@ -101,19 +113,18 @@ function saveErrorMessage(error) {
   return 'No se pudo guardar el producto. Tus datos siguen en el formulario; inténtalo de nuevo en unos minutos.';
 }
 
-const NOTICE_STYLES = {
-  info: 'bg-blue-50 border-blue-400 text-blue-800',
-  error: 'bg-red-50 border-red-400 text-red-700',
-  warning: 'bg-amber-50 border-amber-400 text-amber-800', // T-HU07-04: Aviso de verificación no realizada
-};
+// T-HU07-04: el aviso «warning» es el de verificación no realizada
+const NOTICE_ICONS = { info: CheckCircle2, error: AlertCircle, warning: AlertTriangle };
 
 // Errores y advertencias se anuncian de inmediato a lectores de pantalla (role="alert");
 // los avisos informativos, de forma discreta (role="status"). CA08 / PR-HU03-02.
 function Notice({ kind, children }) {
   const role = kind === 'error' || kind === 'warning' ? 'alert' : 'status';
+  const Icon = NOTICE_ICONS[kind];
   return (
-    <div className={`border-l-4 p-4 text-sm rounded-r-md ${NOTICE_STYLES[kind]}`} role={role}>
-      {children}
+    <div className={`notice notice-${kind}`} role={role}>
+      <Icon size={16} aria-hidden="true" />
+      <span>{children}</span>
     </div>
   );
 }
@@ -121,7 +132,7 @@ function Notice({ kind, children }) {
 function FieldError({ id, message }) {
   if (!message) return null;
   return (
-    <p id={id} className="mt-1 text-sm text-red-600">
+    <p id={id} className="field-error">
       {message}
     </p>
   );
@@ -133,11 +144,20 @@ function focusField(name) {
 
 function PrefilledBadge({ show }) {
   if (!show) return null;
-  return <span className="ml-2 text-xs font-medium text-blue-700">Precargado</span>;
+  return <span className="prefilled">Precargado</span>;
+}
+
+// El inicio abre el registro con el tipo elegido (?tipo=publicacion o ?tipo=proyecto)
+function initialForm(type) {
+  return { ...EMPTY_FORM, type: type === 'proyecto' ? 'proyecto' : 'publicacion' };
 }
 
 export default function RegisterProductPage() {
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const dialogRef = useRef(null);
+  const bodyRef = useRef(null);
+  const [form, setForm] = useState(() => initialForm(searchParams.get('tipo')));
   const [errors, setErrors] = useState({});
   const [lookup, setLookup] = useState({ status: 'idle' });
   const [prefilled, setPrefilled] = useState([]);
@@ -165,7 +185,7 @@ export default function RegisterProductPage() {
     readOnly: isSaving,
     'aria-invalid': Boolean(errors[name]),
     'aria-describedby': errors[name] ? `${name}-error` : undefined,
-    className: inputClass(errors[name]),
+    className: 'field-input',
   });
 
   const handleTypeChange = (type) => {
@@ -288,14 +308,26 @@ export default function RegisterProductPage() {
     try {
       await createProduct(toPayload(form));
       setSave({ status: 'saved' });
-      window.scrollTo({ top: 0 });
+      bodyRef.current?.scrollTo?.({ top: 0 });
     } catch (error) {
       setSave({ status: 'error', message: saveErrorMessage(error) });
     }
   };
 
+  const close = () => navigate('/dashboard');
+
+  // La ventana recibe el foco al abrirse y se cierra con Escape
+  useEffect(() => {
+    dialogRef.current?.focus();
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') navigate('/dashboard');
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [navigate]);
+
   const resetForm = () => {
-    setForm(EMPTY_FORM);
+    setForm(initialForm(form.type));
     setErrors({});
     setPrefilled([]);
     setLookup({ status: 'idle' });
@@ -305,128 +337,102 @@ export default function RegisterProductPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      <nav className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shadow-sm">
-        <h1 className="text-xl font-bold text-slate-800">Portal de profesores</h1>
-        <Link to="/dashboard" className="text-sm font-medium text-blue-600 hover:text-blue-800">
-          Volver al panel
-        </Link>
-      </nav>
+    <div className="modal-overlay">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="register-heading"
+        tabIndex={-1}
+        className="register-dialog"
+      >
+        <div className="register-header">
+          <div className="register-title">
+            <span className="register-icon">
+              <Plus size={20} strokeWidth={3} aria-hidden="true" />
+            </span>
+            <div>
+              <h2 id="register-heading" className="display">
+                {isPublication ? 'Registrar publicación' : 'Registrar proyecto'}
+              </h2>
+              <p>Complete los datos y verifique la información antes de guardar.</p>
+            </div>
+          </div>
+          <button type="button" className="icon-button" aria-label="Cerrar registro" onClick={close}>
+            <X size={20} aria-hidden="true" />
+          </button>
+        </div>
 
-      <main className="max-w-3xl mx-auto mt-10 mb-16 px-6">
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-8 text-left">
+        <div ref={bodyRef} className="register-body">
           {save.status === 'saved' ? (
-            <div role="status">
-              <h2 className="text-2xl font-semibold text-slate-900 mb-2">Producto registrado</h2>
-              <p className="text-slate-600 mb-6">
-                «{form.title.trim()}» quedó registrado a tu nombre con estado <strong>cargado</strong>. Un Revisor lo
-                verificará y recibirás una notificación con el resultado.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="py-2 px-4 rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-                >
+            <div role="status" className="register-form">
+              <div className="notice notice-info">
+                <CheckCircle2 size={16} aria-hidden="true" />
+                <span>
+                  <strong>Producto registrado.</strong> «{form.title.trim()}» quedó registrado a tu nombre con estado{' '}
+                  <strong>cargado</strong>. Un Revisor lo verificará y recibirás una notificación con el resultado.
+                </span>
+              </div>
+              <div className="form-actions">
+                <Link to="/dashboard" className="btn btn-outline">
+                  Volver al inicio
+                </Link>
+                <button type="button" onClick={resetForm} className="btn btn-primary">
                   Registrar otro producto
                 </button>
-                <Link
-                  to="/dashboard"
-                  className="py-2 px-4 rounded-md border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                >
-                  Volver al panel
-                </Link>
               </div>
             </div>
           ) : (
             <>
-              <h2 className="text-2xl font-semibold text-slate-900 mb-2">Registrar producto</h2>
-              <p className="text-slate-600 mb-6">
-                Registra una publicación o un proyecto de investigación. Los campos con * son obligatorios.
-              </p>
-
               {save.status === 'error' && (save.kind !== 'validation' || Object.values(errors).some(Boolean)) && (
-                <div className="mb-6">
-                  <Notice kind="error">{save.message}</Notice>
-                </div>
+                <Notice kind="error">{save.message}</Notice>
               )}
 
-              <form className="space-y-6" onSubmit={handleSubmit} noValidate aria-busy={isSaving}>
+              <form className="register-form" onSubmit={handleSubmit} noValidate aria-busy={isSaving}>
                 <fieldset>
                   <legend className={labelClass}>Tipo de producto *</legend>
-                  <div className="mt-2 grid gap-3 sm:grid-cols-2">
-                    {PRODUCT_TYPES.map((option) => (
-                      <label
-                        key={option.value}
-                        className={`flex items-center gap-3 rounded-md border px-4 py-3 text-sm cursor-pointer ${
-                          form.type === option.value
-                            ? 'border-blue-500 bg-blue-50 text-slate-900'
-                            : 'border-slate-300 text-slate-700 hover:bg-slate-50'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="type"
-                          value={option.value}
-                          checked={form.type === option.value}
-                          onChange={() => handleTypeChange(option.value)}
-                          disabled={isSaving}
-                          className="h-4 w-4 text-blue-600"
-                        />
-                        {option.label}
-                      </label>
-                    ))}
+                  <div className="type-options">
+                    {PRODUCT_TYPES.map((option) => {
+                      const selected = form.type === option.value;
+                      const Icon = option.value === 'publicacion' ? BookOpen : FolderGit2;
+                      return (
+                        <label
+                          key={option.value}
+                          data-type={option.value}
+                          className={`type-option${selected ? ' is-selected' : ''}`}
+                        >
+                          <input
+                            type="radio"
+                            name="type"
+                            value={option.value}
+                            checked={selected}
+                            onChange={() => handleTypeChange(option.value)}
+                            disabled={isSaving}
+                            className="sr-only"
+                          />
+                          <Icon size={16} aria-hidden="true" />
+                          {option.label}
+                        </label>
+                      );
+                    })}
                   </div>
                 </fieldset>
 
-                {/* Subida de archivo y extracción con mensajes de coincidencia y aviso de verificación no realizada (T-HU07-04) */}
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-                  <label className={labelClass}>
-                    Cargar documento del proyecto (PDF, DOCX, ZIP)
-                  </label>
-                  <p className="text-sm text-slate-500" id="file-hint">
-                    Sube el archivo del documento para validar su integridad y extraer los campos automáticamente.
-                  </p>
-                  <div className="mt-2">
-                    <input
-                      type="file"
-                      accept=".pdf,.docx,.zip"
-                      onChange={handleFileUpload}
-                      disabled={isSaving || isExtracting}
-                      className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
-                    />
-                  </div>
-
-                  {isExtracting && (
-                    <p className="mt-2 text-sm text-blue-600 animate-pulse">
-                      Validando archivo y extrayendo campos del documento...
-                    </p>
-                  )}
-
-                  {uploadNotice && (
-                    <div className="mt-3">
-                      <Notice kind={uploadNotice.kind}>{uploadNotice.message}</Notice>
-                    </div>
-                  )}
-
-                  {fileMetadata && !uploadNotice && (
-                    <p className="mt-2 text-xs text-green-700 font-medium">
-                      ✓ Archivo validado: <strong>{fileMetadata.filename}</strong> (SHA-256: {fileMetadata.integrity_sha256?.slice(0, 12)}...)
-                    </p>
-                  )}
-                </div>
-
                 {/* Autocompletado por DOI (CA07, CA08, T-HU07-04) */}
                 {isPublication && (
-                  <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-                    <label htmlFor="doi" className={labelClass}>
-                      DOI
-                    </label>
-                    <p className="text-sm text-slate-500" id="doi-hint">
-                      Si la publicación tiene DOI, úsalo para completar los datos automáticamente.
+                  <div className="form-panel">
+                    <p className="form-panel-title">
+                      <Sparkles size={15} aria-hidden="true" />
+                      Búsqueda asistida por DOI
                     </p>
-                    <div className="mt-2 flex flex-col gap-3 sm:flex-row">
-                      <div className="flex-1">
+                    <div>
+                      <label htmlFor="doi" className={labelClass}>
+                        DOI
+                      </label>
+                      <p className="field-hint" id="doi-hint">
+                        Si la publicación tiene DOI, úsalo para completar los datos automáticamente.
+                      </p>
+                      <div className="inline-field">
                         <input
                           {...fieldProps('doi')}
                           type="text"
@@ -435,33 +441,64 @@ export default function RegisterProductPage() {
                           placeholder="p. ej., 10.1145/3576915.3623102"
                           aria-describedby={['doi-hint', errors.doi && 'doi-error'].filter(Boolean).join(' ')}
                         />
+                        <button
+                          type="button"
+                          onClick={handleAutocomplete}
+                          aria-disabled={isLookingUp || isSaving}
+                          className="btn btn-primary"
+                        >
+                          <Search size={15} aria-hidden="true" />
+                          {isLookingUp ? 'Buscando...' : 'Autocompletar'}
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={handleAutocomplete}
-                        aria-disabled={isLookingUp || isSaving}
-                        className="py-2 px-4 rounded-md border border-blue-600 text-sm font-medium text-blue-600 bg-white hover:bg-blue-50 aria-disabled:opacity-50 aria-disabled:cursor-wait"
-                      >
-                        {isLookingUp ? 'Buscando...' : 'Autocompletar'}
-                      </button>
+                      <FieldError id="doi-error" message={errors.doi} />
                     </div>
-                    <FieldError id="doi-error" message={errors.doi} />
                     {(lookup.status === 'done' || lookup.status === 'error') && (
-                      <div className="mt-3">
-                        <Notice kind={lookup.status === 'done' ? 'info' : 'warning'}>{lookup.message}</Notice>
-                      </div>
+                      <Notice kind={lookup.status === 'done' ? 'info' : 'warning'}>{lookup.message}</Notice>
                     )}
                   </div>
                 )}
+
+                {/* Subida de archivo y extracción con mensajes de coincidencia y aviso de verificación no realizada (T-HU07-04) */}
+                <div className="form-panel">
+                  <p className="form-panel-title">
+                    <FileCheck2 size={15} aria-hidden="true" />
+                    Cargar documento del proyecto (PDF, DOCX, ZIP)
+                  </p>
+                  <p className="field-hint" id="file-hint">
+                    Sube el archivo del documento para validar su integridad y extraer los campos automáticamente.
+                  </p>
+                  <input
+                    id="product-file"
+                    type="file"
+                    accept=".pdf,.docx,.zip"
+                    onChange={handleFileUpload}
+                    disabled={isSaving || isExtracting}
+                    aria-describedby="file-hint"
+                    className="sr-only"
+                  />
+                  <div className="file-row">
+                    <label htmlFor="product-file" className="btn btn-outline">
+                      <Upload size={16} aria-hidden="true" />
+                      {fileMetadata ? 'Cambiar archivo' : 'Seleccionar archivo'}
+                    </label>
+                    {fileMetadata && !uploadNotice && (
+                      <span>
+                        Archivo validado: <strong>{fileMetadata.filename}</strong> (SHA-256:{' '}
+                        {fileMetadata.integrity_sha256?.slice(0, 12)}...)
+                      </span>
+                    )}
+                    {isExtracting && <span>Validando archivo y extrayendo campos del documento...</span>}
+                  </div>
+                  {uploadNotice && <Notice kind={uploadNotice.kind}>{uploadNotice.message}</Notice>}
+                </div>
 
                 {/* Datos comunes del formulario */}
                 <div>
                   <label htmlFor="title" className={labelClass}>
                     Título *<PrefilledBadge show={prefilled.includes('title')} />
                   </label>
-                  <div className="mt-1">
-                    <input {...fieldProps('title')} type="text" />
-                  </div>
+                  <input {...fieldProps('title')} type="text" placeholder="Título completo de la publicación o proyecto" />
                   <FieldError id="title-error" message={errors.title} />
                 </div>
 
@@ -470,21 +507,17 @@ export default function RegisterProductPage() {
                     {isPublication ? 'Autores *' : 'Investigadores participantes *'}
                     <PrefilledBadge show={prefilled.includes('authors')} />
                   </label>
-                  <div className="mt-1">
-                    <input {...fieldProps('authors')} type="text" placeholder="Separados por coma" />
-                  </div>
+                  <input {...fieldProps('authors')} type="text" placeholder="Separados por coma" />
                   <FieldError id="authors-error" message={errors.authors} />
                 </div>
 
-                <div className="grid gap-6 sm:grid-cols-[10rem_1fr]">
+                <div className="grid-year">
                   <div>
                     <label htmlFor="year" className={labelClass}>
                       {isPublication ? 'Año *' : 'Año de inicio *'}
                       <PrefilledBadge show={prefilled.includes('year')} />
                     </label>
-                    <div className="mt-1">
-                      <input {...fieldProps('year')} type="text" inputMode="numeric" maxLength={4} placeholder="p. ej., 2025" />
-                    </div>
+                    <input {...fieldProps('year')} type="text" inputMode="numeric" maxLength={4} placeholder="p. ej., 2025" />
                     <FieldError id="year-error" message={errors.year} />
                   </div>
 
@@ -492,16 +525,14 @@ export default function RegisterProductPage() {
                     <label htmlFor="researchLine" className={labelClass}>
                       Línea de investigación *
                     </label>
-                    <div className="mt-1">
-                      <select {...fieldProps('researchLine')} disabled={isSaving}>
-                        <option value="">Selecciona una línea</option>
-                        {RESEARCH_LINES.map((line) => (
-                          <option key={line} value={line}>
-                            {line}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    <select {...fieldProps('researchLine')} disabled={isSaving}>
+                      <option value="">Selecciona una línea</option>
+                      {RESEARCH_LINES.map((line) => (
+                        <option key={line} value={line}>
+                          {line}
+                        </option>
+                      ))}
+                    </select>
                     <FieldError id="researchLine-error" message={errors.researchLine} />
                   </div>
                 </div>
@@ -512,34 +543,28 @@ export default function RegisterProductPage() {
                       Revista, congreso o editorial
                       <PrefilledBadge show={prefilled.includes('venue')} />
                     </label>
-                    <div className="mt-1">
-                      <input {...fieldProps('venue')} type="text" />
-                    </div>
+                    <input {...fieldProps('venue')} type="text" />
                   </div>
                 ) : (
-                  <div className="grid gap-6 sm:grid-cols-2">
+                  <div className="grid-2">
                     <div>
                       <label htmlFor="projectCode" className={labelClass}>
                         Código institucional del proyecto *
                       </label>
-                      <div className="mt-1">
-                        <input {...fieldProps('projectCode')} type="text" placeholder="p. ej., ECMC-INV-2024-008" />
-                      </div>
+                      <input {...fieldProps('projectCode')} type="text" placeholder="p. ej., ECMC-INV-2024-008" />
                       <FieldError id="projectCode-error" message={errors.projectCode} />
                     </div>
                     <div>
                       <label htmlFor="projectStatus" className={labelClass}>
                         Estado del proyecto *
                       </label>
-                      <div className="mt-1">
-                        <select {...fieldProps('projectStatus')} disabled={isSaving}>
-                          {PROJECT_STATUSES.map((status) => (
-                            <option key={status.value} value={status.value}>
-                              {status.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                      <select {...fieldProps('projectStatus')} disabled={isSaving}>
+                        {PROJECT_STATUSES.map((status) => (
+                          <option key={status.value} value={status.value}>
+                            {status.label}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 )}
@@ -549,28 +574,30 @@ export default function RegisterProductPage() {
                     Resumen
                     <PrefilledBadge show={prefilled.includes('abstract')} />
                   </label>
-                  <div className="mt-1">
-                    <textarea {...fieldProps('abstract')} rows={4} />
-                  </div>
+                  <textarea {...fieldProps('abstract')} rows={4} />
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 pt-2">
-                  <button
-                    type="submit"
-                    aria-disabled={isSaving}
-                    className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 aria-disabled:opacity-50 aria-disabled:cursor-wait transition-colors"
-                  >
-                    {isSaving ? 'Guardando...' : 'Guardar producto'}
-                  </button>
-                  <Link to="/dashboard" className="text-sm font-medium text-slate-600 hover:text-slate-900">
+                <p className="form-note">
+                  <Info size={16} aria-hidden="true" />
+                  <span>
+                    Al guardar, su trabajo quedará <strong>cargado para revisión</strong> y recibirá una notificación con
+                    el resultado.
+                  </span>
+                </p>
+
+                <div className="form-actions">
+                  <Link to="/dashboard" className="btn btn-outline">
                     Cancelar
                   </Link>
+                  <button type="submit" aria-disabled={isSaving} className="btn btn-primary">
+                    {isSaving ? 'Guardando...' : 'Guardar producto'}
+                  </button>
                 </div>
               </form>
             </>
           )}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

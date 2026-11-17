@@ -1,63 +1,42 @@
+/**
+ * Inicio del profesor: «Accesos rápidos», como en el prototipo. Solo aparecen las acciones
+ * que ya funcionan (registrar publicación y proyecto).
+ */
+import { Link, useLocation } from 'react-router-dom';
+import { BookOpen, FolderPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ACCOUNT_CREATED_MESSAGE } from '../utils/loginMessages';
 
 export default function DashboardPage() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
   // T-HU01-06 (PGPCECMC-23), CA01: confirmación del registro en el primer acceso
   const accountCreated = useLocation().state?.accountCreated === true;
 
-  const handleLogout = () => {
-    logout(null, {
-      onSuccess: () => navigate('/login'),
-    });
-  };
-
   return (
-    <div className="min-h-screen bg-slate-100">
-      <nav className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center shadow-sm">
-        <h1 className="text-xl font-bold text-slate-800">Portal de profesores</h1>
-        <div className="flex items-center space-x-4">
-          <span className="text-sm font-medium text-slate-600">
-            {user?.name} ({user?.username})
-          </span>
-          <button
-            onClick={handleLogout}
-            className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
-          >
-            Cerrar sesión
-          </button>
+    <>
+      {accountCreated && (
+        <div className="notice-success" role="status">
+          {ACCOUNT_CREATED_MESSAGE}
         </div>
-      </nav>
-
-      <main className="max-w-5xl mx-auto mt-10 px-6">
-        {accountCreated && (
-          <div className="mb-6 border-l-4 border-green-500 bg-green-50 p-4 text-sm text-green-800" role="status">
-            {ACCOUNT_CREATED_MESSAGE}
-          </div>
-        )}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-8">
-          <h2 className="text-2xl font-semibold text-slate-900 mb-2">
-            Hola, {user?.name}
-          </h2>
-          <p className="text-slate-600 mb-6">
-            Iniciaste sesión con tu cuenta institucional. Tu sesión está activa.
-          </p>
-
-          <div className="bg-slate-50 rounded-md p-4 border border-slate-200 text-sm font-mono text-slate-700">
-            <div><span className="font-semibold text-slate-900">Correo:</span> {user?.email || 'N/A'}</div>
-            <div><span className="font-semibold text-slate-900">Rol:</span> {user?.role}</div>
-          </div>
-
-          <Link
-            to="/products/new"
-            className="mt-6 inline-flex py-2 px-4 rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-          >
-            Registrar producto
+      )}
+      <section aria-labelledby="quick-actions-title">
+        <p className="greeting">Hola, {user?.name}</p>
+        <h1 id="quick-actions-title" className="display page-title">
+          Accesos rápidos
+        </h1>
+        <div className="quick-actions">
+          <Link to="/products/new?tipo=publicacion">
+            <BookOpen aria-hidden="true" />
+            <strong>Registrar publicación</strong>
+            <span>Artículos, libros y otros trabajos publicados</span>
+          </Link>
+          <Link to="/products/new?tipo=proyecto">
+            <FolderPlus aria-hidden="true" />
+            <strong>Registrar proyecto</strong>
+            <span>Agregue su proyecto de investigación</span>
           </Link>
         </div>
-      </main>
-    </div>
+      </section>
+    </>
   );
 }

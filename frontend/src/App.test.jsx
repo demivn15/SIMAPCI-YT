@@ -22,8 +22,8 @@ describe('CA06 · vista pública y funciones privadas sin sesión', () => {
     window.history.pushState({}, '', '/');
     render(<App />);
 
-    expect(await screen.findByRole('heading', { name: /Producción científica de la ECMC/ })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Acceso para profesores' })).toHaveAttribute('href', '/login');
+    expect(await screen.findByRole('heading', { name: /Un espacio para su investigación/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Iniciar sesión' })).toHaveAttribute('href', '/login');
   });
 
   it('CP-11: el registro de productos sin sesión lleva al login', async () => {
@@ -38,7 +38,7 @@ describe('CA06 · vista pública y funciones privadas sin sesión', () => {
     window.history.pushState({}, '', '/no-existe');
     render(<App />);
 
-    expect(await screen.findByRole('heading', { name: /Producción científica de la ECMC/ })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Un espacio para su investigación/ })).toBeInTheDocument();
     expect(window.location.pathname).toBe('/');
   });
 });
