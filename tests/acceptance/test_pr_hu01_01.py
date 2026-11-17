@@ -93,10 +93,9 @@ def test_cp04_email_already_registered_with_different_case_is_rejected(monkeypat
     assert db_session.query(User).count() == 1
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Pendiente T-HU01-02 (PGPCECMC-19): validación del dominio de correo institucional. "
-    "Cuando se implemente, esta prueba pasará y se debe quitar el marcador xfail.",
+@pytest.mark.skip(
+    reason="T-HU01-02 (PGPCECMC-19): el dominio institucional lo garantiza el directorio de la "
+    "universidad (acordado con TICs); el login solo acepta cuentas institucionales.",
 )
 def test_cp05_external_email_domain_is_rejected(monkeypatch, db_session):
     """CP-05 · CA02: correo de dominio externo -> se rechaza con motivo y no se crea cuenta."""
