@@ -4,11 +4,24 @@ Author: Demian Viteri
 Description: LDAP logic: connection, authentication, group membership verification.
 """
 
+import logging
+
 from app.core.config import settings
 from fastapi import HTTPException, status
 from ldap3 import Server, Connection, ALL, SUBTREE
 from ldap3.core.exceptions import LDAPException, LDAPSocketOpenError
 from ldap3.utils.conv import escape_filter_chars
+
+logger = logging.getLogger(__name__)
+
+# Único mensaje que ve el cliente cuando el directorio falla (CA05: no revelar detalles
+# internos). El detalle técnico queda solo en el log del servidor (PGPCECMC-22).
+DIRECTORY_UNAVAILABLE = "Institutional directory service is temporarily unreachable. Please try again later."
+
+
+def _directory_unavailable() -> HTTPException:
+    return HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=DIRECTORY_UNAVAILABLE)
+
 
 class LDAPService:
     @staticmethod
@@ -29,17 +42,13 @@ class LDAPService:
 
             return conn
         except LDAPSocketOpenError:
-                    # Server is down, unreachable, or timed out
-                    raise HTTPException(
-                        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                        detail="Institutional directory service is temporarily unreachable. Please try again later."
-                    )
-        except Exception as e:
-            # Catch other unexpected setup errors
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"LDAP connection initialization failed: {str(e)}"
-            )
+            # Server is down, unreachable, or timed out
+            logger.warning("LDAP directory unreachable", exc_info=True)
+            raise _directory_unavailable()
+        except Exception:
+            # Otros errores de configuración o del directorio: el detalle va al log, nunca a la respuesta
+            logger.exception("LDAP connection initialization failed")
+            raise _directory_unavailable()
 
     @classmethod
     def authenticate_and_authorize_professor(cls, username: str, password: str) -> dict | None:
@@ -100,15 +109,17 @@ class LDAPService:
 
             # Return basic user payload for session creation
             return {
-                "username": username,
+                # El uid que entrega el directorio, no el texto que escribió el usuario
+                "username": str(user_entry.uid) if hasattr(user_entry, 'uid') else username,
                 "full_name": str(user_entry.cn) if hasattr(user_entry, 'cn') else username,
                 "email": str(user_entry.mail) if hasattr(user_entry, 'mail') else None,
                 "dn": user_dn
             }
 
-        except LDAPException as e:
-            # Log the exception in a real application (e.g., logger.error(str(e)))
-            raise RuntimeError(f"LDAP directory error: {str(e)}")
+        except LDAPException:
+            # Error del directorio en la búsqueda o el bind: 503 genérico, el detalle solo en el log
+            logger.exception("LDAP directory error")
+            raise _directory_unavailable()
 
     @classmethod
     def _verify_professor_membership(cls, user_dn: str, user_entry) -> bool:
