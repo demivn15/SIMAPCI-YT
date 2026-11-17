@@ -4,7 +4,7 @@ Description: Pruebas de integración HTTP para importación ORCID (T-HU12-02)
 y flujo de cola/revisión del consejo (T-HU12-03, CA34-CA38).
 """
 
-import pytest
+
 from fastapi.testclient import TestClient
 
 from app.main import app
