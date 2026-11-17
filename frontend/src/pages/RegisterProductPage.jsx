@@ -82,7 +82,8 @@ function toPayload(form) {
 
 function lookupErrorMessage(error) {
   if (!error?.response) {
-    return 'Verificación no realizada: No hay conexión con los servicios externos. Puedes completar los campos manualmente; tus datos se conservan.';
+    // Sin "response": la petición no llegó a nuestro servidor (apagado o sin red)
+    return 'Verificación no realizada: no hay conexión con el servidor. Puedes completar los campos manualmente; tus datos se conservan.';
   }
   if (error.response.status === 404) {
     return 'No encontramos datos para este DOI. Puedes completar o corregir los campos manualmente.';
@@ -106,9 +107,12 @@ const NOTICE_STYLES = {
   warning: 'bg-amber-50 border-amber-400 text-amber-800', // T-HU07-04: Aviso de verificación no realizada
 };
 
+// Errores y advertencias se anuncian de inmediato a lectores de pantalla (role="alert");
+// los avisos informativos, de forma discreta (role="status"). CA08 / PR-HU03-02.
 function Notice({ kind, children }) {
+  const role = kind === 'error' || kind === 'warning' ? 'alert' : 'status';
   return (
-    <div className={`border-l-4 p-4 text-sm rounded-r-md ${NOTICE_STYLES[kind]}`} role={kind === 'error' ? 'alert' : 'status'}>
+    <div className={`border-l-4 p-4 text-sm rounded-r-md ${NOTICE_STYLES[kind]}`} role={role}>
       {children}
     </div>
   );

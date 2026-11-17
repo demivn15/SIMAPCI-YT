@@ -95,9 +95,10 @@ describe('PR-HU03-01 · precarga con DOI válido (CA07)', () => {
 
 describe('PR-HU03-02 · caída del servicio externo durante el autocompletado (CA08)', () => {
   const casos = [
-    ['servicio no disponible (503)', errorHttp(503), /no está disponible ahora/],
-    ['tiempo de espera del backend (504)', errorHttp(504), /no está disponible ahora/],
-    ['sin conexión con el servidor', new Error('Network Error'), /No hay conexión con el servidor/],
+    // Mensajes de «verificación no realizada» de T-HU07-04 (PGPCECMC-62)
+    ['servicio no disponible (503)', errorHttp(503), /no está disponible o excedió el tiempo de espera/],
+    ['tiempo de espera del backend (504)', errorHttp(504), /no está disponible o excedió el tiempo de espera/],
+    ['sin conexión con el servidor', new Error('Network Error'), /no hay conexión con el servidor/],
     ['DOI sin datos (404)', errorHttp(404), /No encontramos datos para este DOI/],
   ];
 
