@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import PortalLayout from './components/portal/PortalLayout';
 import LoginPage from './pages/LoginPage';
 import PublicHomePage from './pages/PublicHomePage';
 import DashboardPage from './pages/DashboardPage';
@@ -21,8 +22,20 @@ export default function App() {
 
             {/* Protected Routes Guard */}
             <Route element={<ProtectedRoute allowedRoles={['professor']} />}>
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/products/new" element={<RegisterProductPage />} />
+              {/* Menú lateral, barra superior y pie del portal */}
+              <Route element={<PortalLayout />}>
+                <Route path="/dashboard" element={<DashboardPage />} />
+                {/* El registro se abre como ventana sobre el inicio, como en el prototipo */}
+                <Route
+                  path="/products/new"
+                  element={
+                    <>
+                      <DashboardPage />
+                      <RegisterProductPage />
+                    </>
+                  }
+                />
+              </Route>
             </Route>
 
             {/* Fallback Catch-all Redirect */}
