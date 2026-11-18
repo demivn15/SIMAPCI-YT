@@ -11,6 +11,7 @@ from app.models.product import Product
 from app.models.user import User
 from app.schemas.product import ProductCreate
 from app.services.notification_service import create_notification
+from app.services.product_identity_service import find_existing_product
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -31,13 +32,13 @@ class DuplicateProductError(ProductError):
 class ProductService:
     @staticmethod
     def _find_duplicate(db: Session, data: ProductCreate) -> str | None:
-        """Devuelve el motivo del duplicado ('doi' o 'project_code') o None si no hay."""
+        """Devuelve el motivo del duplicado ('doi' o 'project_code') o None si no hay.
 
-        if data.doi and db.scalar(select(Product.id).where(Product.doi == data.doi)):
-            return "doi"
-        if data.project_code and db.scalar(select(Product.id).where(Product.project_code == data.project_code)):
-            return "project_code"
-        return None
+        Delega en el verificador común de T-HU07-02 (PGPCECMC-60), el mismo que usan la
+        importación ORCID y la consulta previa GET /products/exists.
+        """
+        check = find_existing_product(db, doi=data.doi, project_code=data.project_code)
+        return check.field if check.exists else None
 
     @classmethod
     def create_product(cls, db: Session, owner_id: str | None, data: ProductCreate) -> Product:
@@ -92,7 +93,8 @@ class ProductService:
         imported_products = []
 
         for item in items:
-            if item.doi and db.scalar(select(Product.id).where(Product.doi == item.doi)):
+            # CA37 / RU-10: un DOI ya registrado (en cualquier formato) no se vuelve a importar
+            if item.doi and find_existing_product(db, doi=item.doi).exists:
                 continue
 
             existing_orcid = db.scalar(

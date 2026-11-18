@@ -3,10 +3,11 @@ File: product.py
 Description: Product creation schema, ORCID import schema, review decisions, and input validations (T-HU03-04, T-HU12-02, T-HU12-03).
 """
 
-import re
 from datetime import date, datetime
 from typing import Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from app.utils.identifiers import is_valid_doi, normalize_doi, normalize_project_code
 
 MIN_YEAR = 1900
 RESEARCH_LINES = (
@@ -18,6 +19,22 @@ RESEARCH_LINES = (
     "Ciencia, Tecnología y Sociedad",
 )
 PROJECT_STATUSES = ("activo", "en_pausa", "finalizado", "cancelado")
+
+
+def _canonical_doi(value: str | None) -> str | None:
+    """Normaliza el DOI y exige el formato 10.<prefijo>/<sufijo> (regla RU-02, T-HU07-02).
+
+    Un texto vacío equivale a no tener DOI (CA21). Antes había tres versiones de esta
+    normalización; ahora todas usan app/utils/identifiers.py.
+    """
+    if value is None:
+        return None
+    doi = normalize_doi(value)
+    if not doi:
+        return None
+    if not is_valid_doi(doi):
+        raise ValueError("DOI is not valid. Expected format: 10.<prefix>/<suffix>.")
+    return doi
 
 
 class ProductCreate(BaseModel):
@@ -65,11 +82,7 @@ class ProductCreate(BaseModel):
     @field_validator("doi")
     @classmethod
     def doi_in_canonical_form(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        value = re.sub(r"^https?://(?:dx\.)?doi\.org/", "", value.strip().lower())
-        value = re.sub(r"^doi:\s*", "", value).rstrip("/")
-        return value or None
+        return _canonical_doi(value)
 
     @field_validator("abstract", "venue", "project_code")
     @classmethod
@@ -83,7 +96,8 @@ class ProductCreate(BaseModel):
                 raise ValueError("Project code is required for projects.")
             if self.project_status not in PROJECT_STATUSES:
                 raise ValueError("Invalid project status.")
-            self.project_code = self.project_code.upper()
+            # RU-03 (T-HU07-02): misma forma que usa la verificación de existencia
+            self.project_code = normalize_project_code(self.project_code)
             self.doi = None
             self.venue = None
         else:
@@ -107,11 +121,7 @@ class OrcidItemImport(BaseModel):
     @field_validator("doi")
     @classmethod
     def doi_canonical(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        value = re.sub(r"^https?://(?:dx\.)?doi\.org/", "", value.strip().lower())
-        value = re.sub(r"^doi:\s*", "", value).rstrip("/")
-        return value or None
+        return _canonical_doi(value)
 
 
 class ReviewDecisionSchema(BaseModel):
@@ -157,3 +167,21 @@ class ProductResponse(BaseModel):
 
     created_at: datetime
     updated_at: datetime
+
+
+class ProductExistenceResponse(BaseModel):
+    """
+    Respuesta de GET /api/v1/products/exists - T-HU07-02 (PGPCECMC-60).
+
+    - verifiable=False: no se envió DOI ni código; el registro puede continuar con el
+      aviso de verificación no realizada (CA21).
+    - exists=True: el identificador ya está registrado (CA20); field dice cuál coincidió.
+    - public_product_id: solo si el producto existente es visible públicamente (RU-08),
+      para enlazar su detalle sin revelar productos pendientes o rechazados.
+    """
+
+    verifiable: bool
+    exists: bool
+    field: Optional[Literal["doi", "project_code"]] = None
+    normalized_identifier: Optional[str] = None
+    public_product_id: Optional[str] = None
