@@ -2,14 +2,22 @@
 File: app/api/v1/products.py
 Description: API router for managing scientific products, ORCID imports, and council reviews (HU03, HU12).
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from typing import List
 
 from app.api.deps import get_current_professor
 from app.db.session import get_db
 from app.models.user import User  # <-- Importamos User al inicio correctamente
-from app.schemas.product import ProductCreate, ProductResponse, OrcidItemImport, ReviewDecisionSchema
+from app.schemas.product import (
+    OrcidItemImport,
+    ProductCreate,
+    ProductExistenceResponse,
+    ProductResponse,
+    ReviewDecisionSchema,
+)
+from app.services.product_identity_service import find_existing_product
+from app.utils.identifiers import is_valid_doi, normalize_doi
 from app.services.product_service import DuplicateProductError, InvalidOwnerError, ProductError, ProductService
 
 router = APIRouter(prefix="/products", tags=["Products"])
@@ -31,6 +39,37 @@ def create_product(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
     except DuplicateProductError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+
+
+@router.get("/exists", response_model=ProductExistenceResponse, status_code=status.HTTP_200_OK)
+def check_product_existence(
+    doi: str | None = Query(default=None, max_length=255, description="DOI en cualquier formato"),
+    project_code: str | None = Query(default=None, max_length=64, description="Código del proyecto"),
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_professor),
+):
+    """
+    Pre-save existence check (T-HU07-02, PGPCECMC-60; CA19, CA20, CA21).
+
+    Lets the registration form warn the professor before submitting. It is
+    informative: POST /products repeats the check and answers 409 on duplicates.
+    422 if the DOI does not have the form 10.<prefix>/<suffix>.
+    """
+    clean_doi = normalize_doi(doi)
+    if clean_doi and not is_valid_doi(clean_doi):
+        raise HTTPException(
+            status_code=422,  # Unprocessable Content
+            detail="DOI is not valid. Expected format: 10.<prefix>/<suffix>.",
+        )
+
+    check = find_existing_product(db, doi=clean_doi, project_code=project_code)
+    return ProductExistenceResponse(
+        verifiable=check.verifiable,
+        exists=check.exists,
+        field=check.field,
+        normalized_identifier=check.normalized_identifier,
+        public_product_id=check.public_product_id,
+    )
 
 
 @router.post("/orcid-import", response_model=List[ProductResponse], status_code=status.HTTP_200_OK)
