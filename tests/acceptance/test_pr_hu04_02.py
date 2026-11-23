@@ -93,12 +93,8 @@ def test_cp04_un_pdf_que_excede_el_tamano_se_rechaza(profesor):
     assert str(LIMITE_MB) in respuesta.json()["detail"]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECTO D-08: app/utils/file_validation.py acepta DOCX y ZIP además de PDF, pero CA11 y "
-    "HU04 piden rechazar todo lo que no sea PDF (también el frontend los permite en fileValidation.js). "
-    "T-HU04-03 (PGPCECMC-42).",
-)
+# DEFECTO D-08 corregido en T-HU04-05 (PGPCECMC-91): app/utils/file_validation.py ya solo admite
+# application/pdf, y el frontend hace lo mismo en fileValidation.js.
 @pytest.mark.parametrize(
     "nombre, tipo",
     [("proyecto.docx", DOCX), ("proyecto.zip", "application/zip")],
@@ -111,12 +107,8 @@ def test_cp05_docx_y_zip_se_rechazan_porque_no_son_pdf(profesor, nombre, tipo):
     assert respuesta.status_code in (400, 415)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECTO D-09: un PDF dañado (encabezado %PDF pero sin estructura) pasa la validación y "
-    "pdfplumber lanza PdfminerException al extraer; la API responde 500 sin mensaje claro. La "
-    "validación de integridad debería rechazarlo con 400. T-HU04-03 (PGPCECMC-42).",
-)
+# DEFECTO D-09 corregido en T-HU04-05 (PGPCECMC-91): la extracción lanza UnreadableDocumentError
+# cuando pdfplumber no puede abrir el PDF y el endpoint la traduce a 400 con un mensaje claro.
 def test_cp06_un_pdf_danado_se_rechaza_con_mensaje_claro(profesor):
     """CP-06 · CA11: un PDF dañado se rechaza con 400 y mensaje, nunca con un error interno (500)."""
     respuesta = _subir(profesor, "proyecto.pdf", b"%PDF-1.4\n contenido roto sin estructura", "application/pdf")

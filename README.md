@@ -60,8 +60,10 @@ A secure, scalable, role-based authentication and authorization web application 
 7. **Product Registration (HU03, HU07 · PGPCECMC-34, 35, 36):**
    * `POST /api/v1/products` saves the product for the signed-in professor with the initial status «cargado».
    * The DOI is normalized before saving; a DOI or project code that already exists returns `409`, so the same work is not registered twice.
-8. **Document Upload and Extraction (HU04 · PGPCECMC-42, 43):**
-   * `POST /api/v1/integrations/upload` checks type, size (max 25 MB) and content (magic bytes), computes a SHA-256 integrity hash and, for PDFs, extracts title, authors, year and abstract with `pdfplumber` to prefill the form.
+8. **Document Upload and Extraction (HU04 · PGPCECMC-42, 43, 91):**
+   * `POST /api/v1/integrations/upload` checks type, size (max 25 MB) and content (magic bytes), computes a SHA-256 integrity hash and extracts title, authors, year and abstract with `pdfplumber` to prefill the form.
+   * **Unrecognized format (PGPCECMC-91):** PDF is the only format the system can read, so anything else is rejected with `400`; a file that carries the `%PDF` header but cannot be parsed (damaged, truncated or password-protected) is also rejected with `400` and a clear message instead of an internal error.
+   * **Partial extraction (PGPCECMC-91):** reading a PDF and identifying only some fields is not a failure. The response carries an `extraction` report (`status`: `completa` / `parcial` / `vacia`, plus `fields_found`, `fields_missing` and a message), so the form prefills what was identified, leaves the rest editable and tells the professor what is left to complete. A scanned PDF with no text is reported as `vacia`, still with `200`.
 9. **ORCID Import and Council Review (HU12):**
    * `POST /api/v1/products/orcid-import` saves a professor's ORCID works with source `orcid`, skipping works whose DOI or ORCID id is already stored.
    * Council members (role `reviewer`) list pending products and approve («verificado») or reject («rechazado», with a reason) them; the decision, the reviewer and the date are stored.
@@ -157,8 +159,8 @@ A secure, scalable, role-based authentication and authorization web application 
 │   │   └── orcid.py             # ORCID works adapter
 │   └── utils/
 │       ├── identifiers.py       # DOI / ORCID normalization and validation
-│       ├── file_validation.py   # Upload type, size, magic bytes and SHA-256
-│       └── pdf_extractor.py     # Field extraction from PDFs (pdfplumber)
+│       ├── file_validation.py   # Upload type (PDF only), size, magic bytes and SHA-256
+│       └── pdf_extractor.py     # Field extraction from PDFs (pdfplumber) + unreadable / partial handling
 ├── migrations/
 │   └── versions/
 │       ├── 0001_create_users_table.py
@@ -171,7 +173,7 @@ A secure, scalable, role-based authentication and authorization web application 
 │   │   ├── context/             # AuthContext & TanStack Query wrapper
 │   │   ├── pages/               # PublicHomePage, LoginPage, DashboardPage, RegisterProductPage (+ *.test.jsx)
 │   │   ├── services/            # api.js (Axios, withCredentials) and productService.js
-│   │   ├── utils/               # loginMessages.js (status code → message), fileValidation.js (upload checks)
+│   │   ├── utils/               # loginMessages.js (status code → message), fileValidation.js (PDF-only upload checks)
 │   │   ├── constants/           # products.js (types, research lines, project states), school.js (ECMC data)
 │   │   ├── styles/              # portal.css (look of the prototype)
 │   │   └── assets/fonts/        # Bricolage Grotesque and Source Sans 3 (OFL licenses included)
@@ -182,7 +184,7 @@ A secure, scalable, role-based authentication and authorization web application 
 │   ├── backend/                 # Unit and integration tests per module
 │   ├── acceptance/              # Acceptance tests, one file per Jira test case (PR-HUxx-yy)
 │   ├── performance/             # Response-time measurements (T-HU02-07)
-│   └── support/                 # Test doubles: simulated LDAP directory and simulated network
+│   └── support/                 # Test doubles: simulated LDAP directory, simulated network, test PDFs
 └── docs/
     └── deployment.md            # Deployment notes and limits (Render)
 ```
@@ -202,13 +204,13 @@ A secure, scalable, role-based authentication and authorization web application 
 | `GET` | `/api/v1/professor/dashboard` | Professor session | Example private route |
 | `GET` | `/api/v1/integrations/doi/{doi}` | Professor session | Metadata for a DOI (title, authors, year, venue, abstract). Accepts `https://doi.org/...` links |
 | `GET` | `/api/v1/integrations/orcid/{orcid}/works` | Professor session | Public works of an ORCID profile, without duplicates |
-| `POST` | `/api/v1/integrations/upload` | Public (session check pending) | Validates an uploaded file (type, 25 MB limit, magic bytes, SHA-256) and extracts fields from PDFs |
+| `POST` | `/api/v1/integrations/upload` | Public (session check pending) | Validates an uploaded PDF (type, 25 MB limit, magic bytes, SHA-256) and extracts its fields, reporting which ones are still missing |
 | `POST` | `/api/v1/products` | Professor session | Saves a publication or project with status «cargado». `409` if the DOI or project code already exists |
 | `POST` | `/api/v1/products/orcid-import` | Professor session | Saves ORCID works (source `orcid`) and skips the ones already stored |
 | `GET` | `/api/v1/products/review-queue` | Professor session + `reviewer` role in the database | Products waiting for the council |
 | `PATCH` | `/api/v1/products/{id}/review` | Professor session + `reviewer` role in the database | Approves («verificado») or rejects («rechazado», reason required) a pending product |
 
-Login status codes: `401` invalid credentials or not a professor · `403` inactive account · `409` email already linked to another account · `502` the directory returned an incomplete identity · `503` directory unreachable. Integration status codes: `400` malformed identifier · `404` no data · `503` external service unavailable.
+Login status codes: `401` invalid credentials or not a professor · `403` inactive account · `409` email already linked to another account · `502` the directory returned an incomplete identity · `503` directory unreachable. Integration status codes: `400` malformed identifier · `404` no data · `503` external service unavailable. Upload status codes: `400` not a PDF or PDF that cannot be read · `413` over the size limit.
 
 ### Frontend Routes
 
@@ -238,7 +240,7 @@ The screens follow the design of the `prototype` branch (ECMC colors, fonts and 
 
 | User story | Implemented in `main` | Still pending |
 | :--- | :--- | :--- |
-| **HU04** Autocomplete a research project from its PDF | Upload with type, size and integrity checks (PGPCECMC-42), PDF field extraction (PGPCECMC-43), test PR-HU04-02 | PGPCECMC-40, 41, 44, 45 |
+| **HU04** Autocomplete a research project from its PDF | Upload with type, size and integrity checks (PGPCECMC-42), PDF field extraction (PGPCECMC-43), handling of unrecognized formats and partial extraction (PGPCECMC-91), test PR-HU04-02 | PGPCECMC-40, 41, 44, 45 |
 | **HU05** View the scientific production (public) | — | Public list and detail (`/produccion`), PGPCECMC-47 to 52 |
 | **HU06** Filter the scientific production | — | Filters on the HU05 list, PGPCECMC-53 to 58 |
 | **HU07** Check that a product exists before adding it | DOI normalization and duplicate control, tests PR-HU07-01 and PR-HU07-02 | CA21 notice (PGPCECMC-63) |
@@ -266,6 +268,7 @@ The QA suite turns each Jira test case into an automated test and runs the team'
 | PGPCECMC-103 | PR-HU03-01 · Product registration with a valid DOI and prefilled data | `tests/acceptance/test_pr_hu03_01.py` + `frontend/src/pages/RegisterProductPage.test.jsx` |
 | PGPCECMC-104 | PR-HU03-02 · External service outage during autocomplete | `tests/acceptance/test_pr_hu03_02.py` + `frontend/src/pages/RegisterProductPage.test.jsx` |
 | PGPCECMC-106 | PR-HU04-02 · Non-PDF, damaged and oversized files are rejected without losing the form | `tests/acceptance/test_pr_hu04_02.py` + `frontend/src/pages/RegisterProductPage.hu04.test.jsx` |
+| PGPCECMC-91 | T-HU04-05 · Unrecognized format rejected with a clear message, and partial extraction reported instead of failing | `tests/backend/test_pdf_extraction.py` + `frontend/src/pages/RegisterProductPage.hu04-extraccion.test.jsx` |
 | PGPCECMC-111 | PR-HU07-01 · Duplicate DOI rejected in its different formats | `tests/acceptance/test_pr_hu07_01.py` |
 | PGPCECMC-112 | PR-HU07-02 · Product without DOI or project code | `tests/acceptance/test_pr_hu07_02.py` + `frontend/src/pages/RegisterProductPage.hu07.test.jsx` |
 | PGPCECMC-113 | PR-HU08-01 · One notification per status change, with the reason on rejection | `tests/acceptance/test_pr_hu08_01.py` |
@@ -286,7 +289,7 @@ cd frontend && npm run lint     # frontend lint (ESLint)
 cd frontend && npm run build    # frontend production build
 ```
 
-Current results on `main`: backend `269 passed, 1 skipped, 7 xfailed`; frontend `27 passed, 2 expected fail`. CI runs only the backend (`ruff` + `pytest`), so run the frontend commands locally before opening a pull request.
+Current results on `main`: backend `349 passed, 1 skipped, 4 xfailed`; frontend `43 passed, 1 expected fail`. CI runs only the backend (`ruff` + `pytest`), so run the frontend commands locally before opening a pull request.
 
 ### Known defects documented by tests
 
@@ -295,8 +298,10 @@ Current results on `main`: backend `269 passed, 1 skipped, 7 xfailed`; frontend 
 | D-05 | Review routes use `get_current_professor`, so a council member (role `reviewer`) gets `403` | PR-HU08-01 CP-08, PR-HU12-02 CP-07 | PGPCECMC-96 |
 | D-06 | Saving without DOI does not warn that duplicates were not checked (CA21) | `RegisterProductPage.hu07.test.jsx` CP-07 | PGPCECMC-63 |
 | D-07 | ORCID import does not validate the year or the research line | PR-HU12-01 CP-09 | PGPCECMC-95 |
-| D-08 | Upload accepts DOCX and ZIP although CA11 asks for PDF only | PR-HU04-02 CP-05, `RegisterProductPage.hu04.test.jsx` CP-10 | PGPCECMC-42 |
-| D-09 | A damaged PDF returns `500` instead of a clear `400` | PR-HU04-02 CP-06 | PGPCECMC-42 |
+
+Closed: **D-08** (upload accepted DOCX and ZIP) and **D-09** (a damaged PDF returned `500`), both fixed in T-HU04-05 (PGPCECMC-91). Their test cases — PR-HU04-02 CP-05 and CP-06, and `RegisterProductPage.hu04.test.jsx` CP-10 — now pass.
+
+One open discrepancy against Jira: T-HU04-03 asks for a **10 MB** limit and both the code and PR-HU04-02 CP-04 use **25 MB** (PGPCECMC-42).
 
 ---
 
@@ -378,7 +383,7 @@ npm.cmd run dev
 
 * **`notifications` has no migration.** The model exists, but `0002` only creates `products`. In MySQL, saving or reviewing a product can fail until a `0003` migration creates the table (HU08, PGPCECMC-67).
 * **Upload without session check.** `POST /api/v1/integrations/upload` does not require a professor session yet.
-* **Defects D-05 to D-09** (see [Known defects documented by tests](#known-defects-documented-by-tests)).
+* **Defects D-05 to D-07** (see [Known defects documented by tests](#known-defects-documented-by-tests)).
 
 ---
 

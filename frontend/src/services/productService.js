@@ -76,11 +76,29 @@ export async function createProduct(product) {
   return data;
 }
 
+/**
+ * Carga el PDF del proyecto y devuelve los campos que el backend logró identificar
+ * (T-HU04-03 / T-HU04-04, y el manejo de T-HU04-05 / PGPCECMC-91).
+ *
+ * POST /integrations/upload (multipart). Respuesta (200):
+ *   {
+ *     file: { filename, size, content_type, integrity_sha256 },
+ *     extracted_fields: { title, authors, year, research_line, venue, abstract },
+ *     extraction: { status, fields_found, fields_missing, message }
+ *   }
+ * `extraction.status` es 'completa', 'parcial' o 'vacia'. Las tres son respuestas correctas:
+ * una extracción parcial o vacía solo significa que quedan campos por llenar a mano (CA10).
+ *
+ * 400 = el archivo no es un PDF o el PDF no se puede leer (dañado, incompleto o protegido)
+ * 413 = el archivo excede el tamaño permitido
+ * En todos los casos el registro en curso del formulario se conserva (CA11).
+ */
 export const uploadAndExtractPdf = async (file) => {
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await api.post('/api/v1/integrations/upload', formData, {
+  // La baseURL de api ya incluye /api/v1; la ruta aquí es relativa a ella.
+  const response = await api.post('/integrations/upload', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
