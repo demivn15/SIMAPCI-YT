@@ -54,6 +54,34 @@ function toFormValues(metadata) {
   };
 }
 
+/**
+ * Aviso de la carga del documento, armado con el reporte de extracción del backend
+ * (T-HU04-05, PGPCECMC-91; CA10).
+ *
+ * - 'completa': se identificó todo, solo queda revisar -> aviso informativo.
+ * - 'parcial' / 'vacia': el PDF se leyó pero quedan campos sin identificar -> advertencia, para
+ *   que el profesor sepa que todavía le toca completarlos a mano antes de guardar.
+ *
+ * Si la respuesta no trae el reporte, se arma el mensaje con lo que se alcanzó a precargar.
+ */
+function extractionNotice(extraction, filledCount, keptCount) {
+  const kept = keptCount > 0 ? ' Los campos que ya habías escrito se conservaron.' : '';
+  const prefilled = filledCount > 0 ? `Se precargaron ${filledCount} campos desde el documento. ` : '';
+
+  if (!extraction?.message) {
+    const message =
+      filledCount > 0
+        ? `${prefilled}Revísalos antes de guardar.`
+        : 'El documento no aportó datos para los campos vacíos. Complétalos manualmente.';
+    return { kind: filledCount > 0 ? 'info' : 'warning', message: message + kept };
+  }
+
+  return {
+    kind: extraction.status === 'completa' ? 'info' : 'warning',
+    message: `${prefilled}${extraction.message}${kept}`,
+  };
+}
+
 function validate(form) {
   const errors = {};
   if (!form.title.trim()) errors.title = 'Ingresa el título.';
@@ -196,13 +224,19 @@ export default function RegisterProductPage() {
     setUploadNotice(null);
   };
 
-  // Subida de archivo y extracción con manejo de verificación no realizada (T-HU04-03 / T-HU04-04 / T-HU07-04)
+  // Subida del PDF y extracción de campos (T-HU04-03 / T-HU04-04 / T-HU07-04), con el manejo de
+  // documentos de formato no reconocido o extracción parcial de T-HU04-05 (PGPCECMC-91).
+  //
+  // Pase lo que pase, el registro en curso se conserva: ni un formato rechazado ni una extracción
+  // fallida borran lo que el profesor ya escribió (CA11), y los campos que no se logran
+  // identificar quedan vacíos y editables para que los complete a mano (CA10).
   const handleFileUpload = async (event) => {
     const selectedFile = event.target.files?.[0];
     if (!selectedFile) return;
 
     setUploadNotice(null);
 
+    // Formato no reconocido o tamaño excedido: se rechaza sin llegar a enviar el archivo.
     const validation = validateFileClientSide(selectedFile);
     if (!validation.valid) {
       setUploadNotice({ kind: 'error', message: validation.error });
@@ -229,16 +263,10 @@ export default function RegisterProductPage() {
       });
       setPrefilled((prev) => Array.from(new Set([...prev, ...filled])));
 
-      let message =
-        filled.length > 0
-          ? `Coincidencia exitosa: Se precargaron ${filled.length} campos desde el documento. Revísalos antes de guardar.`
-          : 'Verificación completada: El documento no aportó datos nuevos para los campos vacíos.';
-      if (kept.length > 0) message += ' Los campos que ya habías escrito se conservaron.';
-      
-      setUploadNotice({ kind: 'info', message });
+      setUploadNotice(extractionNotice(result.extraction, filled.length, kept.length));
     } catch (error) {
       // Aviso de verificación no realizada (T-HU07-04) permitiendo llenado manual
-      const message = error.response?.data?.detail || 
+      const message = error.response?.data?.detail ||
         'Verificación no realizada: No se pudo procesar el documento automáticamente. Puedes completar los campos manualmente; tu información se conserva.';
       setUploadNotice({ kind: 'warning', message });
     } finally {
@@ -463,15 +491,16 @@ export default function RegisterProductPage() {
                 <div className="form-panel">
                   <p className="form-panel-title">
                     <FileCheck2 size={15} aria-hidden="true" />
-                    Cargar documento del proyecto (PDF, DOCX, ZIP)
+                    Cargar documento del proyecto (PDF)
                   </p>
                   <p className="field-hint" id="file-hint">
-                    Sube el archivo del documento para validar su integridad y extraer los campos automáticamente.
+                    Sube el PDF del documento para validar su integridad y extraer los campos automáticamente. Los
+                    campos que no se puedan identificar quedan vacíos para que los completes a mano.
                   </p>
                   <input
                     id="product-file"
                     type="file"
-                    accept=".pdf,.docx,.zip"
+                    accept="application/pdf,.pdf"
                     onChange={handleFileUpload}
                     disabled={isSaving || isExtracting}
                     aria-describedby="file-hint"

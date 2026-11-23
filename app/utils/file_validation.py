@@ -1,11 +1,20 @@
+"""
+File: file_validation.py
+Description: Validación de tipo, tamaño e integridad del archivo cargado (T-HU04-03) y rechazo
+             de los formatos no reconocidos (T-HU04-05, PGPCECMC-91). Criterio CA11.
+
+HU04 es «Autocompletar un proyecto de investigación desde su PDF»: el único formato que el
+sistema sabe leer es PDF, así que cualquier otro se rechaza aquí (defecto D-08 de PR-HU04-02).
+Un PDF con el encabezado correcto pero ilegible no se distingue por sus bytes: de ese caso se
+encarga la extracción (app/utils/pdf_extractor.py) y el endpoint lo traduce a 400.
+"""
+
 import hashlib
 from fastapi import HTTPException, UploadFile, status
 
-# Allowed MIME types and their corresponding magic number headers (bytes)
+# Único tipo admitido y su número mágico (firma de los primeros bytes).
 ALLOWED_MIME_TYPES = {
     "application/pdf": [b"%PDF"],
-    "application/zip": [b"PK\x03\x04"],
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [b"PK\x03\x04"],
 }
 
 MAX_FILE_SIZE_MB = 25

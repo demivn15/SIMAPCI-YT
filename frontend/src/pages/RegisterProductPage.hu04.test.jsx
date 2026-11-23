@@ -99,10 +99,8 @@ describe('PR-HU04-02 · rechazo de archivos inválidos sin perder el registro en
     registroIntacto();
   });
 
-  // DEFECTO D-08: fileValidation.js acepta DOCX y ZIP, pero CA11 pide rechazar todo lo que no sea
-  // PDF. it.fails pasa mientras el defecto exista; cuando se corrija, cambiar it.fails por it.
-  // Relacionado con T-HU04-03 (PGPCECMC-42).
-  it.fails('CP-10: un DOCX se rechaza en la pantalla porque no es PDF', async () => {
+  // DEFECTO D-08 corregido en T-HU04-05 (PGPCECMC-91): fileValidation.js ya solo acepta PDF.
+  it('CP-10: un DOCX se rechaza en la pantalla porque no es PDF', async () => {
     vi.mocked(uploadAndExtractPdf).mockResolvedValue({ file: { filename: 'p.docx' }, extracted_fields: {} });
     renderizar();
 

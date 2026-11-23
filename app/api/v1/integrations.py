@@ -16,11 +16,12 @@ from app.integrations.openalex import OpenAlexClient
 from app.integrations.orcid import OrcidClient
 from app.services.doi_lookup_service import DoiLookupService
 from app.utils.file_validation import validate_and_process_file
-from app.utils.pdf_extractor import extract_fields_from_pdf
+from app.utils.pdf_extractor import UnreadableDocumentError, extract_fields_from_pdf
 from app.utils.identifiers import is_valid_doi, is_valid_orcid, normalize_doi, normalize_orcid
 from collections.abc import Iterator
 from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
 from pydantic import BaseModel
+from typing import Literal
 
 import httpx2
 
@@ -45,6 +46,35 @@ class OrcidWorkOut(BaseModel):
     doi: str | None
     venue: str | None
     work_type: str | None
+
+
+class UploadedFileOut(BaseModel):
+    """Archivo aceptado por la validación de tipo, tamaño e integridad (T-HU04-03)."""
+
+    filename: str | None
+    size: int
+    content_type: str | None
+    integrity_sha256: str
+
+
+class ExtractionReportOut(BaseModel):
+    """Qué se logró identificar en el documento y qué queda por completar (T-HU04-05, CA10).
+
+    status: 'completa' (todos los campos), 'parcial' (algunos) o 'vacia' (ninguno, por ejemplo
+    un PDF escaneado). Ninguno de los tres es un error: el formulario precarga lo identificado
+    y deja el resto editable.
+    """
+
+    status: Literal["completa", "parcial", "vacia"]
+    fields_found: list[str]
+    fields_missing: list[str]
+    message: str
+
+
+class ProductFileUploadOut(BaseModel):
+    file: UploadedFileOut
+    extracted_fields: dict[str, str]
+    extraction: ExtractionReportOut
 
 
 # --- Dependencias (las pruebas las reemplazan por clientes simulados) -----------
@@ -115,21 +145,32 @@ def list_orcid_works(
 
     return [OrcidWorkOut(**work.__dict__) for work in works]
 
-@router.post("/upload")
+@router.post("/upload", response_model=ProductFileUploadOut)
 async def upload_and_extract_product_file(file: UploadFile = File(...)):
-  """
-    Validates type, size, and integrity (T-HU04-03) and extracts metadata fields
-    from PDF project documents (T-HU04-04).
+    """Carga del documento del proyecto y extracción de sus campos (CA10, CA11).
+
+    1. Valida tipo, tamaño, número mágico y calcula el hash de integridad (T-HU04-03).
+    2. Extrae los campos que logre identificar (T-HU04-04).
+
+    T-HU04-05 (PGPCECMC-91) cubre los dos casos que no son un PDF de proyecto normal:
+      - Formato no reconocido: lo que no es PDF se rechaza en la validación y un PDF ilegible
+        (dañado, truncado o protegido) se rechaza aquí con 400 y un mensaje claro, no con un
+        error interno. En ambos casos el registro en curso del profesor no se altera.
+      - Extracción parcial: si el PDF se lee pero solo se identifican algunos campos (o
+        ninguno), la respuesta sigue siendo 200 e incluye en `extraction` qué se identificó y
+        qué falta, para que el formulario precargue eso y deje el resto editable.
     """
-  # 1. Validate type, size, magic numbers, and compute SHA-256 integrity hash
-  file_metadata = await validate_and_process_file(file)
+    # 1. Tipo, tamaño, firma de bytes y hash SHA-256 de integridad.
+    file_metadata = await validate_and_process_file(file)
 
-  # 2. Extract fields if the uploaded file is a PDF
-  extracted_fields = {}
-  if file.content_type == "application/pdf":
-    extracted_fields = await extract_fields_from_pdf(file)
+    # 2. Extracción. Solo llegan archivos PDF: la validación rechaza cualquier otro tipo.
+    try:
+        extraction = await extract_fields_from_pdf(file)
+    except UnreadableDocumentError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
 
-  return {
-      "file": file_metadata,
-      "extracted_fields": extracted_fields,
-  }
+    return ProductFileUploadOut(
+        file=UploadedFileOut(**file_metadata),
+        extracted_fields=extraction.fields,
+        extraction=ExtractionReportOut(**extraction.as_dict()),
+    )
