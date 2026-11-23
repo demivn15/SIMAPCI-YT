@@ -1,7 +1,12 @@
 /**
- * Formulario de registro de productos - T-HU03-01, T-HU07-04 y T-HU07-05 (PGPCECMC-63).
+ * Formulario de registro de productos - T-HU03-01, T-HU04-06 (PGPCECMC-45), T-HU07-04 y
+ * T-HU07-05 (PGPCECMC-63).
  * Incluye validación de archivos, autocompletado por DOI y extracción de PDF,
  * con mensajes claros de coincidencia y aviso de verificación no realizada (CA08).
+ *
+ * La extracción del PDF precarga los campos identificados según el tipo de producto elegido y
+ * los marca como «Precargado»; todos quedan editables y nada se guarda hasta que el profesor
+ * pulsa «Guardar producto» (CA10 y CA12).
  *
  * Antes de guardar, el formulario verifica si el identificador ya está registrado (CA19): si
  * coincide, no se guarda y se informa con qué coincidió (CA20); si no hay identificador, se
@@ -50,7 +55,18 @@ const EMPTY_FORM = {
   projectStatus: 'activo',
 };
 
-const AUTOFILL_FIELDS = ['title', 'authors', 'year', 'venue', 'abstract'];
+// Campos que puede precargar la consulta por DOI (HU03, CA07): siempre una publicación.
+const DOI_AUTOFILL_FIELDS = ['title', 'authors', 'year', 'venue', 'abstract'];
+
+// Campos que puede precargar el PDF (HU04, CA10). Dependen del tipo de producto, porque el
+// formulario no muestra los mismos campos en una publicación que en un proyecto: la revista
+// solo existe en publicaciones y el código institucional solo en proyectos. Así el aviso no
+// cuenta como «precargado» un campo que el profesor ni siquiera tiene en pantalla.
+const PDF_AUTOFILL_FIELDS = {
+  publicacion: ['title', 'authors', 'year', 'researchLine', 'venue', 'abstract'],
+  proyecto: ['title', 'authors', 'year', 'researchLine', 'abstract', 'projectCode'],
+};
+
 const CURRENT_YEAR = new Date().getFullYear();
 
 const labelClass = 'field-label';
@@ -62,6 +78,38 @@ function toFormValues(metadata) {
     year: metadata.year ? String(metadata.year) : '',
     venue: metadata.venue || '',
     abstract: metadata.abstract || '',
+  };
+}
+
+/**
+ * La línea de investigación es un catálogo cerrado (un `select`), así que un texto libre del PDF
+ * no se puede precargar tal cual: solo se precarga si corresponde a una línea oficial de la ECMC,
+ * ya sea exactamente o porque el texto extraído la contiene («Línea: Ciencia de datos»). Si no
+ * corresponde a ninguna, el campo queda vacío para que el profesor la elija (CA10).
+ */
+function matchResearchLine(value) {
+  const text = (value || '').trim().toLowerCase();
+  if (!text) return '';
+
+  return (
+    RESEARCH_LINES.find((line) => line.toLowerCase() === text) ??
+    RESEARCH_LINES.find((line) => text.includes(line.toLowerCase())) ??
+    ''
+  );
+}
+
+/**
+ * Traduce los campos extraídos del PDF a los del formulario - T-HU04-06 (PGPCECMC-45).
+ *
+ * Comparte con el DOI el mapeo de los campos comunes y añade los que solo llegan del documento:
+ * la línea de investigación y el código institucional del proyecto. `project_code` todavía no lo
+ * devuelve el extractor (T-HU04-04, PGPCECMC-43), pero queda conectado para cuando lo haga.
+ */
+function toFormValuesFromPdf(extracted) {
+  return {
+    ...toFormValues(extracted),
+    researchLine: matchResearchLine(extracted.research_line),
+    projectCode: (extracted.project_code || '').trim().toUpperCase(),
   };
 }
 
@@ -314,10 +362,13 @@ export default function RegisterProductPage() {
       setFileMetadata(result.file);
 
       const extracted = result.extracted_fields || {};
-      const values = toFormValues(extracted);
+      const values = toFormValuesFromPdf(extracted);
 
-      const filled = AUTOFILL_FIELDS.filter((field) => values[field] && !form[field].trim());
-      const kept = AUTOFILL_FIELDS.filter((field) => values[field] && form[field].trim());
+      // Solo se consideran los campos que el tipo de producto elegido tiene en pantalla (CA10).
+      // Lo que el profesor ya había escrito no se pisa: queda en `kept` y se le avisa.
+      const autofillFields = PDF_AUTOFILL_FIELDS[form.type] ?? PDF_AUTOFILL_FIELDS.publicacion;
+      const filled = autofillFields.filter((field) => values[field] && !form[field].trim());
+      const kept = autofillFields.filter((field) => values[field] && form[field].trim());
 
       setForm((prev) => {
         const next = { ...prev };
@@ -353,8 +404,8 @@ export default function RegisterProductPage() {
     try {
       const values = toFormValues(await lookupDoi(doi));
 
-      const filled = AUTOFILL_FIELDS.filter((field) => values[field] && !form[field].trim());
-      const kept = AUTOFILL_FIELDS.filter((field) => values[field] && form[field].trim());
+      const filled = DOI_AUTOFILL_FIELDS.filter((field) => values[field] && !form[field].trim());
+      const kept = DOI_AUTOFILL_FIELDS.filter((field) => values[field] && form[field].trim());
 
       setForm((prev) => {
         const next = { ...prev, doi };
@@ -569,15 +620,17 @@ export default function RegisterProductPage() {
                   </div>
                 )}
 
-                {/* Subida de archivo y extracción con mensajes de coincidencia y aviso de verificación no realizada (T-HU07-04) */}
+                {/* Carga del PDF y precarga de los campos del formulario (T-HU04-06, CA10 y CA12),
+                    con los avisos de T-HU04-05 y de verificación no realizada de T-HU07-04 */}
                 <div className="form-panel">
                   <p className="form-panel-title">
                     <FileCheck2 size={15} aria-hidden="true" />
-                    Cargar documento del proyecto (PDF)
+                    {isPublication ? 'Cargar documento de la publicación (PDF)' : 'Cargar documento del proyecto (PDF)'}
                   </p>
                   <p className="field-hint" id="file-hint">
                     Sube el PDF del documento para validar su integridad y extraer los campos automáticamente. Los
-                    campos que no se puedan identificar quedan vacíos para que los completes a mano.
+                    campos que no se puedan identificar quedan vacíos para que los completes a mano. Nada se guarda
+                    hasta que revises los datos y pulses «Guardar producto».
                   </p>
                   <input
                     id="product-file"
@@ -635,6 +688,7 @@ export default function RegisterProductPage() {
                   <div>
                     <label htmlFor="researchLine" className={labelClass}>
                       Línea de investigación *
+                      <PrefilledBadge show={prefilled.includes('researchLine')} />
                     </label>
                     <select {...fieldProps('researchLine')} disabled={isSaving}>
                       <option value="">Selecciona una línea</option>
@@ -661,6 +715,7 @@ export default function RegisterProductPage() {
                     <div>
                       <label htmlFor="projectCode" className={labelClass}>
                         Código institucional del proyecto *
+                        <PrefilledBadge show={prefilled.includes('projectCode')} />
                       </label>
                       <input {...fieldProps('projectCode')} type="text" placeholder="p. ej., ECMC-INV-2024-008" />
                       <FieldError id="projectCode-error" message={errors.projectCode} />

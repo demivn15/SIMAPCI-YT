@@ -64,6 +64,7 @@ A secure, scalable, role-based authentication and authorization web application 
 8. **Document Upload and Extraction (HU04 · PGPCECMC-42, 43, 91):**
    * `POST /api/v1/integrations/upload` checks type, size (max 25 MB) and content (magic bytes), computes a SHA-256 integrity hash and extracts title, authors, year and abstract with `pdfplumber` to prefill the form.
    * **Unrecognized format (PGPCECMC-91):** PDF is the only format the system can read, so anything else is rejected with `400`; a file that carries the `%PDF` header but cannot be parsed (damaged, truncated or password-protected) is also rejected with `400` and a clear message instead of an internal error.
+   * **Prefill in the registration form (PGPCECMC-45):** the extracted fields prefill the HU03 form according to the chosen product type — a publication takes the venue, a project takes the institutional code — and each one is tagged «Precargado». The research line is a closed catalogue, so it is only selected when the extracted text matches an official ECMC line. Everything stays editable and nothing is saved until the professor reviews it and presses «Guardar producto» (CA10, CA12).
    * **Partial extraction (PGPCECMC-91):** reading a PDF and identifying only some fields is not a failure. The response carries an `extraction` report (`status`: `completa` / `parcial` / `vacia`, plus `fields_found`, `fields_missing` and a message), so the form prefills what was identified, leaves the rest editable and tells the professor what is left to complete. A scanned PDF with no text is reported as `vacia`, still with `200`.
 9. **ORCID Import and Council Review (HU12):**
    * `POST /api/v1/products/orcid-import` saves a professor's ORCID works with source `orcid`, skipping works whose DOI or ORCID id is already stored.
@@ -242,7 +243,7 @@ The screens follow the design of the `prototype` branch (ECMC colors, fonts and 
 
 | User story | Implemented in `main` | Still pending |
 | :--- | :--- | :--- |
-| **HU04** Autocomplete a research project from its PDF | Upload with type, size and integrity checks (PGPCECMC-42), PDF field extraction (PGPCECMC-43), handling of unrecognized formats and partial extraction (PGPCECMC-91), test PR-HU04-02 | PGPCECMC-40, 41, 44, 45 |
+| **HU04** Autocomplete a research project from its PDF | Upload with type, size and integrity checks (PGPCECMC-42), PDF field extraction (PGPCECMC-43), handling of unrecognized formats and partial extraction (PGPCECMC-91), extraction wired into the registration form (PGPCECMC-45), test PR-HU04-02 | PGPCECMC-40, 41, 44 |
 | **HU05** View the scientific production (public) | — | Public list and detail (`/produccion`), PGPCECMC-47 to 52 |
 | **HU06** Filter the scientific production | — | Filters on the HU05 list, PGPCECMC-53 to 58 |
 | **HU07** Check that a product exists before adding it | DOI normalization and duplicate control, pre-save existence check wired into the registration form (PGPCECMC-60, 63), tests PR-HU07-01, PR-HU07-02 and T-HU07-06 | — |
@@ -270,6 +271,7 @@ The QA suite turns each Jira test case into an automated test and runs the team'
 | PGPCECMC-103 | PR-HU03-01 · Product registration with a valid DOI and prefilled data | `tests/acceptance/test_pr_hu03_01.py` + `frontend/src/pages/RegisterProductPage.test.jsx` |
 | PGPCECMC-104 | PR-HU03-02 · External service outage during autocomplete | `tests/acceptance/test_pr_hu03_02.py` + `frontend/src/pages/RegisterProductPage.test.jsx` |
 | PGPCECMC-106 | PR-HU04-02 · Non-PDF, damaged and oversized files are rejected without losing the form | `tests/acceptance/test_pr_hu04_02.py` + `frontend/src/pages/RegisterProductPage.hu04.test.jsx` |
+| PGPCECMC-45 | T-HU04-06 · Extraction prefills the form by product type, stays editable and saves only on confirmation | `frontend/src/pages/RegisterProductPage.hu04-integracion.test.jsx` |
 | PGPCECMC-91 | T-HU04-05 · Unrecognized format rejected with a clear message, and partial extraction reported instead of failing | `tests/backend/test_pdf_extraction.py` + `frontend/src/pages/RegisterProductPage.hu04-extraccion.test.jsx` |
 | PGPCECMC-111 | PR-HU07-01 · Duplicate DOI rejected in its different formats | `tests/acceptance/test_pr_hu07_01.py` |
 | PGPCECMC-112 | PR-HU07-02 · Product without DOI or project code | `tests/acceptance/test_pr_hu07_02.py` + `frontend/src/pages/RegisterProductPage.hu07.test.jsx` |
@@ -292,7 +294,7 @@ cd frontend && npm run lint     # frontend lint (ESLint)
 cd frontend && npm run build    # frontend production build
 ```
 
-Current results on `main`: backend `349 passed, 1 skipped, 4 xfailed`; frontend `53 passed`. CI runs only the backend (`ruff` + `pytest`), so run the frontend commands locally before opening a pull request.
+Current results on `main`: backend `349 passed, 1 skipped, 4 xfailed`; frontend `64 passed`. CI runs only the backend (`ruff` + `pytest`), so run the frontend commands locally before opening a pull request.
 
 ### Known defects documented by tests
 
@@ -386,6 +388,7 @@ npm.cmd run dev
 * **`notifications` has no migration.** The model exists, but `0002` only creates `products`. In MySQL, saving or reviewing a product can fail until a `0003` migration creates the table (HU08, PGPCECMC-67).
 * **Upload without session check.** `POST /api/v1/integrations/upload` does not require a professor session yet.
 * **Defects D-05 and D-07** (see [Known defects documented by tests](#known-defects-documented-by-tests)).
+* **The extractor does not read the project code yet.** T-HU04-02 lists the institutional code among the fields to extract and the form already prefills it, but `app/utils/pdf_extractor.py` has no heuristic for it, so it always arrives empty (T-HU04-04, PGPCECMC-43).
 * **No public product detail route.** On a match, HU07 names the identifier but cannot link to the existing product: `/produccion/:id` belongs to HU05 (PGPCECMC-47 to 52) and does not exist yet, so a link would bounce the professor to the public home page.
 
 ---
