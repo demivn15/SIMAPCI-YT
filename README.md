@@ -57,9 +57,10 @@ A secure, scalable, role-based authentication and authorization web application 
 6. **Product Autocomplete (HU03 · PGPCECMC-32, 33):**
    * The product form asks the backend for metadata by DOI. The backend queries Crossref first and falls back to OpenAlex; ORCID lists a profile's public works.
    * Any timeout or provider error is translated into `503` ("service unavailable") and a missing DOI into `404`, so the form can tell the professor what happened and keep what was already typed.
-7. **Product Registration (HU03, HU07 · PGPCECMC-34, 35, 36):**
+7. **Product Registration (HU03, HU07 · PGPCECMC-34, 35, 36, 60, 63):**
    * `POST /api/v1/products` saves the product for the signed-in professor with the initial status «cargado».
    * The DOI is normalized before saving; a DOI or project code that already exists returns `409`, so the same work is not registered twice.
+   * **Existence check in the registration flow (PGPCECMC-63):** when the professor confirms the registration, the form calls `GET /api/v1/products/exists` first (CA19). On a match it does not save and says which identifier matched, noting when the existing product is already verified and public (CA20, RU-08). Without a DOI or project code there is nothing to check (RU-06), so the product is saved and the confirmation says existence could not be verified (CA21) — the same notice appears when the check service itself does not answer, because `POST /products` still rejects a duplicate with `409`.
 8. **Document Upload and Extraction (HU04 · PGPCECMC-42, 43, 91):**
    * `POST /api/v1/integrations/upload` checks type, size (max 25 MB) and content (magic bytes), computes a SHA-256 integrity hash and extracts title, authors, year and abstract with `pdfplumber` to prefill the form.
    * **Unrecognized format (PGPCECMC-91):** PDF is the only format the system can read, so anything else is rejected with `400`; a file that carries the `%PDF` header but cannot be parsed (damaged, truncated or password-protected) is also rejected with `400` and a clear message instead of an internal error.
@@ -206,6 +207,7 @@ A secure, scalable, role-based authentication and authorization web application 
 | `GET` | `/api/v1/integrations/orcid/{orcid}/works` | Professor session | Public works of an ORCID profile, without duplicates |
 | `POST` | `/api/v1/integrations/upload` | Public (session check pending) | Validates an uploaded PDF (type, 25 MB limit, magic bytes, SHA-256) and extracts its fields, reporting which ones are still missing |
 | `POST` | `/api/v1/products` | Professor session | Saves a publication or project with status «cargado». `409` if the DOI or project code already exists |
+| `GET` | `/api/v1/products/exists` | Professor session | Pre-save existence check by DOI or project code, used by the registration form. `422` if the DOI is malformed |
 | `POST` | `/api/v1/products/orcid-import` | Professor session | Saves ORCID works (source `orcid`) and skips the ones already stored |
 | `GET` | `/api/v1/products/review-queue` | Professor session + `reviewer` role in the database | Products waiting for the council |
 | `PATCH` | `/api/v1/products/{id}/review` | Professor session + `reviewer` role in the database | Approves («verificado») or rejects («rechazado», reason required) a pending product |
@@ -243,7 +245,7 @@ The screens follow the design of the `prototype` branch (ECMC colors, fonts and 
 | **HU04** Autocomplete a research project from its PDF | Upload with type, size and integrity checks (PGPCECMC-42), PDF field extraction (PGPCECMC-43), handling of unrecognized formats and partial extraction (PGPCECMC-91), test PR-HU04-02 | PGPCECMC-40, 41, 44, 45 |
 | **HU05** View the scientific production (public) | — | Public list and detail (`/produccion`), PGPCECMC-47 to 52 |
 | **HU06** Filter the scientific production | — | Filters on the HU05 list, PGPCECMC-53 to 58 |
-| **HU07** Check that a product exists before adding it | DOI normalization and duplicate control, tests PR-HU07-01 and PR-HU07-02 | CA21 notice (PGPCECMC-63) |
+| **HU07** Check that a product exists before adding it | DOI normalization and duplicate control, pre-save existence check wired into the registration form (PGPCECMC-60, 63), tests PR-HU07-01, PR-HU07-02 and T-HU07-06 | — |
 | **HU08** Receive product status notifications | Notifications on save, approval and rejection, test PR-HU08-01 | `notifications` migration (see [Known issues](#known-issues)) and PGPCECMC-69 |
 | **HU12** Consolidate ORCID and reviewed publications | ORCID import, council review queue and decisions, tests PR-HU12-01 to 03 | Reviewer access through the API (defect D-05) |
 
@@ -271,6 +273,7 @@ The QA suite turns each Jira test case into an automated test and runs the team'
 | PGPCECMC-91 | T-HU04-05 · Unrecognized format rejected with a clear message, and partial extraction reported instead of failing | `tests/backend/test_pdf_extraction.py` + `frontend/src/pages/RegisterProductPage.hu04-extraccion.test.jsx` |
 | PGPCECMC-111 | PR-HU07-01 · Duplicate DOI rejected in its different formats | `tests/acceptance/test_pr_hu07_01.py` |
 | PGPCECMC-112 | PR-HU07-02 · Product without DOI or project code | `tests/acceptance/test_pr_hu07_02.py` + `frontend/src/pages/RegisterProductPage.hu07.test.jsx` |
+| PGPCECMC-63 | T-HU07-05 · Existence check integrated into the registration flow (match blocks the save, no identifier warns) | `frontend/src/pages/RegisterProductPage.hu07-verificacion.test.jsx` |
 | PGPCECMC-113 | PR-HU08-01 · One notification per status change, with the reason on rejection | `tests/acceptance/test_pr_hu08_01.py` |
 | PGPCECMC-121 | PR-HU12-01 · ORCID import persists, keeps its source and does not duplicate | `tests/acceptance/test_pr_hu12_01.py` |
 | PGPCECMC-122 | PR-HU12-02 · Council approves and rejects manual publications | `tests/acceptance/test_pr_hu12_02.py` |
@@ -289,17 +292,16 @@ cd frontend && npm run lint     # frontend lint (ESLint)
 cd frontend && npm run build    # frontend production build
 ```
 
-Current results on `main`: backend `349 passed, 1 skipped, 4 xfailed`; frontend `43 passed, 1 expected fail`. CI runs only the backend (`ruff` + `pytest`), so run the frontend commands locally before opening a pull request.
+Current results on `main`: backend `349 passed, 1 skipped, 4 xfailed`; frontend `53 passed`. CI runs only the backend (`ruff` + `pytest`), so run the frontend commands locally before opening a pull request.
 
 ### Known defects documented by tests
 
 | Id | Defect | Test | Jira task |
 | :--- | :--- | :--- | :--- |
 | D-05 | Review routes use `get_current_professor`, so a council member (role `reviewer`) gets `403` | PR-HU08-01 CP-08, PR-HU12-02 CP-07 | PGPCECMC-96 |
-| D-06 | Saving without DOI does not warn that duplicates were not checked (CA21) | `RegisterProductPage.hu07.test.jsx` CP-07 | PGPCECMC-63 |
 | D-07 | ORCID import does not validate the year or the research line | PR-HU12-01 CP-09 | PGPCECMC-95 |
 
-Closed: **D-08** (upload accepted DOCX and ZIP) and **D-09** (a damaged PDF returned `500`), both fixed in T-HU04-05 (PGPCECMC-91). Their test cases — PR-HU04-02 CP-05 and CP-06, and `RegisterProductPage.hu04.test.jsx` CP-10 — now pass.
+Closed: **D-06** (saving without DOI did not warn that duplicates were not checked), fixed in T-HU07-05 (PGPCECMC-63); **D-08** (upload accepted DOCX and ZIP) and **D-09** (a damaged PDF returned `500`), both fixed in T-HU04-05 (PGPCECMC-91). Their test cases — `RegisterProductPage.hu07.test.jsx` CP-07, PR-HU04-02 CP-05 and CP-06, and `RegisterProductPage.hu04.test.jsx` CP-10 — now pass.
 
 One open discrepancy against Jira: T-HU04-03 asks for a **10 MB** limit and both the code and PR-HU04-02 CP-04 use **25 MB** (PGPCECMC-42).
 
@@ -383,7 +385,8 @@ npm.cmd run dev
 
 * **`notifications` has no migration.** The model exists, but `0002` only creates `products`. In MySQL, saving or reviewing a product can fail until a `0003` migration creates the table (HU08, PGPCECMC-67).
 * **Upload without session check.** `POST /api/v1/integrations/upload` does not require a professor session yet.
-* **Defects D-05 to D-07** (see [Known defects documented by tests](#known-defects-documented-by-tests)).
+* **Defects D-05 and D-07** (see [Known defects documented by tests](#known-defects-documented-by-tests)).
+* **No public product detail route.** On a match, HU07 names the identifier but cannot link to the existing product: `/produccion/:id` belongs to HU05 (PGPCECMC-47 to 52) and does not exist yet, so a link would bounce the professor to the public home page.
 
 ---
 

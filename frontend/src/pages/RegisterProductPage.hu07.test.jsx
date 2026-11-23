@@ -58,11 +58,9 @@ describe('PR-HU07-02 · registro sin DOI ni código de proyecto (CA21)', () => {
     expect(await screen.findByText(/quedó registrado a tu nombre/)).toBeInTheDocument();
   });
 
-  // DEFECTO D-06: después de guardar sin DOI, la pantalla de confirmación no avisa que no se pudo
-  // verificar si el producto ya existía (CA21). it.fails pasa mientras el aviso falte; cuando se
-  // agregue, Vitest marcará esta prueba como fallida y hay que cambiar it.fails por it.
-  // Relacionado con T-HU07-04 (PGPCECMC-62) y T-HU07-05 (PGPCECMC-63).
-  it.fails('CP-07: después de guardar sin DOI se avisa que no se verificó si ya existía', async () => {
+  // DEFECTO D-06 corregido en T-HU07-05 (PGPCECMC-63): la confirmación ya muestra el aviso de
+  // verificación no realizada cuando el producto se guarda sin identificador.
+  it('CP-07: después de guardar sin DOI se avisa que no se verificó si ya existía', async () => {
     const usuario = renderizar();
 
     await guardarSinDoi(usuario);

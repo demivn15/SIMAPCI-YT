@@ -1,7 +1,11 @@
 /**
- * Formulario de registro de productos - T-HU03-01 & T-HU07-04.
+ * Formulario de registro de productos - T-HU03-01, T-HU07-04 y T-HU07-05 (PGPCECMC-63).
  * Incluye validación de archivos, autocompletado por DOI y extracción de PDF,
  * con mensajes claros de coincidencia y aviso de verificación no realizada (CA08).
+ *
+ * Antes de guardar, el formulario verifica si el identificador ya está registrado (CA19): si
+ * coincide, no se guarda y se informa con qué coincidió (CA20); si no hay identificador, se
+ * guarda igual y la confirmación avisa que no se pudo verificar (CA21).
  *
  * Se muestra como la ventana «Registrar publicación / Registrar proyecto» del prototipo,
  * en un solo formulario (las pruebas de HU03, HU04 y HU07 lo usan así).
@@ -23,7 +27,14 @@ import {
   X,
 } from 'lucide-react';
 import { PRODUCT_TYPES, PROJECT_STATUSES, RESEARCH_LINES } from '../constants/products';
-import { createProduct, isValidDoi, lookupDoi, normalizeDoi, uploadAndExtractPdf } from '../services/productService';
+import {
+  checkProductExistence,
+  createProduct,
+  isValidDoi,
+  lookupDoi,
+  normalizeDoi,
+  uploadAndExtractPdf,
+} from '../services/productService';
 import { validateFileClientSide } from '../utils/fileValidation';
 
 const EMPTY_FORM = {
@@ -133,6 +144,60 @@ function lookupErrorMessage(error) {
   }
   return 'El servicio de consulta externa no está disponible ahora. Puedes completar los campos manualmente.';
 }
+
+// --- Verificación previa de existencia (HU07, T-HU07-05 / PGPCECMC-63) --------------------
+
+/**
+ * Consulta si el identificador del producto ya está registrado, antes de guardarlo (CA19).
+ *
+ * Devuelve `{ exists, field, publicProductId, unverified }`:
+ *   - Sin DOI ni código de proyecto no hay nada que consultar (regla RU-06): no se llama al
+ *     servicio y se marca `unverified: 'sin-identificador'` para el aviso de CA21.
+ *   - Si el servicio no responde, tampoco se bloquea el guardado: `POST /products` repite la
+ *     verificación y contesta 409 si el producto ya existía. Se marca `unverified: 'servicio'`
+ *     para decirle al profesor que la verificación no se pudo hacer.
+ */
+async function verifyExistence({ doi, project_code: projectCode }) {
+  if (!doi && !projectCode) {
+    return { exists: false, unverified: 'sin-identificador' };
+  }
+
+  try {
+    const result = await checkProductExistence({ doi, projectCode });
+    // Se envió un identificador, así que el servicio debería poder verificarlo; si dice que no,
+    // se trata como una verificación no realizada en vez de afirmar que el producto es nuevo.
+    if (!result?.verifiable) return { exists: false, unverified: 'servicio' };
+
+    return {
+      exists: Boolean(result.exists),
+      field: result.field,
+      publicProductId: result.public_product_id ?? null,
+    };
+  } catch {
+    return { exists: false, unverified: 'servicio' };
+  }
+}
+
+/** Mensaje de coincidencia: el producto no se guarda y se informa con qué coincidió (CA20). */
+function duplicateMessage({ field, publicProductId }) {
+  const identifier = field === 'project_code' ? 'código de proyecto' : 'DOI';
+  const message =
+    `Ya existe un producto registrado con este ${identifier}, así que no se guardó para no duplicarlo. ` +
+    'Revisa el identificador o corrige los datos antes de intentarlo de nuevo.';
+
+  // RU-08: solo se puede señalar el producto existente si ya está verificado y es público.
+  return publicProductId
+    ? `${message} El producto que coincide ya está verificado y publicado en la producción científica de la Escuela.`
+    : message;
+}
+
+/** Aviso de verificación no realizada en la confirmación del guardado (CA21). */
+const UNVERIFIED_MESSAGES = {
+  'sin-identificador':
+    'No fue posible verificar si este producto ya existía, porque no tiene DOI ni código de proyecto.',
+  servicio:
+    'No fue posible verificar si este producto ya existía: el servicio de verificación no respondió. El producto se guardó de todas formas.',
+};
 
 function saveErrorMessage(error) {
   if (!error?.response) return 'No hay conexión con el servidor. Tus datos siguen en el formulario; inténtalo de nuevo.';
@@ -333,9 +398,24 @@ export default function RegisterProductPage() {
     }
 
     setSave({ status: 'saving' });
+    const payload = toPayload(form);
+
+    // CA19: antes de guardar se verifica si el identificador ya está registrado. Aplica tanto al
+    // registro manual de HU03 como a los datos que vinieron del DOI o del PDF de HU04: lo que se
+    // verifica es lo que quedó en el formulario, sin importar cómo llegó.
+    const verification = await verifyExistence(payload);
+
+    // CA20: si coincide, no se guarda nada y se informa con qué identificador coincidió.
+    if (verification.exists) {
+      setSave({ status: 'error', kind: 'duplicate', message: duplicateMessage(verification) });
+      focusField(verification.field === 'project_code' ? 'projectCode' : 'doi');
+      return;
+    }
+
     try {
-      await createProduct(toPayload(form));
-      setSave({ status: 'saved' });
+      await createProduct(payload);
+      // CA21: se permite continuar, pero la confirmación dice si no se pudo verificar.
+      setSave({ status: 'saved', unverified: verification.unverified });
       bodyRef.current?.scrollTo?.({ top: 0 });
     } catch (error) {
       setSave({ status: 'error', message: saveErrorMessage(error) });
@@ -401,6 +481,8 @@ export default function RegisterProductPage() {
                   <strong>cargado</strong>. Un Revisor lo verificará y recibirás una notificación con el resultado.
                 </span>
               </div>
+              {/* Aviso de verificación no realizada (CA21, T-HU07-05) */}
+              {save.unverified && <Notice kind="warning">{UNVERIFIED_MESSAGES[save.unverified]}</Notice>}
               <div className="form-actions">
                 <Link to="/dashboard" className="btn btn-outline">
                   Volver al inicio
