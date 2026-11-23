@@ -33,6 +33,19 @@ def _login_as(monkeypatch, username: str, email: str, full_name: str = "Test Use
     return client
 
 
+def _login_as_reviewer(monkeypatch, db_session, username: str, email: str, full_name: str) -> TestClient:
+    """Sesión de un miembro del consejo.
+
+    La cuenta se crea con rol 'reviewer' ANTES del login, porque el token lleva el rol que tiene
+    la cuenta en ese momento y las rutas de revisión exigen rol 'reviewer' en el token (defecto
+    D-05, corregido en T-HU08-05 / PGPCECMC-93). Cambiar el rol después del login dejaba un token
+    que seguía diciendo 'professor'.
+    """
+    db_session.add(User(username=username, email=email, full_name=full_name, role="reviewer"))
+    db_session.commit()
+    return _login_as(monkeypatch, username, email, full_name)
+
+
 def test_orcid_import_endpoint_success_and_deduplication(monkeypatch, db_session):
     """
     CA34 & CA37: POST /api/v1/products/orcid-import importa publicaciones como 'verificado' 
@@ -93,11 +106,10 @@ def test_review_queue_access_control(monkeypatch, db_session):
     forbidden_res = prof_client.get(f"{BASE_URL}/review-queue")
     assert forbidden_res.status_code == 403
 
-    # Se inicia sesión con un usuario y se le asigna el rol 'reviewer' en BD
-    rev_client = _login_as(monkeypatch, "council_member", "council@ecmc.edu.ec", "Dr. Carlos Ruiz")
-    reviewer = db_session.query(User).filter_by(username="council_member").one()
-    reviewer.role = "reviewer"
-    db_session.commit()
+    # Se inicia sesión con un miembro del consejo (cuenta con rol 'reviewer')
+    rev_client = _login_as_reviewer(
+        monkeypatch, db_session, "council_member", "council@ecmc.edu.ec", "Dr. Carlos Ruiz"
+    )
 
     # El miembro del consejo sí puede ver la cola pendiente
     queue_res = rev_client.get(f"{BASE_URL}/review-queue")
@@ -142,11 +154,11 @@ def test_council_review_decision_approve_reject_and_notify(monkeypatch, db_sessi
     unauth_res = prof_client.patch(f"{BASE_URL}/{p1_id}/review", json={"decision": "verificado"})
     assert unauth_res.status_code == 403
 
-    # Preparamos miembro del consejo
-    rev_client = _login_as(monkeypatch, "reviewer_user", "reviewer@ecmc.edu.ec", "Dra. Elena Vega")
+    # Preparamos miembro del consejo (cuenta con rol 'reviewer')
+    rev_client = _login_as_reviewer(
+        monkeypatch, db_session, "reviewer_user", "reviewer@ecmc.edu.ec", "Dra. Elena Vega"
+    )
     reviewer = db_session.query(User).filter_by(username="reviewer_user").one()
-    reviewer.role = "reviewer"
-    db_session.commit()
 
     # 1. Aprobación del primer producto
     approve_res = rev_client.patch(f"{BASE_URL}/{p1_id}/review", json={"decision": "verificado"})

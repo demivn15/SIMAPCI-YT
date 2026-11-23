@@ -63,6 +63,12 @@ def require_roles(*allowed_roles: str):
 # Guard for professor-only (private) functions
 get_current_professor = require_roles("professor")
 
+# Guard for the council's review functions (review queue and decisions).
+# Corrects defect D-05: these routes used get_current_professor, so a council member signing in
+# with role 'reviewer' in their token got 403 and nobody could review through the API, which also
+# meant the verification and rejection notifications of HU08 never fired (T-HU08-05, PGPCECMC-93).
+get_current_reviewer = require_roles("reviewer")
+
 def get_db() -> Generator[Session, None, None]:
     """
     Dependency that creates a new SQLAlchemy database session for each request

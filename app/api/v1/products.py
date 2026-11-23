@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from typing import List
 
-from app.api.deps import get_current_professor
+from app.api.deps import get_current_professor, get_current_reviewer
 from app.db.session import get_db
 from app.models.user import User  # <-- Importamos User al inicio correctamente
 from app.schemas.product import (
@@ -93,12 +93,16 @@ def import_orcid_products(
 @router.get("/review-queue", response_model=List[ProductResponse], status_code=status.HTTP_200_OK)
 def get_pending_review_queue(
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_professor),
+    current_user: dict = Depends(get_current_reviewer),
 ):
     """
     Get the pending review queue for authorized council members with 'reviewer' role (CA35, CA38).
     """
     user = db.get(User, current_user.get("user_id"))
+    if user is None:
+        # El token es válido pero la cuenta ya no existe: no se puede comprobar el rol en la BD.
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Reviewer account not found.")
+
     try:
         return ProductService.get_pending_queue(db, user)
     except PermissionError as exc:
@@ -110,13 +114,18 @@ def review_product_decision(
     product_id: str,
     decision_data: ReviewDecisionSchema,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_professor),
+    current_user: dict = Depends(get_current_reviewer),
 ):
     """
-    Allows an authorized council member to approve ('verificado') or reject ('rechazado') 
+    Allows an authorized council member to approve ('verificado') or reject ('rechazado')
     a pending product (CA36, CA38).
+
+    The decision is what triggers the owner's notification (CA23, T-HU08-05): until D-05 was
+    fixed this route answered 403 to council members, so the notification never fired.
     """
     reviewer = db.get(User, current_user.get("user_id"))
+    if reviewer is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Reviewer account not found.")
 
     try:
         return ProductService.review_product(
