@@ -10,7 +10,11 @@ from datetime import datetime
 from app.models.product import Product
 from app.models.user import User
 from app.schemas.product import ProductCreate
-from app.services.notification_service import create_notification
+from app.services.notification_service import (
+    PRODUCT_IMPORTED,
+    PRODUCT_LOADED,
+    notify_product_event,
+)
 from app.services.product_identity_service import find_existing_product
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -70,13 +74,8 @@ class ProductService:
 
         db.refresh(product)
 
-        create_notification(
-            db=db,
-            user_id=owner.id,
-            title="Producto cargado exitosamente",
-            message=f"Tu producto «{product.title}» ha sido registrado correctamente y se encuentra en estado cargado.",
-            product_id=product.id,
-        )
+        # T-HU08-04 y CA22: aviso de carga exitosa al autor.
+        notify_product_event(db, product, PRODUCT_LOADED)
 
         return product
 
@@ -133,6 +132,11 @@ class ProductService:
             db.rollback()
             raise DuplicateProductError("A duplicate product was detected during ORCID import.") from exc
 
+        # T-HU08-05 y CA23: lo importado nace «verificado» sin pasar por el Comité, así que sin
+        # este aviso el autor tendría un producto suyo ya verificado sin enterarse.
+        for product in imported_products:
+            notify_product_event(db, product, PRODUCT_IMPORTED)
+
         return imported_products
 
     @classmethod
@@ -182,19 +186,9 @@ class ProductService:
             db.rollback()
             raise ProductError("Error saving review decision.") from exc
 
-        notif_title = "Producto aprobado" if decision == "verificado" else "Producto rechazado"
-        notif_msg = (
-            f"Tu producto «{product.title}» ha sido aprobado e incorporado al catálogo consolidado."
-            if decision == "verificado"
-            else f"Tu producto «{product.title}» ha sido rechazado. Motivo: {product.review_reason}"
-        )
-
-        create_notification(
-            db=db,
-            user_id=product.owner_id,
-            title=notif_title,
-            message=notif_msg,
-            product_id=product.id,
-        )
+        # T-HU08-05 y CA23: el autor recibe el aviso con el nuevo estado y, si fue rechazado, el
+        # motivo. La decisión ya quedó guardada, así que el evento se notifica aquí; el control de
+        # unicidad de CA24 lo aplica notify_product_event.
+        notify_product_event(db, product, decision, reason=product.review_reason)
 
         return product

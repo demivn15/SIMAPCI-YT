@@ -145,13 +145,8 @@ def test_cp06_una_decision_ya_tomada_no_se_puede_cambiar(decididas, consejero, d
     assert db_session.get(Product, rechazada.id).status == "rechazado"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECTO D-05: un consejero real inicia sesión con rol 'reviewer' en su token, pero "
-    "PATCH /api/v1/products/{id}/review y GET /review-queue usan get_current_professor y le "
-    "responden 403. La prueba existente test_products_hu12_api.py no lo detecta porque cambia el "
-    "rol en la BD después del login (el token sigue diciendo 'professor'). T-HU12-03 (PGPCECMC-96).",
-)
+# DEFECTO D-05 corregido en T-HU08-05 (PGPCECMC-93): las rutas de revisión exigen rol 'reviewer'
+# en el token, que es el que lleva un consejero al iniciar sesión con su cuenta.
 def test_cp07_el_consejero_aprueba_por_la_api(monkeypatch, enviadas, consejero):
     """CP-07 · CA36 de punta a punta: el consejero inicia sesión y aprueba por la API."""
     instalar_directorio(monkeypatch)

@@ -160,13 +160,9 @@ def test_cp07_un_profesor_no_puede_cambiar_el_estado(producto, db_session):
     assert len(_notificaciones(db_session, producto.owner_id)) == 1
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECTO D-05: PATCH /api/v1/products/{id}/review usa get_current_professor (solo rol "
-    "'professor'), pero ProductService.review_product exige rol 'reviewer'. Un consejero recibe 403 "
-    "en la ruta y un profesor recibe 403 en el servicio: nadie puede revisar por la API. "
-    "Mismo defecto en GET /products/review-queue. Relacionado con T-HU12-03 (PGPCECMC-96).",
-)
+# DEFECTO D-05 corregido en T-HU08-05 (PGPCECMC-93): las rutas de revisión usan ahora
+# get_current_reviewer, así que el consejo puede decidir por la API y el aviso de CA23 sí se
+# dispara de punta a punta.
 def test_cp08_el_consejero_cambia_el_estado_por_la_api(producto, consejero, db_session):
     """CP-08 · CA23 (de punta a punta): el consejero rechaza por la API y el dueño recibe el aviso."""
     cliente = TestClient(app)

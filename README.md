@@ -69,8 +69,9 @@ A secure, scalable, role-based authentication and authorization web application 
 9. **ORCID Import and Council Review (HU12):**
    * `POST /api/v1/products/orcid-import` saves a professor's ORCID works with source `orcid`, skipping works whose DOI or ORCID id is already stored.
    * Council members (role `reviewer`) list pending products and approve («verificado») or reject («rechazado», with a reason) them; the decision, the reviewer and the date are stored.
-10. **Notifications (HU08):**
-    * Each status change (saved, approved, rejected) creates a notification for the product owner in the `notifications` table. There is no API or screen to list them yet.
+10. **Notifications (HU08 · PGPCECMC-93):**
+    * Each status change creates a notification for the product **owner** in the `notifications` table. There is no API or screen to list them yet.
+    * `app/services/notification_service.py` holds the templates for the four events — `cargado` (CA22), `verificado` and `rechazado` with its reason (CA23), and `importado` for works that arrive verified from ORCID without passing through the council — and the uniqueness control: the same event on the same product never produces two notifications, whatever path changed the state (CA24).
 
 ---
 
@@ -210,8 +211,8 @@ A secure, scalable, role-based authentication and authorization web application 
 | `POST` | `/api/v1/products` | Professor session | Saves a publication or project with status «cargado». `409` if the DOI or project code already exists |
 | `GET` | `/api/v1/products/exists` | Professor session | Pre-save existence check by DOI or project code, used by the registration form. `422` if the DOI is malformed |
 | `POST` | `/api/v1/products/orcid-import` | Professor session | Saves ORCID works (source `orcid`) and skips the ones already stored |
-| `GET` | `/api/v1/products/review-queue` | Professor session + `reviewer` role in the database | Products waiting for the council |
-| `PATCH` | `/api/v1/products/{id}/review` | Professor session + `reviewer` role in the database | Approves («verificado») or rejects («rechazado», reason required) a pending product |
+| `GET` | `/api/v1/products/review-queue` | `reviewer` session | Products waiting for the council |
+| `PATCH` | `/api/v1/products/{id}/review` | `reviewer` session | Approves («verificado») or rejects («rechazado», reason required) a pending product, which notifies the owner |
 
 Login status codes: `401` invalid credentials or not a professor · `403` inactive account · `409` email already linked to another account · `502` the directory returned an incomplete identity · `503` directory unreachable. Integration status codes: `400` malformed identifier · `404` no data · `503` external service unavailable. Upload status codes: `400` not a PDF or PDF that cannot be read · `413` over the size limit.
 
@@ -247,8 +248,8 @@ The screens follow the design of the `prototype` branch (ECMC colors, fonts and 
 | **HU05** View the scientific production (public) | — | Public list and detail (`/produccion`), PGPCECMC-47 to 52 |
 | **HU06** Filter the scientific production | — | Filters on the HU05 list, PGPCECMC-53 to 58 |
 | **HU07** Check that a product exists before adding it | DOI normalization and duplicate control, pre-save existence check wired into the registration form (PGPCECMC-60, 63), tests PR-HU07-01, PR-HU07-02 and T-HU07-06 | — |
-| **HU08** Receive product status notifications | Notifications on save, approval and rejection, test PR-HU08-01 | `notifications` migration (see [Known issues](#known-issues)) and PGPCECMC-69 |
-| **HU12** Consolidate ORCID and reviewed publications | ORCID import, council review queue and decisions, tests PR-HU12-01 to 03 | Reviewer access through the API (defect D-05) |
+| **HU08** Receive product status notifications | Notifications on save, approval, rejection and ORCID import, with shared templates and uniqueness control (PGPCECMC-93), test PR-HU08-01 | `notifications` migration (see [Known issues](#known-issues)) and PGPCECMC-69 |
+| **HU12** Consolidate ORCID and reviewed publications | ORCID import, council review queue and decisions reachable through the API, tests PR-HU12-01 to 03 | — |
 
 The frontend follows the design of the `prototype` branch for the screens that already have a backend (public access, login, professor home and product registration).
 
@@ -276,6 +277,7 @@ The QA suite turns each Jira test case into an automated test and runs the team'
 | PGPCECMC-111 | PR-HU07-01 · Duplicate DOI rejected in its different formats | `tests/acceptance/test_pr_hu07_01.py` |
 | PGPCECMC-112 | PR-HU07-02 · Product without DOI or project code | `tests/acceptance/test_pr_hu07_02.py` + `frontend/src/pages/RegisterProductPage.hu07.test.jsx` |
 | PGPCECMC-63 | T-HU07-05 · Existence check integrated into the registration flow (match blocks the save, no identifier warns) | `frontend/src/pages/RegisterProductPage.hu07-verificacion.test.jsx` |
+| PGPCECMC-93 | T-HU08-05 · Verification and rejection events notify the author, with templates, uniqueness and the ORCID import event | `tests/backend/test_notification_events.py` |
 | PGPCECMC-113 | PR-HU08-01 · One notification per status change, with the reason on rejection | `tests/acceptance/test_pr_hu08_01.py` |
 | PGPCECMC-121 | PR-HU12-01 · ORCID import persists, keeps its source and does not duplicate | `tests/acceptance/test_pr_hu12_01.py` |
 | PGPCECMC-122 | PR-HU12-02 · Council approves and rejects manual publications | `tests/acceptance/test_pr_hu12_02.py` |
@@ -294,16 +296,15 @@ cd frontend && npm run lint     # frontend lint (ESLint)
 cd frontend && npm run build    # frontend production build
 ```
 
-Current results on `main`: backend `349 passed, 1 skipped, 4 xfailed`; frontend `64 passed`. CI runs only the backend (`ruff` + `pytest`), so run the frontend commands locally before opening a pull request.
+Current results on `main`: backend `367 passed, 1 skipped, 2 xfailed`; frontend `64 passed`. CI runs only the backend (`ruff` + `pytest`), so run the frontend commands locally before opening a pull request.
 
 ### Known defects documented by tests
 
 | Id | Defect | Test | Jira task |
 | :--- | :--- | :--- | :--- |
-| D-05 | Review routes use `get_current_professor`, so a council member (role `reviewer`) gets `403` | PR-HU08-01 CP-08, PR-HU12-02 CP-07 | PGPCECMC-96 |
 | D-07 | ORCID import does not validate the year or the research line | PR-HU12-01 CP-09 | PGPCECMC-95 |
 
-Closed: **D-06** (saving without DOI did not warn that duplicates were not checked), fixed in T-HU07-05 (PGPCECMC-63); **D-08** (upload accepted DOCX and ZIP) and **D-09** (a damaged PDF returned `500`), both fixed in T-HU04-05 (PGPCECMC-91). Their test cases — `RegisterProductPage.hu07.test.jsx` CP-07, PR-HU04-02 CP-05 and CP-06, and `RegisterProductPage.hu04.test.jsx` CP-10 — now pass.
+Closed: **D-05** (review routes answered `403` to council members, so nobody could review through the API and the HU08 verification and rejection notifications never fired), fixed in T-HU08-05 (PGPCECMC-93) with the new `get_current_reviewer` guard — the work Jira had filed under PGPCECMC-96, so note it there; **D-06** (saving without DOI did not warn that duplicates were not checked), fixed in T-HU07-05 (PGPCECMC-63); **D-08** (upload accepted DOCX and ZIP) and **D-09** (a damaged PDF returned `500`), both fixed in T-HU04-05 (PGPCECMC-91). Their test cases — `RegisterProductPage.hu07.test.jsx` CP-07, PR-HU04-02 CP-05 and CP-06, and `RegisterProductPage.hu04.test.jsx` CP-10 — now pass.
 
 One open discrepancy against Jira: T-HU04-03 asks for a **10 MB** limit and both the code and PR-HU04-02 CP-04 use **25 MB** (PGPCECMC-42).
 
@@ -387,7 +388,7 @@ npm.cmd run dev
 
 * **`notifications` has no migration.** The model exists, but `0002` only creates `products`. In MySQL, saving or reviewing a product can fail until a `0003` migration creates the table (HU08, PGPCECMC-67).
 * **Upload without session check.** `POST /api/v1/integrations/upload` does not require a professor session yet.
-* **Defects D-05 and D-07** (see [Known defects documented by tests](#known-defects-documented-by-tests)).
+* **Defect D-07** (see [Known defects documented by tests](#known-defects-documented-by-tests)).
 * **The extractor does not read the project code yet.** T-HU04-02 lists the institutional code among the fields to extract and the form already prefills it, but `app/utils/pdf_extractor.py` has no heuristic for it, so it always arrives empty (T-HU04-04, PGPCECMC-43).
 * **No public product detail route.** On a match, HU07 names the identifier but cannot link to the existing product: `/produccion/:id` belongs to HU05 (PGPCECMC-47 to 52) and does not exist yet, so a link would bounce the professor to the public home page.
 
