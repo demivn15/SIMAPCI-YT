@@ -61,7 +61,8 @@ export async function lookupDoi(doi) {
  *   - exists=true: ya está registrado; field indica si coincidió el DOI o el código.
  *   - public_product_id: solo si el producto existente es público (para enlazarlo).
  * 422 = DOI con formato inválido. Es informativa: POST /products vuelve a verificar (409).
- * Su uso en el formulario corresponde a T-HU07-05 (PGPCECMC-63).
+ * El formulario la llama antes de guardar (T-HU07-05, PGPCECMC-63): ver verifyExistence() en
+ * pages/RegisterProductPage.jsx.
  */
 export async function checkProductExistence({ doi, projectCode } = {}) {
   const params = {};

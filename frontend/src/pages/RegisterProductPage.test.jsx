@@ -14,12 +14,15 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import RegisterProductPage from './RegisterProductPage';
-import { createProduct, lookupDoi } from '../services/productService';
+import { checkProductExistence, createProduct, lookupDoi } from '../services/productService';
 
+// checkProductExistence se simula porque el formulario la llama antes de guardar desde
+// T-HU07-05 (PGPCECMC-63); aquí siempre responde «no existe» para no mezclar HU07 con HU03.
 vi.mock('../services/productService', async (importOriginal) => ({
   ...(await importOriginal()),
   lookupDoi: vi.fn(),
   createProduct: vi.fn(),
+  checkProductExistence: vi.fn(),
 }));
 
 const DOI = '10.1145/3576915.3623102';
@@ -51,6 +54,8 @@ const campo = (nombre) => screen.getByLabelText(nombre);
 beforeEach(() => {
   vi.mocked(lookupDoi).mockReset();
   vi.mocked(createProduct).mockReset();
+  vi.mocked(checkProductExistence).mockReset();
+  vi.mocked(checkProductExistence).mockResolvedValue({ verifiable: true, exists: false });
 });
 
 describe('PR-HU03-01 · precarga con DOI válido (CA07)', () => {
