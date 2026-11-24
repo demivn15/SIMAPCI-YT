@@ -70,7 +70,8 @@ A secure, scalable, role-based authentication and authorization web application 
    * `POST /api/v1/products/orcid-import` saves a professor's ORCID works with source `orcid`, skipping works whose DOI or ORCID id is already stored.
    * Council members (role `reviewer`) list pending products and approve («verificado») or reject («rechazado», with a reason) them; the decision, the reviewer and the date are stored.
 10. **Notifications (HU08 · PGPCECMC-93):**
-    * Each status change creates a notification for the product **owner** in the `notifications` table. There is no API or screen to list them yet.
+    * Each status change creates a notification for the product **owner** in the `notifications` table.
+    * **Query (PGPCECMC-69):** `GET /api/v1/notifications` returns the signed-in professor's own notifications, newest first, paginated, with the count of unread ones. The owner comes from the session token and never from a request parameter, so there is no way to ask for another professor's notifications; someone else's notification id answers `404`, not `403`, so the response cannot be used to find out what others received. `PATCH /api/v1/notifications/{id}/read` marks one as read so the counter goes down. There is no screen yet.
     * `app/services/notification_service.py` holds the templates for the four events — `cargado` (CA22), `verificado` and `rechazado` with its reason (CA23), and `importado` for works that arrive verified from ORCID without passing through the council — and the uniqueness control: the same event on the same product never produces two notifications, whatever path changed the state (CA24).
 
 ---
@@ -133,6 +134,7 @@ A secure, scalable, role-based authentication and authorization web application 
 │   │       ├── auth.py          # Auth endpoints (/login, /me, /logout, /refresh) + account provisioning
 │   │       ├── registration.py  # Registration form validation (/auth/register)
 │   │       ├── integrations.py  # DOI and ORCID lookup, document upload and extraction
+│   │       ├── notifications.py # The professor's own notifications (query and mark as read)
 │   │       ├── products.py      # Product registration, ORCID import and council review
 │   │       └── professor.py     # Example private route (/professor/dashboard)
 │   ├── core/
@@ -213,6 +215,8 @@ A secure, scalable, role-based authentication and authorization web application 
 | `POST` | `/api/v1/products/orcid-import` | Professor session | Saves ORCID works (source `orcid`) and skips the ones already stored |
 | `GET` | `/api/v1/products/review-queue` | `reviewer` session | Products waiting for the council |
 | `PATCH` | `/api/v1/products/{id}/review` | `reviewer` session | Approves («verificado») or rejects («rechazado», reason required) a pending product, which notifies the owner |
+| `GET` | `/api/v1/notifications` | Professor session | The professor's own notifications with the unread count. `only_unread`, `limit` (1-100) and `offset` |
+| `PATCH` | `/api/v1/notifications/{id}/read` | Professor session | Marks one of the professor's own notifications as read. `404` if it does not exist or belongs to someone else |
 
 Login status codes: `401` invalid credentials or not a professor · `403` inactive account · `409` email already linked to another account · `502` the directory returned an incomplete identity · `503` directory unreachable. Integration status codes: `400` malformed identifier · `404` no data · `503` external service unavailable. Upload status codes: `400` not a PDF or PDF that cannot be read · `413` over the size limit.
 
@@ -248,7 +252,7 @@ The screens follow the design of the `prototype` branch (ECMC colors, fonts and 
 | **HU05** View the scientific production (public) | — | Public list and detail (`/produccion`), PGPCECMC-47 to 52 |
 | **HU06** Filter the scientific production | — | Filters on the HU05 list, PGPCECMC-53 to 58 |
 | **HU07** Check that a product exists before adding it | DOI normalization and duplicate control, pre-save existence check wired into the registration form (PGPCECMC-60, 63), tests PR-HU07-01, PR-HU07-02 and T-HU07-06 | — |
-| **HU08** Receive product status notifications | Notifications on save, approval, rejection and ORCID import, with shared templates and uniqueness control (PGPCECMC-93), test PR-HU08-01 | `notifications` migration (see [Known issues](#known-issues)) and PGPCECMC-69 |
+| **HU08** Receive product status notifications | Notifications on save, approval, rejection and ORCID import, with shared templates and uniqueness control (PGPCECMC-93); owner-isolated query with unread count (PGPCECMC-69); test PR-HU08-01 | `notifications` migration (see [Known issues](#known-issues)) and the screen that shows them |
 | **HU12** Consolidate ORCID and reviewed publications | ORCID import, council review queue and decisions reachable through the API, tests PR-HU12-01 to 03 | — |
 
 The frontend follows the design of the `prototype` branch for the screens that already have a backend (public access, login, professor home and product registration).
@@ -277,6 +281,7 @@ The QA suite turns each Jira test case into an automated test and runs the team'
 | PGPCECMC-111 | PR-HU07-01 · Duplicate DOI rejected in its different formats | `tests/acceptance/test_pr_hu07_01.py` |
 | PGPCECMC-112 | PR-HU07-02 · Product without DOI or project code | `tests/acceptance/test_pr_hu07_02.py` + `frontend/src/pages/RegisterProductPage.hu07.test.jsx` |
 | PGPCECMC-63 | T-HU07-05 · Existence check integrated into the registration flow (match blocks the save, no identifier warns) | `frontend/src/pages/RegisterProductPage.hu07-verificacion.test.jsx` |
+| PGPCECMC-69 | T-HU08-06 · Notification query with unread count, owner isolation and duplicate control | `tests/backend/test_notifications_api.py` |
 | PGPCECMC-93 | T-HU08-05 · Verification and rejection events notify the author, with templates, uniqueness and the ORCID import event | `tests/backend/test_notification_events.py` |
 | PGPCECMC-113 | PR-HU08-01 · One notification per status change, with the reason on rejection | `tests/acceptance/test_pr_hu08_01.py` |
 | PGPCECMC-121 | PR-HU12-01 · ORCID import persists, keeps its source and does not duplicate | `tests/acceptance/test_pr_hu12_01.py` |
@@ -296,7 +301,7 @@ cd frontend && npm run lint     # frontend lint (ESLint)
 cd frontend && npm run build    # frontend production build
 ```
 
-Current results on `main`: backend `367 passed, 1 skipped, 2 xfailed`; frontend `64 passed`. CI runs only the backend (`ruff` + `pytest`), so run the frontend commands locally before opening a pull request.
+Current results on `main`: backend `384 passed, 1 skipped, 2 xfailed`; frontend `64 passed`. CI runs only the backend (`ruff` + `pytest`), so run the frontend commands locally before opening a pull request.
 
 ### Known defects documented by tests
 
@@ -386,7 +391,7 @@ npm.cmd run dev
 
 ## Known issues
 
-* **`notifications` has no migration.** The model exists, but `0002` only creates `products`. In MySQL, saving or reviewing a product can fail until a `0003` migration creates the table (HU08, PGPCECMC-67).
+* **`notifications` has no migration.** The model exists, but `0002` only creates `products`. In MySQL, saving or reviewing a product can fail until a `0003` migration creates the table (HU08, PGPCECMC-67). That migration must also create the `uq_notification_event` unique constraint on `(user_id, product_id, title)`, which is what backs the duplicate control of CA24; the tests build the schema from the models, so they already have it.
 * **Upload without session check.** `POST /api/v1/integrations/upload` does not require a professor session yet.
 * **Defect D-07** (see [Known defects documented by tests](#known-defects-documented-by-tests)).
 * **The extractor does not read the project code yet.** T-HU04-02 lists the institutional code among the fields to extract and the form already prefills it, but `app/utils/pdf_extractor.py` has no heuristic for it, so it always arrives empty (T-HU04-04, PGPCECMC-43).
