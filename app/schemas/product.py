@@ -123,6 +123,21 @@ class OrcidItemImport(BaseModel):
     def doi_canonical(cls, value: str | None) -> str | None:
         return _canonical_doi(value)
 
+    # D-07: lo importado cumple las mismas reglas de año y línea que el registro manual (ProductCreate).
+    @field_validator("year")
+    @classmethod
+    def year_in_range(cls, value: int) -> int:
+        if not MIN_YEAR <= value <= date.today().year + 1:
+            raise ValueError(f"Year must be between {MIN_YEAR} and {date.today().year + 1}.")
+        return value
+
+    @field_validator("research_line")
+    @classmethod
+    def research_line_in_catalog(cls, value: str) -> str:
+        if value not in RESEARCH_LINES:
+            raise ValueError("Research line is not valid.")
+        return value
+
 
 class ReviewDecisionSchema(BaseModel):
     """Esquema para la decisión del consejo de revisión sobre publicaciones pendientes (CA36)."""

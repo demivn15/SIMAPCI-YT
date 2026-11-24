@@ -178,12 +178,8 @@ def test_cp08_importar_sin_sesion_no_esta_permitido(db_session):
     assert _productos(db_session) == []
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECTO D-07: OrcidItemImport (app/schemas/product.py) no valida el año ni la línea de "
-    "investigación, a diferencia del registro manual (ProductCreate). Una obra con año 1500 o con una "
-    "línea fuera del catálogo de la ECMC se guarda igual. Relacionado con T-HU12-02 (PGPCECMC-95).",
-)
+# DEFECTO D-07 corregido (T-HU12-02, PGPCECMC-95): OrcidItemImport ya valida el año y la línea de
+# investigación con las mismas reglas que el registro manual (ProductCreate).
 @pytest.mark.parametrize(
     "cambio",
     [{"year": 1500}, {"research_line": "Línea que no existe"}],
