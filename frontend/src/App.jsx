@@ -5,6 +5,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import PortalLayout from './components/portal/PortalLayout';
 import LoginPage from './pages/LoginPage';
 import PublicHomePage from './pages/PublicHomePage';
+import PublicCatalogPage from './pages/PublicCatalogPage';
+import PublicProductPage from './pages/PublicProductPage';
 import DashboardPage from './pages/DashboardPage';
 import RegisterProductPage from './pages/RegisterProductPage';
 
@@ -19,6 +21,9 @@ export default function App() {
             {/* Public Routes (CA06: la vista pública no exige sesión) */}
             <Route path="/" element={<PublicHomePage />} />
             <Route path="/login" element={<LoginPage />} />
+            {/* Catálogo público sin sesión (HU05, CA13 y CA14; filtros de HU06) */}
+            <Route path="/produccion" element={<PublicCatalogPage />} />
+            <Route path="/produccion/:productId" element={<PublicProductPage />} />
 
             {/* Protected Routes Guard */}
             <Route element={<ProtectedRoute allowedRoles={['professor']} />}>
