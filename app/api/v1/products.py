@@ -9,6 +9,7 @@ from typing import List
 from app.api.deps import get_current_professor, get_current_reviewer
 from app.db.session import get_db
 from app.models.user import User  # <-- Importamos User al inicio correctamente
+from app.schemas.catalog import CatalogListResponse, CatalogProductResponse
 from app.schemas.product import (
     OrcidItemImport,
     ProductCreate,
@@ -16,11 +17,14 @@ from app.schemas.product import (
     ProductResponse,
     ReviewDecisionSchema,
 )
+from app.services.catalog_service import count_catalog, get_catalog_product, list_catalog
 from app.services.product_identity_service import find_existing_product
 from app.utils.identifiers import is_valid_doi, normalize_doi
 from app.services.product_service import DuplicateProductError, InvalidOwnerError, ProductError, ProductService
 
 router = APIRouter(prefix="/products", tags=["Products"])
+
+MAX_CATALOG_PAGE_SIZE = 100
 
 
 @router.post("", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
@@ -70,6 +74,47 @@ def check_product_existence(
         normalized_identifier=check.normalized_identifier,
         public_product_id=check.public_product_id,
     )
+
+
+@router.get("/catalog", response_model=CatalogListResponse, status_code=status.HTTP_200_OK)
+def get_consolidated_catalog(
+    limit: int = Query(default=20, ge=1, le=MAX_CATALOG_PAGE_SIZE, description="Tamaño de la página"),
+    offset: int = Query(default=0, ge=0, description="Cuántos productos saltar"),
+    db: Session = Depends(get_db),
+):
+    """
+    Consolidated catalogue: the verified production of the School (T-HU12-04, PGPCECMC-97).
+
+    This is where an approval becomes visible (CA36). It holds the manual publications the
+    council approved and the works imported from ORCID, which arrive verified (CA34); pending
+    and rejected ones are kept for follow-up but stay out.
+
+    Sin sesión: el catálogo es la producción publicada de la Escuela (HU05). Por eso la
+    respuesta no lleva el dueño ni el expediente de revisión; ver CatalogProductResponse.
+    """
+    return CatalogListResponse(
+        total=count_catalog(db),
+        items=[
+            CatalogProductResponse.model_validate(product)
+            for product in list_catalog(db, limit=limit, offset=offset)
+        ],
+    )
+
+
+@router.get("/catalog/{product_id}", response_model=CatalogProductResponse, status_code=status.HTTP_200_OK)
+def get_catalog_product_detail(product_id: str, db: Session = Depends(get_db)):
+    """
+    Detail of one product of the consolidated catalogue (T-HU12-04, PGPCECMC-97).
+
+    404 if it does not exist or is not verified yet: a pending or rejected product is not
+    readable even knowing its id, which is what makes the `public_product_id` of the HU07
+    pre-save check safe to link (rule RU-08).
+    """
+    product = get_catalog_product(db, product_id)
+    if product is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found in the catalogue.")
+
+    return product
 
 
 @router.post("/orcid-import", response_model=List[ProductResponse], status_code=status.HTTP_200_OK)

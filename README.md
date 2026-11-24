@@ -66,9 +66,11 @@ A secure, scalable, role-based authentication and authorization web application 
    * **Unrecognized format (PGPCECMC-91):** PDF is the only format the system can read, so anything else is rejected with `400`; a file that carries the `%PDF` header but cannot be parsed (damaged, truncated or password-protected) is also rejected with `400` and a clear message instead of an internal error.
    * **Prefill in the registration form (PGPCECMC-45):** the extracted fields prefill the HU03 form according to the chosen product type — a publication takes the venue, a project takes the institutional code — and each one is tagged «Precargado». The research line is a closed catalogue, so it is only selected when the extracted text matches an official ECMC line. Everything stays editable and nothing is saved until the professor reviews it and presses «Guardar producto» (CA10, CA12).
    * **Partial extraction (PGPCECMC-91):** reading a PDF and identifying only some fields is not a failure. The response carries an `extraction` report (`status`: `completa` / `parcial` / `vacia`, plus `fields_found`, `fields_missing` and a message), so the form prefills what was identified, leaves the rest editable and tells the professor what is left to complete. A scanned PDF with no text is reported as `vacia`, still with `200`.
-9. **ORCID Import and Council Review (HU12):**
+9. **ORCID Import and Council Review (HU12 · PGPCECMC-97):**
    * `POST /api/v1/products/orcid-import` saves a professor's ORCID works with source `orcid`, skipping works whose DOI or ORCID id is already stored.
    * Council members (role `reviewer`) list pending products and approve («verificado») or reject («rechazado», with a reason) them; the decision, the reviewer and the date are stored.
+   * **Consolidated catalogue (PGPCECMC-97):** approving is what makes a product readable. `GET /api/v1/products/catalog` returns the verified production — the publications the council approved (CA36) and the works imported from ORCID, which arrive verified (CA34) — newest first and paginated; `GET /api/v1/products/catalog/{id}` returns one of them and answers `404` for anything not verified, so a pending or rejected product cannot be read even knowing its id. That is what makes the `public_product_id` of the HU07 check safe to link (RU-08). Both routes are public, so the response carries the work and not the review record: no owner, no reviewer, no date and no rejection reason. `app/services/catalog_service.py` holds the single definition of «catalogue» (status «verificado»), which the HU05 screens and the HU06 filters will build on.
+   * Each decision reaches the author through HU08: approval and rejection (with its reason) show up in the professor's own notification query.
 10. **Notifications (HU08 · PGPCECMC-93):**
     * Each status change creates a notification for the product **owner** in the `notifications` table.
     * **Query (PGPCECMC-69):** `GET /api/v1/notifications` returns the signed-in professor's own notifications, newest first, paginated, with the count of unread ones. The owner comes from the session token and never from a request parameter, so there is no way to ask for another professor's notifications; someone else's notification id answers `404`, not `403`, so the response cannot be used to find out what others received. `PATCH /api/v1/notifications/{id}/read` marks one as read so the counter goes down. There is no screen yet.
@@ -135,7 +137,7 @@ A secure, scalable, role-based authentication and authorization web application 
 │   │       ├── registration.py  # Registration form validation (/auth/register)
 │   │       ├── integrations.py  # DOI and ORCID lookup, document upload and extraction
 │   │       ├── notifications.py # The professor's own notifications (query and mark as read)
-│   │       ├── products.py      # Product registration, ORCID import and council review
+│   │       ├── products.py      # Product registration, ORCID import, council review and the public catalogue
 │   │       └── professor.py     # Example private route (/professor/dashboard)
 │   ├── core/
 │   │   ├── config.py            # Pydantic environment configuration
@@ -149,6 +151,8 @@ A secure, scalable, role-based authentication and authorization web application 
 │   │   └── notification.py      # Notification model (one per status change)
 │   ├── schemas/
 │   │   ├── product.py           # Product, ORCID import and review payloads
+│   │   ├── catalog.py           # Consolidated catalogue payloads (no owner, no review record)
+│   │   ├── notification.py      # Notification query payloads
 │   │   └── registration.py      # Registration form payload
 │   ├── services/
 │   │   ├── ldap_service.py      # LDAP authentication and RBAC logic
@@ -156,7 +160,8 @@ A secure, scalable, role-based authentication and authorization web application 
 │   │   ├── user_store.py        # In-memory store for /auth/register (not persistent)
 │   │   ├── doi_lookup_service.py  # Crossref → OpenAlex fallback rules
 │   │   ├── product_service.py   # Saving, duplicate control, ORCID import and review rules
-│   │   └── notification_service.py  # Creates the owner's notifications
+│   │   ├── catalog_service.py   # The single definition of the consolidated catalogue (verified products)
+│   │   └── notification_service.py  # Creates and queries the owner's notifications
 │   ├── integrations/
 │   │   ├── base.py              # HTTP client, timeouts, error translation
 │   │   ├── crossref.py          # Crossref adapter
@@ -212,9 +217,11 @@ A secure, scalable, role-based authentication and authorization web application 
 | `POST` | `/api/v1/integrations/upload` | Public (session check pending) | Validates an uploaded PDF (type, 25 MB limit, magic bytes, SHA-256) and extracts its fields, reporting which ones are still missing |
 | `POST` | `/api/v1/products` | Professor session | Saves a publication or project with status «cargado». `409` if the DOI or project code already exists |
 | `GET` | `/api/v1/products/exists` | Professor session | Pre-save existence check by DOI or project code, used by the registration form. `422` if the DOI is malformed |
+| `GET` | `/api/v1/products/catalog` | **Public** | Consolidated catalogue: the verified production of the School, newest first. `limit` (1-100) and `offset`. Does not expose the owner or the review record |
+| `GET` | `/api/v1/products/catalog/{id}` | **Public** | Detail of one catalogue product. `404` if it does not exist or is not verified yet |
 | `POST` | `/api/v1/products/orcid-import` | Professor session | Saves ORCID works (source `orcid`) and skips the ones already stored |
 | `GET` | `/api/v1/products/review-queue` | `reviewer` session | Products waiting for the council |
-| `PATCH` | `/api/v1/products/{id}/review` | `reviewer` session | Approves («verificado») or rejects («rechazado», reason required) a pending product, which notifies the owner |
+| `PATCH` | `/api/v1/products/{id}/review` | `reviewer` session | Approves («verificado») or rejects («rechazado», reason required) a pending product. The approval puts it in the consolidated catalogue and both decisions notify the owner |
 | `GET` | `/api/v1/notifications` | Professor session | The professor's own notifications with the unread count. `only_unread`, `limit` (1-100) and `offset` |
 | `PATCH` | `/api/v1/notifications/{id}/read` | Professor session | Marks one of the professor's own notifications as read. `404` if it does not exist or belongs to someone else |
 
@@ -249,11 +256,11 @@ The screens follow the design of the `prototype` branch (ECMC colors, fonts and 
 | User story | Implemented in `main` | Still pending |
 | :--- | :--- | :--- |
 | **HU04** Autocomplete a research project from its PDF | Upload with type, size and integrity checks (PGPCECMC-42), PDF field extraction (PGPCECMC-43), handling of unrecognized formats and partial extraction (PGPCECMC-91), extraction wired into the registration form (PGPCECMC-45), test PR-HU04-02 | PGPCECMC-40, 41, 44 |
-| **HU05** View the scientific production (public) | — | Public list and detail (`/produccion`), PGPCECMC-47 to 52 |
+| **HU05** View the scientific production (public) | The public catalogue query it reads from (`GET /products/catalog`, PGPCECMC-97) | Public list and detail screens (`/produccion`), PGPCECMC-47 to 52 |
 | **HU06** Filter the scientific production | — | Filters on the HU05 list, PGPCECMC-53 to 58 |
 | **HU07** Check that a product exists before adding it | DOI normalization and duplicate control, pre-save existence check wired into the registration form (PGPCECMC-60, 63), tests PR-HU07-01, PR-HU07-02 and T-HU07-06 | — |
 | **HU08** Receive product status notifications | Notifications on save, approval, rejection and ORCID import, with shared templates and uniqueness control (PGPCECMC-93); owner-isolated query with unread count (PGPCECMC-69); test PR-HU08-01 | `notifications` migration (see [Known issues](#known-issues)) and the screen that shows them |
-| **HU12** Consolidate ORCID and reviewed publications | ORCID import, council review queue and decisions reachable through the API, tests PR-HU12-01 to 03 | — |
+| **HU12** Consolidate ORCID and reviewed publications | ORCID import, council review queue and decisions reachable through the API, approval wired to the consolidated catalogue, its queries and the HU08 notifications (PGPCECMC-97), tests PR-HU12-01 to 03 | — |
 
 The frontend follows the design of the `prototype` branch for the screens that already have a backend (public access, login, professor home and product registration).
 
@@ -282,6 +289,7 @@ The QA suite turns each Jira test case into an automated test and runs the team'
 | PGPCECMC-112 | PR-HU07-02 · Product without DOI or project code | `tests/acceptance/test_pr_hu07_02.py` + `frontend/src/pages/RegisterProductPage.hu07.test.jsx` |
 | PGPCECMC-63 | T-HU07-05 · Existence check integrated into the registration flow (match blocks the save, no identifier warns) | `frontend/src/pages/RegisterProductPage.hu07-verificacion.test.jsx` |
 | PGPCECMC-69 | T-HU08-06 · Notification query with unread count, owner isolation and duplicate control | `tests/backend/test_notifications_api.py` |
+| PGPCECMC-97 | T-HU12-04 · Approval wired to the consolidated catalogue, its public queries and the HU08 notifications | `tests/backend/test_catalog_api.py` |
 | PGPCECMC-93 | T-HU08-05 · Verification and rejection events notify the author, with templates, uniqueness and the ORCID import event | `tests/backend/test_notification_events.py` |
 | PGPCECMC-113 | PR-HU08-01 · One notification per status change, with the reason on rejection | `tests/acceptance/test_pr_hu08_01.py` |
 | PGPCECMC-121 | PR-HU12-01 · ORCID import persists, keeps its source and does not duplicate | `tests/acceptance/test_pr_hu12_01.py` |
@@ -301,7 +309,7 @@ cd frontend && npm run lint     # frontend lint (ESLint)
 cd frontend && npm run build    # frontend production build
 ```
 
-Current results on `main`: backend `384 passed, 1 skipped, 2 xfailed`; frontend `64 passed`. CI runs only the backend (`ruff` + `pytest`), so run the frontend commands locally before opening a pull request.
+Current results on `main`: backend `402 passed, 1 skipped, 2 xfailed`; frontend `64 passed`. CI runs only the backend (`ruff` + `pytest`), so run the frontend commands locally before opening a pull request.
 
 ### Known defects documented by tests
 
@@ -395,7 +403,8 @@ npm.cmd run dev
 * **Upload without session check.** `POST /api/v1/integrations/upload` does not require a professor session yet.
 * **Defect D-07** (see [Known defects documented by tests](#known-defects-documented-by-tests)).
 * **The extractor does not read the project code yet.** T-HU04-02 lists the institutional code among the fields to extract and the form already prefills it, but `app/utils/pdf_extractor.py` has no heuristic for it, so it always arrives empty (T-HU04-04, PGPCECMC-43).
-* **No public product detail route.** On a match, HU07 names the identifier but cannot link to the existing product: `/produccion/:id` belongs to HU05 (PGPCECMC-47 to 52) and does not exist yet, so a link would bounce the professor to the public home page.
+* **The consolidated catalogue has no screen and no filters yet.** `GET /api/v1/products/catalog` answers (PGPCECMC-97), but the public list and detail screens belong to HU05 (PGPCECMC-47 to 52) and the filters by year, line and type to HU06 (PGPCECMC-53 to 58). Until those land, the catalogue is only reachable through the API.
+* **No public product detail route in the SPA.** On a match, HU07 names the identifier but still cannot link to the existing product: the backend detail now exists, but the `/produccion/:id` screen (HU05) does not, so a link would bounce the professor to the public home page.
 
 ---
 
