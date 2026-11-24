@@ -1,10 +1,10 @@
 /**
  * Pantalla de acceso de la ECMC (vista pública y fondo de /login), con el aspecto del
- * prototipo. El botón «Consultar sin iniciar sesión» se agregará con HU05, cuando exista
- * el listado público (/produccion).
+ * prototipo. Desde aquí el visitante entra al catálogo público sin iniciar sesión
+ * (/produccion, HU05 - T-HU05-01).
  */
 import { Link } from 'react-router-dom';
-import { LogIn } from 'lucide-react';
+import { BookOpen, LogIn } from 'lucide-react';
 import { SCHOOL } from '../../constants/school';
 import { EcmcLogo, YachayLogo } from './Brand';
 
@@ -38,6 +38,10 @@ export default function AccessScreen({ dialog = null }) {
               su investigación.
             </h1>
             <p className="access-description">Publicaciones, proyectos y la comunidad científica de nuestra escuela.</p>
+            <Link to="/produccion" className="btn btn-outline access-catalog">
+              <BookOpen size={20} aria-hidden="true" />
+              Consultar la producción científica
+            </Link>
             <dl className="access-dean">
               <dt>Decano</dt>
               <dd>{SCHOOL.dean}</dd>
