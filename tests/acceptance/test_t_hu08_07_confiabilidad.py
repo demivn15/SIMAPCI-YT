@@ -213,15 +213,8 @@ def base_migrada(tmp_path):
     engine.dispose()
 
 
-DEFECTO_D10 = (
-    "DEFECTO D-10 (T-HU08-03, PGPCECMC-67): no hay migración de Alembic para la tabla "
-    "`notifications` (solo 0001 users y 0002 products). En MySQL, `alembic upgrade head` no la "
-    "crea: guardar un producto responde 500 aunque el producto sí se guarda (al reintentar da 409) "
-    "y la consulta GET /notifications también responde 500."
-)
-
-
-@pytest.mark.xfail(strict=True, reason=DEFECTO_D10)
+# DEFECTO D-10 corregido (T-HU08-03, PGPCECMC-67): la migración 0003 crea la tabla `notifications`
+# con su restricción única, así que `alembic upgrade head` ya deja la base lista para HU08.
 def test_cp05_las_migraciones_crean_la_tabla_de_avisos(base_migrada):
     """CP-05 · CA22 a CA24: la base creada por las migraciones tiene la tabla de avisos con su
     restricción de unicidad (CA24)."""
@@ -232,7 +225,7 @@ def test_cp05_las_migraciones_crean_la_tabla_de_avisos(base_migrada):
     assert "uq_notification_event" in restricciones
 
 
-@pytest.mark.xfail(strict=True, reason=DEFECTO_D10)
+# DEFECTO D-10 corregido: con la base migrada, guardar un producto ya responde 201 y notifica.
 def test_cp06_con_la_base_migrada_guardar_un_producto_notifica(base_migrada, monkeypatch):
     """CP-06 · CA22 de punta a punta con la base migrada: el profesor guarda un producto, recibe
     201 y queda su aviso de «cargado exitosamente»."""

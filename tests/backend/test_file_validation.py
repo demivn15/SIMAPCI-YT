@@ -1,9 +1,12 @@
 import io
 from fastapi import status
 from fastapi.testclient import TestClient
+from app.core.security import create_access_token
 from app.main import app
 
 client = TestClient(app)
+# La carga exige sesión de profesor (D-16).
+client.cookies.set("access_token", create_access_token({"sub": "mgarcia", "user_id": "u-1", "role": "professor"}))
 
 # Use your actual mounted route prefix, e.g., /api/v1/integrations/upload
 ENDPOINT_URL = "/api/v1/integrations/upload"
