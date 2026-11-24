@@ -358,7 +358,7 @@ export default function RegisterProductPage() {
 
     setIsExtracting(true);
     try {
-      const result = await uploadAndExtractPdf(selectedFile);
+      const result = await uploadAndExtractPdf(selectedFile, form.type);
       setFileMetadata(result.file);
 
       const extracted = result.extracted_fields || {};

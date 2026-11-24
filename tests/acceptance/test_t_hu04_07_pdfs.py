@@ -28,12 +28,6 @@ from tests.support.portadas_proyecto import PORTADA_PROYECTO, pdf_de_paginas
 
 UPLOAD_URL = "/api/v1/integrations/upload"
 
-DEFECTO_D16 = (
-    "DEFECTO D-16 (T-HU04-03, PGPCECMC-42): POST /integrations/upload no exige sesión de "
-    "profesor (no usa get_current_professor, a diferencia de /doi y /orcid): cualquiera puede "
-    "subir PDF de hasta 25 MB y usar la extracción."
-)
-
 # Variantes de portada: líneas del PDF (una lista por página) y campos que deben precargarse.
 VARIANTES = {
     "autores en la misma línea": (
@@ -124,7 +118,7 @@ def test_cp04_la_huella_de_integridad_corresponde_al_archivo():
     assert primera == segunda
 
 
-@pytest.mark.xfail(strict=True, reason=DEFECTO_D16)
+# DEFECTO D-16 corregido (T-HU04-03, PGPCECMC-42): /integrations/upload ya exige sesión de profesor.
 @pytest.mark.parametrize("rol, codigo", [(None, 401), ("student", 403)], ids=["sin-sesion", "estudiante"])
 def test_cp05_solo_un_profesor_con_sesion_puede_cargar_el_pdf(rol, codigo):
     """CP-05 · CA10 (actor: profesor autenticado): sin sesión la carga responde 401 y con otro

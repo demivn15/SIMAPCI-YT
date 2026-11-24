@@ -29,23 +29,38 @@ const TITULO = 'Modelos de optimización para redes eléctricas inteligentes';
 const RESUMEN =
   'Este proyecto propone modelos de optimización para la operación de redes eléctricas inteligentes con generación distribuida.';
 
-// Respuesta del backend (main f576077) para la portada representativa.
-const RESPUESTA_BACKEND = {
-  file: { filename: 'proyecto.pdf', size: 1047, content_type: 'application/pdf', integrity_sha256: 'a'.repeat(64) },
-  extracted_fields: {
-    title: TITULO,
-    authors: 'Luis Torres, Ana Paz',
-    year: '2025',
-    research_line: '',
-    venue: '',
-    abstract: RESUMEN,
+const CAMPOS_EXTRAIDOS = {
+  title: TITULO,
+  authors: 'María García, Luis Torres, Ana Paz',
+  year: '2025',
+  research_line: 'Ciencia de datos',
+  venue: '',
+  abstract: RESUMEN,
+  project_code: 'ECMC-2025-04',
+};
+const ARCHIVO = { filename: 'proyecto.pdf', size: 1047, content_type: 'application/pdf', integrity_sha256: 'a'.repeat(64) };
+
+// Respuestas reales del backend para la portada representativa: la que recibe el formulario de un
+// proyecto (envía product_type=proyecto) y la que se obtiene sin indicar el tipo.
+const RESPUESTA_PROYECTO = {
+  file: ARCHIVO,
+  extracted_fields: CAMPOS_EXTRAIDOS,
+  extraction: {
+    status: 'completa',
+    fields_found: ['title', 'authors', 'year', 'research_line', 'abstract', 'project_code'],
+    fields_missing: [],
+    message: 'Se identificaron los 6 campos del documento. Revísalos y corrígelos antes de guardar.',
   },
+};
+const RESPUESTA_SIN_TIPO = {
+  file: ARCHIVO,
+  extracted_fields: CAMPOS_EXTRAIDOS,
   extraction: {
     status: 'parcial',
-    fields_found: ['title', 'authors', 'year', 'abstract'],
-    fields_missing: ['research_line', 'venue'],
+    fields_found: ['title', 'authors', 'year', 'research_line', 'abstract', 'project_code'],
+    fields_missing: ['venue'],
     message:
-      'Extracción parcial: se identificaron 4 de 6 campos. Completa manualmente los campos restantes: línea de investigación, editorial o evento.',
+      'Extracción parcial: se identificaron 6 de 7 campos. Completa manualmente los campos restantes: editorial o evento.',
   },
 };
 
@@ -76,7 +91,9 @@ async function cargarProyecto(usuario) {
 
 beforeEach(() => {
   vi.mocked(uploadAndExtractPdf).mockReset();
-  vi.mocked(uploadAndExtractPdf).mockResolvedValue(RESPUESTA_BACKEND);
+  vi.mocked(uploadAndExtractPdf).mockImplementation(async (_file, tipo) =>
+    tipo === 'proyecto' ? RESPUESTA_PROYECTO : RESPUESTA_SIN_TIPO,
+  );
   vi.mocked(createProduct).mockReset();
   vi.mocked(createProduct).mockResolvedValue({ id: 'p-1', status: 'cargado' });
   vi.mocked(checkProductExistence).mockReset();
@@ -84,53 +101,52 @@ beforeEach(() => {
 });
 
 describe('PR-HU04-01 · precarga de los campos identificables (CA10)', () => {
-  it('CP-01: se precargan y marcan título, investigadores, año y resumen; el resto queda vacío y editable', async () => {
+  it('CP-01: se precargan y marcan los seis campos del proyecto; el estado lo elige el profesor', async () => {
     const usuario = renderizar();
 
     await cargarProyecto(usuario);
 
-    expect(campo(/^Investigadores participantes/)).toHaveValue('Luis Torres, Ana Paz');
+    expect(campo(/^Investigadores participantes/)).toHaveValue('María García, Luis Torres, Ana Paz');
     expect(campo(/^Año de inicio/)).toHaveValue('2025');
+    expect(campo(/^Línea de investigación/)).toHaveValue('Ciencia de datos');
+    expect(campo(/^Código institucional/)).toHaveValue('ECMC-2025-04');
     expect(campo(/^Resumen/)).toHaveValue(RESUMEN);
-    expect(screen.getAllByText('Precargado')).toHaveLength(4);
-    expect(campo(/^Línea de investigación/)).toHaveValue('');
-    expect(campo(/^Código institucional/)).toHaveValue('');
+    expect(screen.getAllByText('Precargado')).toHaveLength(6);
     expect(campo(/^Código institucional/)).not.toHaveAttribute('readonly');
+    expect(campo(/^Estado del proyecto/)).toBeEnabled();
   });
 
-  it('CP-02: el aviso dice cuántos campos se precargaron y que la extracción fue parcial', async () => {
+  it('CP-02: el aviso dice cuántos campos se precargaron y pide revisarlos antes de guardar', async () => {
     const usuario = renderizar();
 
     await cargarProyecto(usuario);
 
-    const aviso = await screen.findByRole('alert');
-    expect(aviso).toHaveTextContent(/Se precargaron 4 campos/);
-    expect(aviso).toHaveTextContent(/Extracción parcial/);
+    expect(await screen.findByText(/Se precargaron 6 campos/)).toHaveTextContent(
+      /Revísalos y corrígelos antes de guardar/,
+    );
   });
 
-  // DEFECTO D-15 (T-HU04-05, PGPCECMC-44): el mensaje del backend nombra todos los campos
-  // extraíbles y la pantalla lo muestra tal cual, así que en un proyecto pide completar
-  // «editorial o evento», un campo que el formulario de proyecto no tiene.
-  it.fails('CP-03: en un proyecto el aviso no pide completar «editorial o evento»', async () => {
+  // DEFECTO D-15 corregido (T-HU04-05, PGPCECMC-44): el formulario envía el tipo de producto y
+  // el backend solo pide los campos de ese tipo.
+  it('CP-03: en un proyecto el aviso no pide completar «editorial o evento»', async () => {
     const usuario = renderizar();
 
     await cargarProyecto(usuario);
 
-    expect(await screen.findByRole('alert')).not.toHaveTextContent(/editorial o evento/);
+    expect(uploadAndExtractPdf).toHaveBeenCalledWith(expect.any(File), 'proyecto');
+    expect(await screen.findByText(/Se precargaron 6 campos/)).not.toHaveTextContent(/editorial o evento/);
   });
 });
 
 describe('PR-HU04-01 · revisión y confirmación explícita (CA12)', () => {
-  it('CP-04: el profesor corrige y completa lo precargado, y solo se guarda al pulsar «Guardar producto»', async () => {
+  it('CP-04: el profesor corrige lo precargado, y solo se guarda al pulsar «Guardar producto»', async () => {
     const usuario = renderizar();
     await cargarProyecto(usuario);
 
     await usuario.clear(campo(/^Título/));
     await usuario.type(campo(/^Título/), `${TITULO} - fase 2`);
-    await usuario.clear(campo(/^Investigadores participantes/));
-    await usuario.type(campo(/^Investigadores participantes/), 'María García, Luis Torres, Ana Paz');
-    await usuario.selectOptions(campo(/^Línea de investigación/), 'Ciencia de datos');
-    await usuario.type(campo(/^Código institucional/), 'ecmc-2025-04');
+    await usuario.clear(campo(/^Código institucional/));
+    await usuario.type(campo(/^Código institucional/), 'ecmc-2025-05');
     await usuario.selectOptions(campo(/^Estado del proyecto/), 'finalizado');
     expect(createProduct).not.toHaveBeenCalled();
 
@@ -145,7 +161,7 @@ describe('PR-HU04-01 · revisión y confirmación explícita (CA12)', () => {
         year: 2025,
         research_line: 'Ciencia de datos',
         abstract: RESUMEN,
-        project_code: 'ECMC-2025-04',
+        project_code: 'ECMC-2025-05',
         project_status: 'finalizado',
       }),
     );
@@ -156,10 +172,10 @@ describe('PR-HU04-01 · revisión y confirmación explícita (CA12)', () => {
     await cargarProyecto(usuario);
 
     await usuario.type(campo(/^Título/), ' - fase 2');
-    expect(screen.getAllByText('Precargado')).toHaveLength(3);
+    expect(screen.getAllByText('Precargado')).toHaveLength(5);
     cargarPdf();
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(/se conservaron/);
+    expect(await screen.findByText(/se conservaron/)).toBeInTheDocument();
     expect(campo(/^Título/)).toHaveValue(`${TITULO} - fase 2`);
     expect(createProduct).not.toHaveBeenCalled();
   });

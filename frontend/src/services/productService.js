@@ -93,10 +93,14 @@ export async function createProduct(product) {
  * 400 = el archivo no es un PDF o el PDF no se puede leer (dañado, incompleto o protegido)
  * 413 = el archivo excede el tamaño permitido
  * En todos los casos el registro en curso del formulario se conserva (CA11).
+ *
+ * `productType` ('publicacion' o 'proyecto') hace que el reporte solo cuente y pida los campos
+ * de ese tipo: así un proyecto no pide «editorial o evento» (D-15).
  */
-export const uploadAndExtractPdf = async (file) => {
+export const uploadAndExtractPdf = async (file, productType) => {
   const formData = new FormData();
   formData.append('file', file);
+  if (productType) formData.append('product_type', productType);
 
   // La baseURL de api ya incluye /api/v1; la ruta aquí es relativa a ella.
   const response = await api.post('/integrations/upload', formData, {
