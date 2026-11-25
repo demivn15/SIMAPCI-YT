@@ -33,6 +33,10 @@ class DuplicateProductError(ProductError):
     """El DOI o el código de proyecto ya están registrados."""
 
 
+class ProductNotFoundError(ProductError):
+    """No hay ningún producto con ese identificador."""
+
+
 class ProductService:
     @staticmethod
     def _find_duplicate(db: Session, data: ProductCreate) -> str | None:
@@ -91,9 +95,21 @@ class ProductService:
 
         imported_products = []
 
+        # CA37: el mismo lote puede traer la obra repetida (ORCID devuelve la misma publicación
+        # con dos put-codes, o dos veces el mismo DOI). Las obras de este lote todavía no están
+        # guardadas, así que find_existing_product no las ve: hay que recordarlas aquí. Sin esto,
+        # el duplicado solo saltaba al confirmar, contra la restricción única, y el rollback se
+        # llevaba por delante el lote entero, incluidas las obras válidas y nuevas.
+        doi_del_lote: set[str] = set()
+        external_ids_del_lote: set[str] = set()
+
         for item in items:
-            # CA37 / RU-10: un DOI ya registrado (en cualquier formato) no se vuelve a importar
-            if item.doi and find_existing_product(db, doi=item.doi).exists:
+            # CA37 / RU-10: un DOI ya registrado (en cualquier formato) no se vuelve a importar.
+            # El DOI llega normalizado por OrcidItemImport, así que comparar textos basta.
+            if item.doi and (item.doi in doi_del_lote or find_existing_product(db, doi=item.doi).exists):
+                continue
+
+            if item.external_id in external_ids_del_lote:
                 continue
 
             existing_orcid = db.scalar(
@@ -105,6 +121,10 @@ class ProductService:
             )
             if existing_orcid:
                 continue
+
+            if item.doi:
+                doi_del_lote.add(item.doi)
+            external_ids_del_lote.add(item.external_id)
 
             product = Product(
                 owner_id=owner.id,
@@ -139,15 +159,27 @@ class ProductService:
 
         return imported_products
 
+    @staticmethod
+    def _ensure_council_member(user: User) -> None:
+        """CA38: revisar es cosa del consejo, y de un consejo en funciones.
+
+        Se exige también la cuenta activa, igual que el registro y la importación exigen que el
+        dueño lo esté: el token vive hasta una hora, así que sin esta comprobación una cuenta
+        dada de baja seguía aprobando y rechazando con el token que ya tenía emitido.
+        """
+        if user.role != "reviewer":
+            raise PermissionError("User is not authorized to review products.")
+        if not user.is_active:
+            raise PermissionError("The council member account is inactive.")
+
     @classmethod
     def get_pending_queue(cls, db: Session, user: User) -> list[Product]:
         """
-        Retorna la cola de productos pendientes de revisión ('cargado') 
+        Retorna la cola de productos pendientes de revisión ('cargado')
         para los miembros autorizados del consejo (CA35, CA36, CA38).
         """
-        if user.role != "reviewer":
-            raise PermissionError("User is not authorized to access the review queue.")
-        
+        cls._ensure_council_member(user)
+
         return db.scalars(
             select(Product).where(Product.status == "cargado").order_by(Product.created_at.asc())
         ).all()
@@ -158,12 +190,11 @@ class ProductService:
         Registra la decisión del consejo (aprobar 'verificado' o rechazar 'rechazado'),
         el responsable, la fecha y notifica al profesor (CA36, CA38).
         """
-        if reviewer.role != "reviewer":
-            raise PermissionError("Only authorized council members can review products.")
+        cls._ensure_council_member(reviewer)
 
         product = db.get(Product, product_id)
         if not product:
-            raise ProductError("Product not found.")
+            raise ProductNotFoundError("Product not found.")
 
         if product.status != "cargado":
             raise ProductError("Product has already been reviewed.")

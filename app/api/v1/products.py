@@ -20,7 +20,13 @@ from app.schemas.product import (
 from app.services.catalog_service import count_catalog, get_catalog_product, list_catalog
 from app.services.product_identity_service import find_existing_product
 from app.utils.identifiers import is_valid_doi, normalize_doi
-from app.services.product_service import DuplicateProductError, InvalidOwnerError, ProductError, ProductService
+from app.services.product_service import (
+    DuplicateProductError,
+    InvalidOwnerError,
+    ProductError,
+    ProductNotFoundError,
+    ProductService,
+)
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
@@ -182,5 +188,7 @@ def review_product_decision(
         )
     except PermissionError as exc:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
+    except ProductNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except (ProductError, ValueError) as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc

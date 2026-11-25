@@ -71,6 +71,7 @@ A secure, scalable, role-based authentication and authorization web application 
    * Council members (role `reviewer`) list pending products and approve («verificado») or reject («rechazado», with a reason) them; the decision, the reviewer and the date are stored.
    * **Consolidated catalogue (PGPCECMC-97):** approving is what makes a product readable. `GET /api/v1/products/catalog` returns the verified production — the publications the council approved (CA36) and the works imported from ORCID, which arrive verified (CA34) — newest first and paginated; `GET /api/v1/products/catalog/{id}` returns one of them and answers `404` for anything not verified, so a pending or rejected product cannot be read even knowing its id. That is what makes the `public_product_id` of the HU07 check safe to link (RU-08). Both routes are public, so the response carries the work and not the review record: no owner, no reviewer, no date and no rejection reason. `app/services/catalog_service.py` holds the single definition of «catalogue» (status «verificado»), which the HU05 screens and the HU06 filters will build on.
    * Each decision reaches the author through HU08: approval and rejection (with its reason) show up in the professor's own notification query.
+   * **Consolidation rules validated in T-HU12-05 (PGPCECMC-98):** a work repeated inside a *single* ORCID request is imported once and the rest of the batch is still saved; the ORCID put-code is unique per professor (each profile numbers its own works) while the DOI and the project code are unique for the whole School, in any state — a rejected publication keeps its DOI reserved, because the record is kept for follow-up; imported works never enter the review queue, since they arrive verified; and reviewing requires an **active** council account, not just a valid session.
 10. **Notifications (HU08 · PGPCECMC-93):**
     * Each status change creates a notification for the product **owner** in the `notifications` table.
     * **Query (PGPCECMC-69):** `GET /api/v1/notifications` returns the signed-in professor's own notifications, newest first, paginated, with the count of unread ones. The owner comes from the session token and never from a request parameter, so there is no way to ask for another professor's notifications; someone else's notification id answers `404`, not `403`, so the response cannot be used to find out what others received. `PATCH /api/v1/notifications/{id}/read` marks one as read so the counter goes down. There is no screen yet.
@@ -221,7 +222,7 @@ A secure, scalable, role-based authentication and authorization web application 
 | `GET` | `/api/v1/products/catalog/{id}` | **Public** | Detail of one catalogue product. `404` if it does not exist or is not verified yet |
 | `POST` | `/api/v1/products/orcid-import` | Professor session | Saves ORCID works (source `orcid`) and skips the ones already stored |
 | `GET` | `/api/v1/products/review-queue` | `reviewer` session | Products waiting for the council |
-| `PATCH` | `/api/v1/products/{id}/review` | `reviewer` session | Approves («verificado») or rejects («rechazado», reason required) a pending product. The approval puts it in the consolidated catalogue and both decisions notify the owner |
+| `PATCH` | `/api/v1/products/{id}/review` | `reviewer` session (active account) | Approves («verificado») or rejects («rechazado», reason required) a pending product. The approval puts it in the consolidated catalogue and both decisions notify the owner. `404` if the product does not exist, `400` if it was already reviewed, `403` if the council account was deactivated |
 | `GET` | `/api/v1/notifications` | Professor session | The professor's own notifications with the unread count. `only_unread`, `limit` (1-100) and `offset` |
 | `PATCH` | `/api/v1/notifications/{id}/read` | Professor session | Marks one of the professor's own notifications as read. `404` if it does not exist or belongs to someone else |
 
@@ -256,11 +257,11 @@ The screens follow the design of the `prototype` branch (ECMC colors, fonts and 
 | User story | Implemented in `main` | Still pending |
 | :--- | :--- | :--- |
 | **HU04** Autocomplete a research project from its PDF | Upload with type, size and integrity checks (PGPCECMC-42), PDF field extraction (PGPCECMC-43), handling of unrecognized formats and partial extraction (PGPCECMC-91), extraction wired into the registration form (PGPCECMC-45), test PR-HU04-02 | PGPCECMC-40, 41, 44 |
-| **HU05** View the scientific production (public) | The public catalogue query it reads from (`GET /products/catalog`, PGPCECMC-97) | Public list and detail screens (`/produccion`), PGPCECMC-47 to 52 |
-| **HU06** Filter the scientific production | — | Filters on the HU05 list, PGPCECMC-53 to 58 |
+| **HU05** View the scientific production (public) | Public list and detail screens (PGPCECMC-47) and the catalogue query they will read from (`GET /products/catalog`, PGPCECMC-97) | Wiring the screens to the API (T-HU05-03 and T-HU05-05); they still read `src/data/catalogSample.js` |
+| **HU06** Filter the scientific production | Combinable filters on the public list (PGPCECMC-53) | Wiring the filters to the API (T-HU06-03 and T-HU06-05); they still filter the sample data |
 | **HU07** Check that a product exists before adding it | DOI normalization and duplicate control, pre-save existence check wired into the registration form (PGPCECMC-60, 63), tests PR-HU07-01, PR-HU07-02 and T-HU07-06 | — |
 | **HU08** Receive product status notifications | Notifications on save, approval, rejection and ORCID import, with shared templates and uniqueness control (PGPCECMC-93); owner-isolated query with unread count (PGPCECMC-69); test PR-HU08-01 | `notifications` migration (see [Known issues](#known-issues)) and the screen that shows them |
-| **HU12** Consolidate ORCID and reviewed publications | ORCID import, council review queue and decisions reachable through the API, approval wired to the consolidated catalogue, its queries and the HU08 notifications (PGPCECMC-97), tests PR-HU12-01 to 03 | — |
+| **HU12** Consolidate ORCID and reviewed publications | ORCID import, council review queue and decisions reachable through the API, approval wired to the consolidated catalogue, its queries and the HU08 notifications (PGPCECMC-97), validation of persistence, both entry paths, uniqueness and permissions (PGPCECMC-98), tests PR-HU12-01 to 03 | — |
 
 The frontend follows the design of the `prototype` branch for the screens that already have a backend (public access, login, professor home and product registration).
 
@@ -290,6 +291,7 @@ The QA suite turns each Jira test case into an automated test and runs the team'
 | PGPCECMC-63 | T-HU07-05 · Existence check integrated into the registration flow (match blocks the save, no identifier warns) | `frontend/src/pages/RegisterProductPage.hu07-verificacion.test.jsx` |
 | PGPCECMC-69 | T-HU08-06 · Notification query with unread count, owner isolation and duplicate control | `tests/backend/test_notifications_api.py` |
 | PGPCECMC-97 | T-HU12-04 · Approval wired to the consolidated catalogue, its public queries and the HU08 notifications | `tests/backend/test_catalog_api.py` |
+| PGPCECMC-98 | T-HU12-05 · Persistence, both entry paths, uniqueness and permissions of the consolidation | `tests/acceptance/test_t_hu12_05_consolidacion.py` |
 | PGPCECMC-93 | T-HU08-05 · Verification and rejection events notify the author, with templates, uniqueness and the ORCID import event | `tests/backend/test_notification_events.py` |
 | PGPCECMC-113 | PR-HU08-01 · One notification per status change, with the reason on rejection | `tests/acceptance/test_pr_hu08_01.py` |
 | PGPCECMC-121 | PR-HU12-01 · ORCID import persists, keeps its source and does not duplicate | `tests/acceptance/test_pr_hu12_01.py` |
@@ -309,7 +311,7 @@ cd frontend && npm run lint     # frontend lint (ESLint)
 cd frontend && npm run build    # frontend production build
 ```
 
-Current results on `main`: backend `402 passed, 1 skipped, 2 xfailed`; frontend `64 passed`. CI runs only the backend (`ruff` + `pytest`), so run the frontend commands locally before opening a pull request.
+Current results on `main`: backend `417 passed, 1 skipped, 2 xfailed`; frontend `91 passed`. CI runs only the backend (`ruff` + `pytest`), so run the frontend commands locally before opening a pull request.
 
 ### Known defects documented by tests
 
@@ -318,6 +320,8 @@ Current results on `main`: backend `402 passed, 1 skipped, 2 xfailed`; frontend 
 | D-07 | ORCID import does not validate the year or the research line | PR-HU12-01 CP-09 | PGPCECMC-95 |
 
 Closed: **D-05** (review routes answered `403` to council members, so nobody could review through the API and the HU08 verification and rejection notifications never fired), fixed in T-HU08-05 (PGPCECMC-93) with the new `get_current_reviewer` guard — the work Jira had filed under PGPCECMC-96, so note it there; **D-06** (saving without DOI did not warn that duplicates were not checked), fixed in T-HU07-05 (PGPCECMC-63); **D-08** (upload accepted DOCX and ZIP) and **D-09** (a damaged PDF returned `500`), both fixed in T-HU04-05 (PGPCECMC-91). Their test cases — `RegisterProductPage.hu07.test.jsx` CP-07, PR-HU04-02 CP-05 and CP-06, and `RegisterProductPage.hu04.test.jsx` CP-10 — now pass.
+
+Also closed, both found and fixed while validating HU12 in T-HU12-05 (PGPCECMC-98): **D-10** — a DOI or put-code repeated inside a *single* ORCID request lost the whole import, including the valid works, because the works of one batch are not stored yet and so could not be seen by the duplicate check; the unique constraint then fired on commit and the rollback took the batch with it. **D-11** — a council member whose account had been deactivated kept approving, rejecting and reading the review queue with the token already issued to them (it lasts up to an hour), because reviewing never checked `is_active`, unlike saving and importing. Their test cases are T-HU12-05 CP-07, CP-08 and CP-12.
 
 One open discrepancy against Jira: T-HU04-03 asks for a **10 MB** limit and both the code and PR-HU04-02 CP-04 use **25 MB** (PGPCECMC-42).
 
@@ -403,8 +407,8 @@ npm.cmd run dev
 * **Upload without session check.** `POST /api/v1/integrations/upload` does not require a professor session yet.
 * **Defect D-07** (see [Known defects documented by tests](#known-defects-documented-by-tests)).
 * **The extractor does not read the project code yet.** T-HU04-02 lists the institutional code among the fields to extract and the form already prefills it, but `app/utils/pdf_extractor.py` has no heuristic for it, so it always arrives empty (T-HU04-04, PGPCECMC-43).
-* **The consolidated catalogue has no screen and no filters yet.** `GET /api/v1/products/catalog` answers (PGPCECMC-97), but the public list and detail screens belong to HU05 (PGPCECMC-47 to 52) and the filters by year, line and type to HU06 (PGPCECMC-53 to 58). Until those land, the catalogue is only reachable through the API.
-* **No public product detail route in the SPA.** On a match, HU07 names the identifier but still cannot link to the existing product: the backend detail now exists, but the `/produccion/:id` screen (HU05) does not, so a link would bounce the professor to the public home page.
+* **A council member cannot register their own production.** An account has a single role, so the `reviewer` account only reviews: registering and importing answer `403` (validated in T-HU12-05 CP-15). A council member who also publishes needs their production to go in through a professor account. Worth confirming with the client.
+* **The public catalogue screens still show sample data, and their contract does not match the API.** The HU05 and HU06 screens (PGPCECMC-47, 53) read `src/data/catalogSample.js` with `USES_SAMPLE_DATA = true`, and `src/services/catalogService.js` proposes `GET /api/v1/public/products` with query filters, `page` / `page_size` and an `owner: { id, full_name }` field. What HU12 published is `GET /api/v1/products/catalog` with `limit` / `offset`, no filters and no owner (PGPCECMC-97). The two contracts have to be reconciled before wiring them (T-HU05-03, T-HU05-05, T-HU06-03 and T-HU06-05): either the catalogue route grows the filters and the owner, or HU05 publishes its own public route and HU12 keeps using this one internally.
 
 ---
 
