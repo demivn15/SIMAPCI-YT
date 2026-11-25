@@ -19,7 +19,7 @@ from app.utils.file_validation import validate_and_process_file
 from app.utils.pdf_extractor import UnreadableDocumentError, extract_fields_from_pdf
 from app.utils.identifiers import is_valid_doi, is_valid_orcid, normalize_doi, normalize_orcid
 from collections.abc import Iterator
-from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, status, File, Form, UploadFile
 from pydantic import BaseModel
 from typing import Literal
 
@@ -146,8 +146,15 @@ def list_orcid_works(
     return [OrcidWorkOut(**work.__dict__) for work in works]
 
 @router.post("/upload", response_model=ProductFileUploadOut)
-async def upload_and_extract_product_file(file: UploadFile = File(...)):
+async def upload_and_extract_product_file(
+    file: UploadFile = File(...),
+    product_type: Literal["publicacion", "proyecto"] | None = Form(None),
+    _user: dict = Depends(get_current_professor),
+):
     """Carga del documento del proyecto y extracción de sus campos (CA10, CA11).
+
+    Exige sesión de profesor, igual que /doi y /orcid (corrige D-16). `product_type` es el tipo
+    elegido en el formulario: el reporte solo cuenta y pide los campos de ese tipo (corrige D-15).
 
     1. Valida tipo, tamaño, número mágico y calcula el hash de integridad (T-HU04-03).
     2. Extrae los campos que logre identificar (T-HU04-04).
@@ -165,7 +172,7 @@ async def upload_and_extract_product_file(file: UploadFile = File(...)):
 
     # 2. Extracción. Solo llegan archivos PDF: la validación rechaza cualquier otro tipo.
     try:
-        extraction = await extract_fields_from_pdf(file)
+        extraction = await extract_fields_from_pdf(file, product_type)
     except UnreadableDocumentError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
 

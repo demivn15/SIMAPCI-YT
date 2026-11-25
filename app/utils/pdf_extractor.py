@@ -17,6 +17,7 @@ Reglas de T-HU04-05:
 
 import re
 from dataclasses import dataclass, field
+from datetime import date
 
 import pdfplumber
 from fastapi import UploadFile
@@ -25,7 +26,15 @@ from pdfplumber.utils.exceptions import PdfminerException
 
 # Campos que las heurísticas pueden identificar en el documento del proyecto (T-HU04-02).
 # El orden es el que se usa al enumerar los campos faltantes en el mensaje.
-EXTRACTABLE_FIELDS = ("title", "authors", "year", "research_line", "venue", "abstract")
+EXTRACTABLE_FIELDS = ("title", "authors", "year", "research_line", "venue", "abstract", "project_code")
+
+# Campos que el formulario muestra según el tipo de producto (D-15): un proyecto no tiene
+# editorial o evento y una publicación no tiene código de proyecto, así que el reporte solo cuenta
+# y pide los del tipo elegido. Si no se indica el tipo, se reportan todos.
+FIELDS_BY_TYPE = {
+    "publicacion": ("title", "authors", "year", "research_line", "venue", "abstract"),
+    "proyecto": ("title", "authors", "year", "research_line", "abstract", "project_code"),
+}
 
 # Nombres en español para el mensaje que lee el profesor.
 FIELD_LABELS = {
@@ -35,6 +44,7 @@ FIELD_LABELS = {
     "research_line": "línea de investigación",
     "venue": "editorial o evento",
     "abstract": "resumen",
+    "project_code": "código del proyecto",
 }
 
 # Solo se revisan las primeras páginas: la portada es donde vive la metadata del proyecto.
@@ -58,16 +68,22 @@ class ExtractionResult:
     """Resultado de la extracción, con el detalle de qué se identificó y qué falta (CA10)."""
 
     fields: dict[str, str] = field(default_factory=dict)
+    product_type: str | None = None
+
+    @property
+    def expected_fields(self) -> tuple[str, ...]:
+        """Campos que cuentan para el tipo de producto elegido (todos si no hay tipo)."""
+        return FIELDS_BY_TYPE.get(self.product_type, EXTRACTABLE_FIELDS)
 
     @property
     def found(self) -> list[str]:
         """Campos que la extracción sí logró identificar."""
-        return [name for name in EXTRACTABLE_FIELDS if self.fields.get(name)]
+        return [name for name in self.expected_fields if self.fields.get(name)]
 
     @property
     def missing(self) -> list[str]:
         """Campos que quedan vacíos y el profesor debe completar o corregir."""
-        return [name for name in EXTRACTABLE_FIELDS if not self.fields.get(name)]
+        return [name for name in self.expected_fields if not self.fields.get(name)]
 
     @property
     def status(self) -> str:
@@ -81,7 +97,7 @@ class ExtractionResult:
     @property
     def message(self) -> str:
         """Aviso para el profesor; el formulario lo muestra tal cual."""
-        total = len(EXTRACTABLE_FIELDS)
+        total = len(self.expected_fields)
         if self.status == EMPTY:
             return (
                 "No se pudo identificar ningún campo en el documento: puede ser un PDF escaneado "
@@ -133,10 +149,12 @@ def _parse_fields(full_text: str) -> dict[str, str]:
     if lines:
         extracted["title"] = lines[0]
 
-    # 2. Año: cuatro dígitos entre 2000 y 2026.
-    year_match = re.search(r"\b(20[0-2][0-6])\b", full_text)
-    if year_match:
-        extracted["year"] = year_match.group(1)
+    # 2. Año: cuatro dígitos entre 2000 y el año siguiente al actual, el mismo tope que acepta el
+    #    registro. Corrige D-11: el patrón 20[0-2][0-6] no reconocía 2007-2009, 2017-2019 ni 2027+.
+    for year_match in re.finditer(r"\b(20\d{2})\b", full_text):
+        if int(year_match.group(1)) <= date.today().year + 1:
+            extracted["year"] = year_match.group(1)
+            break
 
     # 3. Autores: tras una etiqueta "Autores:" / "Integrantes:", en la misma línea o la siguiente.
     for i, line in enumerate(lines):
@@ -146,6 +164,14 @@ def _parse_fields(full_text: str) -> dict[str, str]:
                 extracted["authors"] = parts[1].strip()
             elif i + 1 < len(lines):
                 extracted["authors"] = lines[i + 1]
+            break
+
+    # 3b. Investigador principal (D-14): también es participante y va primero, sin repetirlo.
+    for line in lines:
+        principal = re.match(r"^investigador(a)?\s+principal\s*:\s*(.+)$", line, re.IGNORECASE)
+        if principal:
+            nombres = [principal.group(2)] + extracted["authors"].split(",")
+            extracted["authors"] = ", ".join(dict.fromkeys(n.strip() for n in nombres if n.strip()))
             break
 
     # 4. Resumen / Abstract: el bloque de texto que sigue al encabezado.
@@ -160,13 +186,29 @@ def _parse_fields(full_text: str) -> dict[str, str]:
             extracted["abstract"] = " ".join(abstract_lines)
             break
 
+    # 5. Código del proyecto (D-12): tras «Código del proyecto:», «Código institucional:» o «Código:».
+    for line in lines:
+        code = re.match(r"^c[oó]digo(\s+del\s+proyecto|\s+institucional)?\s*:\s*(.+)$", line, re.IGNORECASE)
+        if code:
+            extracted["project_code"] = code.group(2).strip()
+            break
+
+    # 6. Línea de investigación (D-13), solo como sugerencia: el texto tras «Línea de
+    #    investigación:» o «Línea:». El formulario la selecciona si es una línea oficial.
+    for line in lines:
+        research_line = re.match(r"^l[ií]nea(\s+de\s+investigaci[oó]n)?\s*:\s*(.+)$", line, re.IGNORECASE)
+        if research_line:
+            extracted["research_line"] = research_line.group(2).strip()
+            break
+
     return extracted
 
 
-async def extract_fields_from_pdf(file: UploadFile) -> ExtractionResult:
+async def extract_fields_from_pdf(file: UploadFile, product_type: str | None = None) -> ExtractionResult:
     """
     Extrae del PDF del proyecto los campos que logre identificar (título, autores, año,
-    resumen) y reporta cuáles quedaron vacíos.
+    resumen, código del proyecto y línea de investigación) y reporta cuáles quedaron vacíos
+    entre los del tipo de producto indicado.
 
     Lanza UnreadableDocumentError si el documento no se puede leer (CA11). Una extracción
     parcial o vacía no es un error: se devuelve igual para que el profesor complete el resto
@@ -177,4 +219,4 @@ async def extract_fields_from_pdf(file: UploadFile) -> ExtractionResult:
     # Se devuelve el puntero al inicio por si luego se almacena el archivo.
     await file.seek(0)
 
-    return ExtractionResult(fields=_parse_fields(full_text))
+    return ExtractionResult(fields=_parse_fields(full_text), product_type=product_type)

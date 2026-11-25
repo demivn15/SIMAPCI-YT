@@ -244,7 +244,7 @@ The screens follow the design of the `prototype` branch (ECMC colors, fonts and 
 
 * `users` (migration `0001`): UUID `id`, `username` and `email` (unique, lowercase), `full_name`, `role` (`professor` or `reviewer`), `is_active`, `school` (default `ECMC`, not hard-coded), optional academic identifiers (`orcid` unique, Google Scholar, Scopus, Web of Science), self-reported h-indexes, `research_lines` (JSON) and audit timestamps. There is no password column.
 * `products` (migration `0002`): UUID `id`, `owner_id` → `users`, `school`, `type` (`publicacion` / `proyecto`), `title`, `authors` (JSON), `year`, `research_line`, `abstract`; for publications `doi` (unique) and `venue`; for projects `project_code` (unique) and `project_status`; `status` (`cargado` → `verificado` / `rechazado`), `source` (`manual` / `orcid`) and `external_id`; review data (`reviewed_by`, `reviewed_at`, `review_reason`) and timestamps.
-* `notifications` (model only, **no migration yet**): `user_id`, optional `product_id`, `title`, `message`, `is_read`, `created_at`.
+* `notifications` (migration `0003`): `user_id`, optional `product_id`, `title`, `message`, `is_read`, `created_at`, plus the `uq_notification_event` unique constraint on `(user_id, product_id, title)` that backs the duplicate control of CA24.
 
 ---
 
@@ -260,7 +260,7 @@ The screens follow the design of the `prototype` branch (ECMC colors, fonts and 
 | **HU05** View the scientific production (public) | Public list and detail screens (PGPCECMC-47) and the catalogue query they will read from (`GET /products/catalog`, PGPCECMC-97) | Wiring the screens to the API (T-HU05-03 and T-HU05-05); they still read `src/data/catalogSample.js` |
 | **HU06** Filter the scientific production | Combinable filters on the public list (PGPCECMC-53) | Wiring the filters to the API (T-HU06-03 and T-HU06-05); they still filter the sample data |
 | **HU07** Check that a product exists before adding it | DOI normalization and duplicate control, pre-save existence check wired into the registration form (PGPCECMC-60, 63), tests PR-HU07-01, PR-HU07-02 and T-HU07-06 | — |
-| **HU08** Receive product status notifications | Notifications on save, approval, rejection and ORCID import, with shared templates and uniqueness control (PGPCECMC-93); owner-isolated query with unread count (PGPCECMC-69); test PR-HU08-01 | `notifications` migration (see [Known issues](#known-issues)) and the screen that shows them |
+| **HU08** Receive product status notifications | Notifications on save, approval, rejection and ORCID import, with shared templates and uniqueness control (PGPCECMC-93); owner-isolated query with unread count (PGPCECMC-69); `notifications` migration `0003` (PGPCECMC-67); tests PR-HU08-01, PR-HU08-02 and T-HU08-07 | The screen that shows them |
 | **HU12** Consolidate ORCID and reviewed publications | ORCID import, council review queue and decisions reachable through the API, approval wired to the consolidated catalogue, its queries and the HU08 notifications (PGPCECMC-97), validation of persistence, both entry paths, uniqueness and permissions (PGPCECMC-98), tests PR-HU12-01 to 03 | — |
 
 The frontend follows the design of the `prototype` branch for the screens that already have a backend (public access, login, professor home and product registration).
@@ -311,17 +311,17 @@ cd frontend && npm run lint     # frontend lint (ESLint)
 cd frontend && npm run build    # frontend production build
 ```
 
-Current results on `main`: backend `417 passed, 1 skipped, 2 xfailed`; frontend `91 passed`. CI runs only the backend (`ruff` + `pytest`), so run the frontend commands locally before opening a pull request.
+Current results on `main`: backend `457 passed, 1 skipped`; frontend `108 passed`. CI runs only the backend (`ruff` + `pytest`), so run the frontend commands locally before opening a pull request.
 
 ### Known defects documented by tests
 
-| Id | Defect | Test | Jira task |
-| :--- | :--- | :--- | :--- |
-| D-07 | ORCID import does not validate the year or the research line | PR-HU12-01 CP-09 | PGPCECMC-95 |
+No defect is open right now: every one found so far has been fixed and its test cases pass.
 
-Closed: **D-05** (review routes answered `403` to council members, so nobody could review through the API and the HU08 verification and rejection notifications never fired), fixed in T-HU08-05 (PGPCECMC-93) with the new `get_current_reviewer` guard — the work Jira had filed under PGPCECMC-96, so note it there; **D-06** (saving without DOI did not warn that duplicates were not checked), fixed in T-HU07-05 (PGPCECMC-63); **D-08** (upload accepted DOCX and ZIP) and **D-09** (a damaged PDF returned `500`), both fixed in T-HU04-05 (PGPCECMC-91). Their test cases — `RegisterProductPage.hu07.test.jsx` CP-07, PR-HU04-02 CP-05 and CP-06, and `RegisterProductPage.hu04.test.jsx` CP-10 — now pass.
+Closed, in the order they were fixed: **D-05** (review routes answered `403` to council members, so nobody could review through the API and the HU08 verification and rejection notifications never fired), fixed in T-HU08-05 (PGPCECMC-93) with the new `get_current_reviewer` guard — the work Jira had filed under PGPCECMC-96, so note it there; **D-06** (saving without DOI did not warn that duplicates were not checked), fixed in T-HU07-05 (PGPCECMC-63); **D-08** (upload accepted DOCX and ZIP) and **D-09** (a damaged PDF returned `500`), both fixed in T-HU04-05 (PGPCECMC-91). Their test cases — `RegisterProductPage.hu07.test.jsx` CP-07, PR-HU04-02 CP-05 and CP-06, and `RegisterProductPage.hu04.test.jsx` CP-10 — now pass.
 
-Also closed, both found and fixed while validating HU12 in T-HU12-05 (PGPCECMC-98): **D-10** — a DOI or put-code repeated inside a *single* ORCID request lost the whole import, including the valid works, because the works of one batch are not stored yet and so could not be seen by the duplicate check; the unique constraint then fired on commit and the rollback took the batch with it. **D-11** — a council member whose account had been deactivated kept approving, rejecting and reading the review queue with the token already issued to them (it lasts up to an hour), because reviewing never checked `is_active`, unlike saving and importing. Their test cases are T-HU12-05 CP-07, CP-08 and CP-12.
+**D-07** (the ORCID import did not validate the year or the research line, so a work with an impossible year or a line outside the ECMC catalogue was imported anyway), fixed in T-HU12-02 (PGPCECMC-95) by giving `OrcidItemImport` the same validators as `ProductCreate`; its test case is PR-HU12-01 CP-09.
+
+**D-10** and **D-11**, both found and fixed while validating HU12 in T-HU12-05 (PGPCECMC-98): **D-10** — a DOI or put-code repeated inside a *single* ORCID request lost the whole import, including the valid works, because the works of one batch are not stored yet and so could not be seen by the duplicate check; the unique constraint then fired on commit and the rollback took the batch with it. **D-11** — a council member whose account had been deactivated kept approving, rejecting and reading the review queue with the token already issued to them (it lasts up to an hour), because reviewing never checked `is_active`, unlike saving and importing. Their test cases are T-HU12-05 CP-07, CP-08 and CP-12.
 
 One open discrepancy against Jira: T-HU04-03 asks for a **10 MB** limit and both the code and PR-HU04-02 CP-04 use **25 MB** (PGPCECMC-42).
 
@@ -403,7 +403,6 @@ npm.cmd run dev
 
 ## Known issues
 
-* **`notifications` has no migration.** The model exists, but `0002` only creates `products`. In MySQL, saving or reviewing a product can fail until a `0003` migration creates the table (HU08, PGPCECMC-67). That migration must also create the `uq_notification_event` unique constraint on `(user_id, product_id, title)`, which is what backs the duplicate control of CA24; the tests build the schema from the models, so they already have it.
 * **Upload without session check.** `POST /api/v1/integrations/upload` does not require a professor session yet.
 * **Defect D-07** (see [Known defects documented by tests](#known-defects-documented-by-tests)).
 * **The extractor does not read the project code yet.** T-HU04-02 lists the institutional code among the fields to extract and the form already prefills it, but `app/utils/pdf_extractor.py` has no heuristic for it, so it always arrives empty (T-HU04-04, PGPCECMC-43).

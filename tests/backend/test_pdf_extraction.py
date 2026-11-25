@@ -114,7 +114,7 @@ def test_una_portada_incompleta_precarga_lo_identificado_y_reporta_lo_que_falta(
 
     assert extraccion["status"] == "parcial"
     assert set(extraccion["fields_found"]) == {"title", "authors", "year", "abstract"}
-    assert set(extraccion["fields_missing"]) == {"research_line", "venue"}
+    assert set(extraccion["fields_missing"]) == {"research_line", "venue", "project_code"}
 
     # Los campos identificados llegan con su valor; los que faltan, vacíos y editables.
     campos = cuerpo["extracted_fields"]
