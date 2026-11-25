@@ -193,7 +193,10 @@ def test_cp04_las_operaciones_que_fallan_no_dejan_avisos(profesores, consejo, db
     assert _decidir(consejo, producto, "rechazado", motivo="   ").status_code == 422
     assert _decidir(consejo, producto, "archivado").status_code == 422
     assert _decidir(a, producto, "verificado").status_code == 403
-    assert _decidir(consejo, "no-existe", "verificado").status_code == 400
+    # 404 desde T-HU12-05 (PGPCECMC-98): un producto que no existe dejó de responder 400,
+    # para que coincida con el resto de las rutas por id. Lo que comprueba este caso sigue
+    # igual: la operación falla y no deja aviso.
+    assert _decidir(consejo, "no-existe", "verificado").status_code == 404
 
     assert len(_avisos(db_session)) == antes == 1
     db_session.expire_all()
