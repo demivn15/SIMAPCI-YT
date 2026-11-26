@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime
 
 from app.db.base import Base
-from sqlalchemy import JSON, CheckConstraint, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy import JSON, CheckConstraint, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 
@@ -20,6 +20,12 @@ class Product(Base):
         CheckConstraint("source IN ('manual', 'orcid')", name="valid_source"),
         # Evita importar exactamente el mismo registro externo de ORCID dos veces para el mismo profesor (CA37)
         UniqueConstraint("owner_id", "source", "external_id", name="uq_owner_source_external_id"),
+        # Optimización de las consultas de lectura del catálogo consolidado (T-HU05-04, PGPCECMC-50, CA15).
+        # La consulta pública filtra por `status = 'verificado'` y ordena por (year, created_at, id)
+        # descendente (ver catalog_service.list_catalog/count_catalog). Un índice compuesto con esas
+        # columnas, en ese orden, deja que el motor resuelva filtro y orden sin recorrer ni ordenar la
+        # tabla entera, para cumplir el tiempo de RNF02 a medida que el catálogo crece (RNF05).
+        Index("ix_products_catalog", "status", "year", "created_at", "id"),
         {"mysql_engine": "InnoDB", "mysql_charset": "utf8mb4", "mysql_collate": "utf8mb4_unicode_ci"},
     )
 
