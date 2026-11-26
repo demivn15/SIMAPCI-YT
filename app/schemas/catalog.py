@@ -50,3 +50,10 @@ class CatalogListResponse(BaseModel):
 
     total: int
     items: list[CatalogProductResponse]
+
+
+class CatalogProfessorResponse(BaseModel):
+    """Identificador y nombre público de un profesor con producción publicada."""
+
+    id: str
+    full_name: str
