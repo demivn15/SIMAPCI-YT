@@ -1,21 +1,30 @@
 /**
- * Catálogo público - T-HU05-01 (PGPCECMC-47) y T-HU06-01 (PGPCECMC-53).
- * Criterios CA13, CA14 (HU05) y CA16, CA17, CA18 (HU06); reglas RV-01 y RFL-01 a RFL-05.
- *
- * Usa la fuente de datos de ejemplo (services/catalogService.js), sin backend ni sesión.
+ * Catálogo público - T-HU05-05 (PGPCECMC-51).
+ * Verifica la integración con la API, paginación, estados vacío/error y detalle público.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { api } from '../services/api';
+import { SAMPLE_PRODUCTS } from '../data/catalogSample';
+import { sortCatalog } from '../utils/catalogFilters';
 import PublicCatalogPage from './PublicCatalogPage';
 import PublicProductPage from './PublicProductPage';
 import AccessScreen from '../components/portal/AccessScreen';
 
+vi.mock('../services/api', () => ({ api: { get: vi.fn() } }));
 vi.mock('../context/AuthContext', () => ({ useAuth: () => ({ isAuthenticated: false, user: null }) }));
 
-/** Muestra la búsqueda actual de la URL para comprobar RFL-05. */
+const publicProducts = sortCatalog(SAMPLE_PRODUCTS.filter((product) => product.status === 'verificado')).map(
+  (product) => {
+    const publicProduct = { ...product };
+    delete publicProduct.owner;
+    return publicProduct;
+  },
+);
+
 function UrlProbe() {
   const location = useLocation();
   return <output data-testid="url">{location.pathname + location.search}</output>;
@@ -42,17 +51,43 @@ function renderAt(path) {
 const entryTitles = () => screen.queryAllByRole('heading', { level: 3 }).map((heading) => heading.textContent);
 const url = () => screen.getByTestId('url').textContent;
 
+function notFoundError() {
+  const error = new Error('not found');
+  error.response = { status: 404 };
+  return error;
+}
+
+beforeEach(() => {
+  api.get.mockImplementation(async (path, { params } = {}) => {
+    if (path === '/products/catalog') {
+      const { limit, offset } = params;
+      return {
+        data: {
+          total: publicProducts.length,
+          items: publicProducts.slice(offset, offset + limit),
+        },
+      };
+    }
+
+    const id = decodeURIComponent(path.slice('/products/catalog/'.length));
+    const product = publicProducts.find((item) => item.id === id);
+    if (!product) throw notFoundError();
+    return { data: { ...product, abstract: product.abstract ?? null } };
+  });
+});
+
 describe('listado público (HU05)', () => {
-  it('CA13: un visitante ve el listado sin iniciar sesión, solo con productos verificados (RV-01)', async () => {
+  it('carga productos verificados sin requerir sesión y usa la paginación de la API', async () => {
     renderAt('/produccion');
 
     expect(await screen.findByText('14 productos')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Iniciar sesión/ })).toHaveAttribute('href', '/login');
     expect(screen.queryByText(/Borrador pendiente/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Registro rechazado/)).not.toBeInTheDocument();
+    expect(api.get).toHaveBeenCalledWith('/products/catalog', { params: { limit: 10, offset: 0 } });
   });
 
-  it('agrupa por año, del más reciente al más antiguo, y pagina de 10 en 10', async () => {
+  it('avanza de página con offset y conserva la página en la URL', async () => {
     const user = renderAt('/produccion');
     await screen.findByText('14 productos');
 
@@ -64,71 +99,40 @@ describe('listado público (HU05)', () => {
     expect(url()).toBe('/produccion?page=2');
     expect(await screen.findByText('Página 2 de 2')).toBeInTheDocument();
     expect(entryTitles()).toHaveLength(4);
+    expect(api.get).toHaveBeenLastCalledWith('/products/catalog', { params: { limit: 10, offset: 10 } });
+  });
+
+  it('limpia parámetros de filtros que el endpoint actual no soporta', async () => {
+    renderAt('/produccion?type=proyecto&page=2');
+
+    expect(await screen.findByText('Página 2 de 2')).toBeInTheDocument();
+    expect(url()).toBe('/produccion?page=2');
+  });
+
+  it('muestra el estado vacío cuando el API no tiene productos verificados', async () => {
+    api.get.mockResolvedValueOnce({ data: { total: 0, items: [] } });
+    renderAt('/produccion');
+
+    expect(await screen.findByRole('heading', { name: 'Todavía no hay productos publicados' })).toBeInTheDocument();
+    expect(screen.getByText('0 productos')).toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Páginas de resultados' })).not.toBeInTheDocument();
+  });
+
+  it('muestra errores de red y permite reintentar sin confundirlos con un catálogo vacío', async () => {
+    api.get.mockRejectedValueOnce(new Error('network error'));
+    const user = renderAt('/produccion');
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo cargar el catálogo.');
+    expect(screen.queryByRole('heading', { name: 'Todavía no hay productos publicados' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Reintentar' }));
+    expect(await screen.findByText('14 productos')).toBeInTheDocument();
   });
 
   it('el inicio público enlaza al catálogo', async () => {
     const user = renderAt('/');
     await user.click(screen.getByRole('link', { name: /Consultar la producción científica/ }));
     expect(url()).toBe('/produccion');
-  });
-});
-
-describe('filtros (HU06)', () => {
-  it('CA16 y RFL-01: combina tipo, profesor y periodo, y los refleja en la URL', async () => {
-    const user = renderAt('/produccion');
-    await screen.findByText('14 productos');
-
-    await user.selectOptions(screen.getByLabelText('Tipo de producto'), 'publicacion');
-    await user.selectOptions(screen.getByLabelText('Profesor'), 'prof-ana');
-    await user.selectOptions(screen.getByLabelText('Desde el año'), '2021');
-
-    expect(await screen.findByText('2 productos')).toBeInTheDocument();
-    expect(url()).toBe('/produccion?type=publicacion&owner_id=prof-ana&year_from=2021');
-    expect(entryTitles()).toEqual([
-      'Redes neuronales informadas por la física para ecuaciones de reacción-difusión',
-      'Clasificación de especies de anfibios andinos a partir de sus vocalizaciones',
-    ]);
-  });
-
-  it('CA18: muestra los filtros activos y permite quitarlos uno por uno', async () => {
-    const user = renderAt('/produccion?type=proyecto&year_from=2023&year_to=2025');
-    await screen.findByText('3 productos');
-
-    const chips = within(screen.getByRole('list', { name: 'Filtros aplicados' }));
-    expect(chips.getByRole('button', { name: 'Quitar filtro Tipo: Proyecto de investigación' })).toBeInTheDocument();
-
-    await user.click(chips.getByRole('button', { name: 'Quitar filtro Periodo: 2023 a 2025' }));
-    expect(url()).toBe('/produccion?type=proyecto');
-    expect(await screen.findByText('4 productos')).toBeInTheDocument();
-  });
-
-  it('la búsqueda de texto se aplica al confirmar y vuelve a la página 1 (RFL-03)', async () => {
-    const user = renderAt('/produccion?page=2');
-    await screen.findByText('Página 2 de 2');
-
-    await user.type(screen.getByRole('searchbox'), 'optimizacion{Enter}');
-
-    expect(url()).toBe('/produccion?q=optimizacion');
-    expect(await screen.findByText('1 producto')).toBeInTheDocument();
-    expect(entryTitles()).toEqual(['Optimización de rutas para el transporte público de Ibarra']);
-  });
-
-  it('CA17: sin coincidencias muestra el estado vacío y «Limpiar filtros» restaura el listado', async () => {
-    const user = renderAt('/produccion?type=proyecto&q=topolog%C3%ADa');
-
-    expect(await screen.findByRole('heading', { name: 'Ningún producto coincide con estos filtros' })).toBeInTheDocument();
-    expect(entryTitles()).toEqual([]);
-
-    const emptyState = screen.getByRole('heading', { name: /Ningún producto/ }).parentElement;
-    await user.click(within(emptyState).getByRole('button', { name: 'Limpiar filtros' }));
-
-    expect(url()).toBe('/produccion');
-    expect(await screen.findByText('14 productos')).toBeInTheDocument();
-    expect(screen.getByRole('searchbox')).toHaveValue('');
-  });
-
-  it('un enlace con valores inválidos no rompe la página', async () => {
-    renderAt('/produccion?type=libro&year_from=abc');
     expect(await screen.findByText('14 productos')).toBeInTheDocument();
   });
 });
@@ -148,6 +152,7 @@ describe('detalle público (HU05, CA14)', () => {
     expect(screen.getByText('Importado desde ORCID')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Resumen' })).toBeInTheDocument();
     expect(screen.queryByText(/@yachaytech\.edu\.ec/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Profesor responsable')).not.toBeInTheDocument();
   });
 
   it('un proyecto muestra su código y estado en lugar de revista y DOI', async () => {
@@ -158,21 +163,20 @@ describe('detalle público (HU05, CA14)', () => {
     expect(screen.queryByText('DOI')).not.toBeInTheDocument();
   });
 
-  it.each(['p-15', 'p-16', 'no-existe'])('%s: un producto no público o inexistente no se muestra (RU-08)', async (id) => {
+  it.each(['p-15', 'p-16', 'no-existe'])('%s: un producto no público o inexistente no se muestra', async (id) => {
     renderAt(`/produccion/${id}`);
     expect(await screen.findByRole('heading', { name: 'Producto no disponible' })).toBeInTheDocument();
-    expect(screen.queryByText(/No visible para el público/)).not.toBeInTheDocument();
   });
 
-  it('«Volver a los resultados» conserva los filtros con los que se llegó', async () => {
-    const user = renderAt('/produccion?type=proyecto');
-    await screen.findByText('4 productos');
+  it('«Volver a los resultados» conserva la página desde la que se llegó', async () => {
+    const user = renderAt('/produccion?page=2');
+    await screen.findByText('Página 2 de 2');
 
-    await user.click(screen.getByRole('link', { name: 'Simulación de flujos de lava en arquitecturas GPU' }));
-    await screen.findByRole('heading', { level: 1, name: /Simulación de flujos de lava/ });
+    await user.click(screen.getByRole('link', { name: /Análisis espacio-temporal de casos de dengue/ }));
+    await screen.findByRole('heading', { level: 1, name: /Análisis espacio-temporal de casos de dengue/ });
     await user.click(screen.getByRole('link', { name: /Volver a los resultados/ }));
 
-    expect(url()).toBe('/produccion?type=proyecto');
-    expect(await screen.findByText('4 productos')).toBeInTheDocument();
+    expect(url()).toBe('/produccion?page=2');
+    expect(await screen.findByText('Página 2 de 2')).toBeInTheDocument();
   });
 });
