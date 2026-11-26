@@ -1,0 +1,561 @@
+/*
+ * Dashboard público de métricas - HU09 y HU10.
+ * Usa los tokens de portal.css (tinta, rojo ECMC, tipografías) y el marco de catalog.css.
+ * Clases con prefijo metrics- / public-nav, para no alterar los estilos existentes.
+ */
+
+/* ---------- Navegación pública (cabecera compartida con el catálogo) ---------- */
+.public-nav {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.public-nav a {
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.public-nav a:hover {
+  color: var(--ink);
+}
+
+.public-nav a.active {
+  color: var(--accent);
+  background: var(--accent-tint);
+}
+
+.access-metrics-link {
+  display: inline-block;
+  margin: 18px 0 0 4px;
+  color: var(--accent);
+  font-weight: 600;
+  text-underline-offset: 4px;
+}
+
+/* ---------- Estructura ---------- */
+.metrics-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 56px;
+  margin-top: 40px;
+}
+
+.metrics-body > *,
+.metrics-columns > * {
+  min-width: 0;
+}
+
+.metrics-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.metrics-section-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(24px, 2.4vw, 30px);
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: var(--ink);
+}
+
+.metrics-section-head p {
+  max-width: 62ch;
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.metrics-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 56px;
+}
+
+.metrics-empty,
+.metrics-muted {
+  color: var(--muted);
+}
+
+/* ---------- Indicadores ---------- */
+.metrics-indicators {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin: 0;
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--line);
+}
+
+.metrics-indicator {
+  padding: 18px 16px 20px;
+}
+
+.metrics-indicator + .metrics-indicator {
+  border-left: 1px solid var(--line);
+}
+
+.metrics-indicator dt {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.metrics-indicator dd {
+  margin: 8px 0 0;
+}
+
+.metrics-indicator-value {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(30px, 3vw, 42px);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.metrics-indicator-note {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+/* ---------- Gráficos ---------- */
+.metrics-chart {
+  width: 100%;
+  height: 300px;
+}
+
+.metrics-chart-tall {
+  height: 360px;
+}
+
+.metrics-toggle {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #fff;
+}
+
+.metrics-toggle button {
+  padding: 8px 14px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.metrics-toggle button + button {
+  border-left: 1px solid var(--line);
+}
+
+.metrics-toggle button[aria-pressed='true'] {
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+.metrics-tooltip {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.metrics-tooltip ul {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.metrics-legend-text {
+  color: var(--ink);
+}
+
+.metrics-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 2px;
+  vertical-align: baseline;
+}
+
+.metrics-swatch.is-round {
+  border-radius: 50%;
+}
+
+/* Barras horizontales (líneas, países) */
+.metrics-bars {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.metrics-bars li {
+  display: grid;
+  grid-template-columns: minmax(120px, 14em) minmax(0, 1fr) 3.5em;
+  align-items: center;
+  gap: 12px;
+}
+
+.metrics-bars-compact li {
+  grid-template-columns: minmax(90px, 9em) minmax(0, 1fr) 3em;
+  gap: 10px;
+}
+
+.metrics-bar-label {
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.metrics-bar-track {
+  height: 12px;
+  border-radius: 2px;
+  background: #ebe6e0;
+  overflow: hidden;
+}
+
+.metrics-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.metrics-bar-value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.metrics-external {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 32px;
+}
+
+.metrics-external h3,
+.metrics-graph-panel h4 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.metrics-institutions,
+.metrics-pairs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.metrics-institutions li,
+.metrics-pairs li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+  line-height: 1.3;
+}
+
+/* ---------- Red de coautoría ---------- */
+.metrics-section-graph {
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fffdfa;
+}
+
+.metrics-graph {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 28px;
+  align-items: start;
+}
+
+.metrics-graph-figure {
+  margin: 0;
+}
+
+.metrics-graph-figure svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.metrics-graph-edges line {
+  stroke: #b9b0a7;
+  stroke-opacity: 0.7;
+  stroke-linecap: round;
+  transition: stroke-opacity 0.15s;
+}
+
+.metrics-graph-edges line.is-active {
+  stroke: var(--accent);
+  stroke-opacity: 0.9;
+}
+
+.metrics-graph-edges line.is-dim {
+  stroke-opacity: 0.12;
+}
+
+.metrics-graph-node {
+  cursor: pointer;
+  outline: none;
+  transition: opacity 0.15s;
+}
+
+.metrics-graph-node circle {
+  stroke: #fffdfa;
+  stroke-width: 2;
+}
+
+.metrics-graph-node text {
+  font-family: var(--font-body);
+  font-size: 13px;
+  fill: var(--ink);
+  paint-order: stroke;
+  stroke: #fffdfa;
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.metrics-graph-node.is-dim {
+  opacity: 0.22;
+}
+
+.metrics-graph-node.is-active circle,
+.metrics-graph-node:focus-visible circle {
+  stroke: var(--ink);
+  stroke-width: 3;
+}
+
+.metrics-graph-node.is-active text {
+  font-weight: 700;
+}
+
+.metrics-graph-figure figcaption {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.metrics-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--ink);
+}
+
+.metrics-graph-panel {
+  padding-left: 24px;
+  border-left: 1px solid var(--line);
+}
+
+.metrics-graph-panel h3 {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--ink);
+}
+
+.metrics-graph-panel > p {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+
+.metrics-graph-panel .metrics-muted {
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+/* ---------- Tabla de profesores ---------- */
+.metrics-table-wrap {
+  overflow-x: auto;
+  border-top: 2px solid var(--ink);
+}
+
+.metrics-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.metrics-table th,
+.metrics-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.metrics-table thead th {
+  padding: 0;
+  font-size: 14px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.metrics-table thead button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 12px 10px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.metrics-table thead th.is-numeric button {
+  justify-content: flex-end;
+}
+
+.metrics-table thead th[aria-sort='ascending'],
+.metrics-table thead th[aria-sort='descending'] {
+  color: var(--accent);
+}
+
+.metrics-table .is-numeric {
+  text-align: right;
+}
+
+.metrics-table .is-strong {
+  font-weight: 700;
+}
+
+.metrics-table tbody th {
+  font-weight: 400;
+}
+
+.metrics-professor {
+  display: block;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.metrics-professor-line {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.metrics-period {
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+/* ---------- Adaptación ---------- */
+@media (max-width: 1100px) {
+  .metrics-indicators {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .metrics-indicator:nth-child(4) {
+    border-left: 0;
+  }
+
+  .metrics-indicator:nth-child(n + 4) {
+    border-top: 1px solid var(--line);
+  }
+
+  .metrics-graph,
+  .metrics-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .metrics-graph-panel {
+    padding: 20px 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+}
+
+@media (max-width: 640px) {
+  .metrics-indicators {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .metrics-indicator:nth-child(odd) {
+    border-left: 0;
+  }
+
+  .metrics-indicator:nth-child(4) {
+    border-left: 1px solid var(--line);
+  }
+
+  .metrics-indicator:nth-child(n + 3) {
+    border-top: 1px solid var(--line);
+  }
+
+  .metrics-external {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .metrics-section-graph {
+    padding: 16px;
+  }
+
+  .metrics-bars li {
+    grid-template-columns: minmax(0, 1fr) 3em;
+  }
+
+  .metrics-bars .metrics-bar-track {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .public-nav {
+    margin-left: 0;
+  }
+}
+
+/* En móvil la navegación pasa a su propia fila, debajo del logo y del botón de sesión. */
+@media (max-width: 760px) {
+  .catalog-shell-header {
+    flex-wrap: wrap;
+    row-gap: 12px;
+  }
+
+  .catalog-shell-header .public-nav {
+    order: 3;
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .metrics-graph-node,
+  .metrics-graph-edges line {
+    transition: none;
+  }
+}

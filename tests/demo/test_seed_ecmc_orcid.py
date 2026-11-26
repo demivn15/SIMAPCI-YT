@@ -11,9 +11,11 @@ from sqlalchemy import select
 
 from app.models.product import Product
 from app.models.user import User
+from app.models.product_bibliometrics import ProductBibliometrics
 from scripts.demo.seed_ecmc_orcid import (
     LINE_EQUATIONS,
     apply_plan,
+    bibliometrics_from_row,
     build_plan,
     classify_research_line,
     read_dump,
@@ -100,12 +102,16 @@ def test_apply_is_idempotent_and_reset_removes_only_seed_data(tmp_path, db_sessi
     seed_users = db_session.scalars(select(User).where(User.username.like("orcid-%"))).all()
     assert all(not u.is_active and u.email.endswith("@orcid-import.invalid") for u in seed_users)
 
+    assert first["indicadores bibliométricos creados"] == 3
+    assert len(db_session.scalars(select(ProductBibliometrics)).all()) == 3
+
     second = apply_plan(db_session, plan)
     assert second["productos creados"] == 0
     assert second["productos ya existentes (saltados)"] == 3
 
     stats = reset_seed(db_session)
     assert stats["productos borrados"] == 3
+    assert stats["indicadores borrados"] == 3
     assert db_session.scalars(select(Product)).all() == []
     assert [u.username for u in db_session.scalars(select(User)).all()] == ["jperez"]
 
@@ -116,3 +122,17 @@ def test_research_line_prefers_title_and_respects_word_boundaries():
     assert classify_research_line("IoT sensors", "", "") == "Tecnologías de la información"
     assert classify_research_line("Statistical inference", "", "") == "Ciencia de datos"
     assert classify_research_line("Untitled", "", "") == "Por clasificar"
+
+
+def test_bibliometrics_zero_citations_without_openalex_are_unknown():
+    base = {"Cuartil SJR": "Sin cuartil", "Afiliado Yachay": "No verificable", "Acceso abierto": "",
+            "Tipo de colaboración": "Internacional", "Instituciones participantes": "Yachay; UPC",
+            "Países de las instituciones": "EC; ES", "Fecha y hora de consulta": "2026-11-10 13:08:45"}
+    unknown = bibliometrics_from_row({**base, "Citas": 0, "ID OpenAlex": ""})
+    known_zero = bibliometrics_from_row({**base, "Citas": 0, "ID OpenAlex": "https://openalex.org/W1"})
+    assert unknown["citations"] is None
+    assert known_zero["citations"] == 0
+    assert unknown["sjr_quartile"] is None and unknown["is_open_access"] is None
+    assert unknown["yachay_affiliation"] == "no_verificable"
+    assert unknown["collaboration_type"] == "internacional"
+    assert unknown["countries"] == ["EC", "ES"]

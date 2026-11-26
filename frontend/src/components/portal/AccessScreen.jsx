@@ -42,6 +42,9 @@ export default function AccessScreen({ dialog = null }) {
               <BookOpen size={20} aria-hidden="true" />
               Consultar la producción científica
             </Link>
+            <Link to="/metricas" className="access-metrics-link">
+              Ver las métricas de la Escuela
+            </Link>
             <dl className="access-dean">
               <dt>Decano</dt>
               <dd>{SCHOOL.dean}</dd>

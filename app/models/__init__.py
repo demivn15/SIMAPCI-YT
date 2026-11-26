@@ -6,5 +6,6 @@ en Base.metadata al generar migraciones.
 from app.models.product import Product
 from app.models.user import User
 from app.models.notification import Notification
+from app.models.product_bibliometrics import ProductBibliometrics
 
-__all__ = ["User", "Product", "Notification"]
+__all__ = ["User", "Product", "Notification", "ProductBibliometrics"]

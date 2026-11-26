@@ -6,6 +6,7 @@ Description: FastAPI application entry point.
 
 from app.api.v1.auth import router as auth_router
 from app.api.v1.integrations import router as integrations_router
+from app.api.v1.metrics import router as metrics_router
 from app.api.v1.notifications import router as notifications_router
 from app.api.v1.products import router as products_router
 from app.api.v1.professor import router as professor_router
@@ -32,6 +33,7 @@ app.include_router(products_router, prefix="/api/v1")
 app.include_router(notifications_router, prefix="/api/v1")
 app.include_router(professor_router, prefix="/api/v1")
 app.include_router(registration_router, prefix="/api/v1")
+app.include_router(metrics_router, prefix="/api/v1")
 
 @app.get("/")
 def health_check():

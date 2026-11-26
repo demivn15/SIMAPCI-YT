@@ -3,7 +3,7 @@
  * pantalla de acceso, para que el visitante no note un cambio al pasar del inicio al catálogo.
  * Con sesión iniciada, el botón lleva al panel en lugar de al inicio de sesión.
  */
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { LayoutDashboard, LogIn } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { SCHOOL } from '../../constants/school';
@@ -26,6 +26,12 @@ export default function PublicShell({ children }) {
             <small>{SCHOOL.shortName}</small>
           </span>
         </Link>
+        <nav className="public-nav" aria-label="Secciones públicas">
+          <NavLink to="/produccion" end={false}>
+            Producción
+          </NavLink>
+          <NavLink to="/metricas">Métricas</NavLink>
+        </nav>
         {isAuthenticated ? (
           <Link to="/dashboard" className="btn btn-outline">
             <LayoutDashboard size={19} aria-hidden="true" />

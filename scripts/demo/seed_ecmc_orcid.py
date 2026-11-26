@@ -23,7 +23,8 @@ Decisiones (todas «propuesta a validar con el cliente»):
 - `authors` solo lleva a los profesores de la Escuela: el volcado no trae la lista completa.
 - `research_line` es obligatoria y el volcado no la trae: se asigna una línea ECMC
   PROVISIONAL por palabras clave del título y del área SCImago.
-- Las citas y el cuartil SJR no tienen columna en `products` todavía: no se cargan.
+- Las citas, el cuartil SJR y la colaboración van a `product_bibliometrics` (migración 0005).
+  Una cita en 0 sin ID de OpenAlex se guarda como NULL (desconocida), no como 0.
 
 Uso (desde la raíz del repo, con la BD migrada: `alembic upgrade head`):
     python -m scripts.demo.seed_ecmc_orcid --sql RUTA.sql --dry-run
@@ -40,6 +41,7 @@ import sys
 import unicodedata
 from collections import Counter
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 
 DEFAULT_DEPARTMENTS = ("Matemáticas", "Computación")
@@ -192,6 +194,65 @@ def _clean(value) -> str:
     return str(value).strip() if value not in (None, "") else ""
 
 
+def _int(value) -> int | None:
+    try:
+        return int(float(value))
+    except (TypeError, ValueError):
+        return None
+
+
+def _float(value) -> float | None:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _split(value) -> list[str] | None:
+    items = [part.strip() for part in _clean(value).split(";") if part.strip()]
+    return items or None
+
+
+_AFFILIATION = {"Sí": "si", "No": "no", "No verificable": "no_verificable"}
+_COLLABORATION = {
+    "Institucional": "institucional",
+    "Nacional": "nacional",
+    "Internacional": "internacional",
+    "No verificable": "no_verificable",
+}
+_OPEN_ACCESS = {"True": True, "False": False}
+
+
+def bibliometrics_from_row(row: dict) -> dict:
+    """Indicadores de una fila del volcado, listos para `product_bibliometrics`.
+
+    Citas: el volcado guarda 0 cuando no encontró la obra en OpenAlex. Sin ID de OpenAlex, un
+    0 no significa «nadie la citó», sino «no se sabe»: se guarda NULL.
+    """
+    citations = _int(row.get("Citas"))
+    has_openalex = bool(_clean(row.get("ID OpenAlex")))
+    if citations == 0 and not has_openalex:
+        citations = None
+    quartile = _clean(row.get("Cuartil SJR"))
+    retrieved = _clean(row.get("Fecha y hora de consulta"))
+    return {
+        "citations": citations,
+        "citations_openalex": _int(row.get("Citas OpenAlex")) if has_openalex else None,
+        "citations_crossref": _int(row.get("Citas Crossref")) if citations is not None else None,
+        "fwci": _float(row.get("FWCI")),
+        "sjr_quartile": quartile if quartile in ("Q1", "Q2", "Q3", "Q4") else None,
+        "sjr_score": _float(row.get("SJR Score")),
+        "scimago_h_index": _int(row.get("H-Index Revista")),
+        "is_open_access": _OPEN_ACCESS.get(_clean(row.get("Acceso abierto"))),
+        "yachay_affiliation": _AFFILIATION.get(_clean(row.get("Afiliado Yachay"))),
+        "collaboration_type": _COLLABORATION.get(_clean(row.get("Tipo de colaboración"))),
+        "institutions": _split(row.get("Instituciones participantes")),
+        "countries": _split(row.get("Países de las instituciones")),
+        "data_source": _clean(row.get("Fuente de información"))[:255] or None,
+        "retrieved_at": datetime.fromisoformat(retrieved) if retrieved else None,
+    }
+
+
 def _year(value) -> int | None:
     try:
         return int(float(value))
@@ -210,6 +271,7 @@ class SeedProduct:
     external_id: str
     authors: list[str] = field(default_factory=list)
     work_type: str = ""
+    metrics: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -275,6 +337,7 @@ def build_plan(dump: dict[str, list[dict]], departments: tuple[str, ...], only_y
             external_id=external_id,
             authors=authors,
             work_type=_clean(first["Tipo"]),
+            metrics=bibliometrics_from_row(first),
         ))
 
     return SeedPlan(professors=professors, products=products, skipped=skipped)
@@ -293,6 +356,7 @@ def apply_plan(db, plan: SeedPlan) -> Counter:
     from sqlalchemy import select
 
     from app.models.product import Product
+    from app.models.product_bibliometrics import ProductBibliometrics
     from app.models.user import User
 
     stats: Counter = Counter()
@@ -316,31 +380,43 @@ def apply_plan(db, plan: SeedPlan) -> Counter:
             stats["perfiles técnicos creados"] += 1
         owner_ids[orcid] = user.id
 
-    existing_dois = set(db.scalars(select(Product.doi).where(Product.doi.is_not(None))))
-    existing_keys = set(db.execute(select(Product.owner_id, Product.external_id)).all())
+    products_by_doi = {p.doi: p for p in db.scalars(select(Product).where(Product.doi.is_not(None)))}
+    products_by_key = {(p.owner_id, p.external_id): p for p in db.scalars(select(Product))}
+    with_metrics = set(db.scalars(select(ProductBibliometrics.product_id)))
     for item in plan.products:
         owner_id = owner_ids[item.owner_orcid]
-        if (item.doi and item.doi in existing_dois) or (owner_id, item.external_id) in existing_keys:
+        product = (products_by_doi.get(item.doi) if item.doi else None) or products_by_key.get(
+            (owner_id, item.external_id)
+        )
+        if product is not None:
             stats["productos ya existentes (saltados)"] += 1
-            continue
-        db.add(Product(
-            owner_id=owner_id,
-            school=SCHOOL,
-            type="publicacion",
-            title=item.title,
-            authors=item.authors,
-            year=item.year,
-            research_line=item.research_line,
-            doi=item.doi,
-            venue=item.venue,
-            status="verificado",
-            source="orcid",
-            external_id=item.external_id,
-        ))
-        if item.doi:
-            existing_dois.add(item.doi)
-        existing_keys.add((owner_id, item.external_id))
-        stats["productos creados"] += 1
+        else:
+            product = Product(
+                owner_id=owner_id,
+                school=SCHOOL,
+                type="publicacion",
+                title=item.title,
+                authors=item.authors,
+                year=item.year,
+                research_line=item.research_line,
+                doi=item.doi,
+                venue=item.venue,
+                status="verificado",
+                source="orcid",
+                external_id=item.external_id,
+            )
+            db.add(product)
+            db.flush()
+            if item.doi:
+                products_by_doi[item.doi] = product
+            products_by_key[(owner_id, item.external_id)] = product
+            stats["productos creados"] += 1
+
+        # Indicadores: solo para las obras de esta carga, y una sola vez (no pisa datos más nuevos).
+        if product.owner_id in owner_ids.values() and product.id not in with_metrics and item.metrics:
+            db.add(ProductBibliometrics(product_id=product.id, **item.metrics))
+            with_metrics.add(product.id)
+            stats["indicadores bibliométricos creados"] += 1
 
     db.commit()
     return stats
@@ -352,6 +428,7 @@ def reset_seed(db) -> Counter:
 
     from app.models.notification import Notification
     from app.models.product import Product
+    from app.models.product_bibliometrics import ProductBibliometrics
     from app.models.user import User
 
     user_ids = list(db.scalars(
@@ -364,6 +441,10 @@ def reset_seed(db) -> Counter:
     if user_ids:
         stats["notificaciones borradas"] = db.execute(
             delete(Notification).where(Notification.user_id.in_(user_ids))
+        ).rowcount
+        product_ids = select(Product.id).where(Product.owner_id.in_(user_ids))
+        stats["indicadores borrados"] = db.execute(
+            delete(ProductBibliometrics).where(ProductBibliometrics.product_id.in_(product_ids))
         ).rowcount
         stats["productos borrados"] = db.execute(delete(Product).where(Product.owner_id.in_(user_ids))).rowcount
         stats["perfiles técnicos borrados"] = db.execute(delete(User).where(User.id.in_(user_ids))).rowcount
