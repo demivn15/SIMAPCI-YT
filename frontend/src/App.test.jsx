@@ -41,4 +41,14 @@ describe('CA06 · vista pública y funciones privadas sin sesión', () => {
     expect(await screen.findByRole('heading', { name: /Un espacio para su investigación/ })).toBeInTheDocument();
     expect(window.location.pathname).toBe('/');
   });
+
+  it('el antiguo dashboard /metricas lleva a la pestaña Inicio, pública y sin sesión', async () => {
+    window.history.pushState({}, '', '/metricas');
+    render(<App />);
+
+    // La pestaña se carga en diferido (React.lazy): se da más margen a la primera importación.
+    expect(await screen.findByRole('heading', { name: 'La Escuela en cifras' }, { timeout: 5000 })).toBeInTheDocument();
+    expect(window.location.pathname).toBe('/inicio');
+    expect(screen.getByRole('link', { name: /Iniciar sesión/ })).toHaveAttribute('href', '/login');
+  });
 });

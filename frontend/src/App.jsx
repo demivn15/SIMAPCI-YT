@@ -11,10 +11,31 @@ import PublicProductPage from './pages/PublicProductPage';
 import DashboardPage from './pages/DashboardPage';
 import RegisterProductPage from './pages/RegisterProductPage';
 
-// Carga diferida: las librerías de gráficos solo se descargan al abrir el dashboard.
+// Carga diferida: las librerías de gráficos (recharts, d3-force) solo se descargan al abrir
+// una pestaña de análisis.
 const PublicMetricsPage = lazy(() => import('./pages/PublicMetricsPage'));
+const ProfessorsDirectoryPage = lazy(() => import('./pages/ProfessorsDirectoryPage'));
+const ProfessorProfilePage = lazy(() => import('./pages/ProfessorProfilePage'));
+const CollaborationsPage = lazy(() => import('./pages/CollaborationsPage'));
+const ComparePage = lazy(() => import('./pages/ComparePage'));
+const IndicatorsGuidePage = lazy(() => import('./pages/IndicatorsGuidePage'));
 
 const queryClient = new QueryClient();
+
+function Deferred({ children }) {
+  return (
+    <Suspense
+      fallback={
+        <div className="catalog-loading" role="status">
+          <div className="spinner" aria-hidden="true" />
+          Cargando…
+        </div>
+      }
+    >
+      {children}
+    </Suspense>
+  );
+}
 
 export default function App() {
   return (
@@ -22,26 +43,27 @@ export default function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* Public Routes (CA06: la vista pública no exige sesión) */}
+            {/* Bienvenida e inicio de sesión, fuera del portal (CA06: la vista pública no exige sesión) */}
             <Route path="/" element={<PublicHomePage />} />
             <Route path="/login" element={<LoginPage />} />
-            {/* Catálogo público sin sesión (HU05, CA13 y CA14; filtros de HU06) */}
-            <Route path="/produccion" element={<PublicCatalogPage />} />
-            <Route path="/produccion/:productId" element={<PublicProductPage />} />
-            {/* Dashboard público de métricas (HU09 y HU10) */}
-            <Route
-              path="/metricas"
-              element={
-                <Suspense fallback={null}>
-                  <PublicMetricsPage />
-                </Suspense>
-              }
-            />
+            {/* El antiguo dashboard de métricas ahora es la pestaña Inicio */}
+            <Route path="/metricas" element={<Navigate to="/inicio" replace />} />
 
-            {/* Protected Routes Guard */}
-            <Route element={<ProtectedRoute allowedRoles={['professor']} />}>
-              {/* Menú lateral, barra superior y pie del portal */}
-              <Route element={<PortalLayout />}>
+            {/* Portal con pestañas: el mismo menú para el visitante y el profesor */}
+            <Route element={<PortalLayout />}>
+              {/* Pestañas públicas, sin sesión */}
+              <Route path="/inicio" element={<Deferred><PublicMetricsPage /></Deferred>} />
+              {/* Catálogo público sin sesión (HU05, CA13 y CA14; filtros de HU06) */}
+              <Route path="/produccion" element={<PublicCatalogPage />} />
+              <Route path="/produccion/:productId" element={<PublicProductPage />} />
+              <Route path="/docentes" element={<Deferred><ProfessorsDirectoryPage /></Deferred>} />
+              <Route path="/docentes/:professorId" element={<Deferred><ProfessorProfilePage /></Deferred>} />
+              <Route path="/colaboraciones" element={<Deferred><CollaborationsPage /></Deferred>} />
+              <Route path="/comparar" element={<Deferred><ComparePage /></Deferred>} />
+              <Route path="/guia" element={<Deferred><IndicatorsGuidePage /></Deferred>} />
+
+              {/* Pestañas del profesor */}
+              <Route element={<ProtectedRoute allowedRoles={['professor']} />}>
                 <Route path="/dashboard" element={<DashboardPage />} />
                 {/* El registro se abre como ventana sobre el inicio, como en el prototipo */}
                 <Route

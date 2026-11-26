@@ -15,3 +15,4 @@ ruff
 sqlalchemy>=2.0
 uvicorn
 pdfplumber
+networkx==3.7

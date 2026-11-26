@@ -77,6 +77,12 @@ class User(Base):
         String(20), nullable=False, default=DEFAULT_SCHOOL, server_default=DEFAULT_SCHOOL, index=True
     )
 
+    # Departamento académico (Matemáticas, Computación, Desarrollo Humano…). Opcional porque
+    # LDAP no lo entrega: hoy lo llena la carga demo desde el volcado ORCID. Se guarda aparte
+    # de `school` porque los análisis de producción y de redes filtran y colorean por
+    # departamento dentro de la misma Escuela (migración 0006).
+    department: Mapped[str | None] = mapped_column(String(80), nullable=True, index=True)
+
     # --- Identificadores académicos (opcionales, los completa el profesor) ---
     # ORCID con formato 0000-0000-0000-000X (19 caracteres). Único: dos cuentas no
     # pueden reclamar el mismo ORCID. MySQL permite varios NULL en un índice único.

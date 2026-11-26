@@ -9,7 +9,6 @@ import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, SearchX } from 'lucide-react';
-import PublicShell from '../components/catalog/PublicShell';
 import CatalogList from '../components/catalog/CatalogList';
 import { CATALOG_PAGE_SIZE, listPublicProducts } from '../services/catalogService';
 import { EMPTY_FILTERS, FILTER_KEYS, readCatalogParams, resultCountLabel, toCatalogParams } from '../utils/catalogFilters';
@@ -79,7 +78,7 @@ export default function PublicCatalogPage() {
   }, [pageOutOfRange, setSearchParams, totalPages]);
 
   return (
-    <PublicShell>
+    <>
       <div className="catalog-intro">
         <h1 className="display">Producción científica</h1>
         <p>Publicaciones y proyectos de investigación verificados de la Escuela.</p>
@@ -115,6 +114,6 @@ export default function PublicCatalogPage() {
           </>
         )}
       </div>
-    </PublicShell>
+    </>
   );
 }

@@ -25,6 +25,12 @@ Decisiones (todas «propuesta a validar con el cliente»):
   PROVISIONAL por palabras clave del título y del área SCImago.
 - Las citas, el cuartil SJR y la colaboración van a `product_bibliometrics` (migración 0005).
   Una cita en 0 sin ID de OpenAlex se guarda como NULL (desconocida), no como 0.
+- El departamento del profesor (columna `departamento` de `docentes`, enlazada por ORCID) va a
+  `users.department` y el tipo de obra (columna `Tipo`) a `product_bibliometrics.contribution_type`
+  (migración 0006). El tipo se guarda tal como viene de Crossref/OpenAlex, sin unificar
+  sinónimos («article» y «journal-article» quedan separados).
+- Volver a correr la carga completa lo que falte en registros ya existentes (departamento
+  vacío, tipo vacío) sin duplicar perfiles, productos ni indicadores.
 
 Uso (desde la raíz del repo, con la BD migrada: `alembic upgrade head`):
     python -m scripts.demo.seed_ecmc_orcid --sql RUTA.sql --dry-run
@@ -248,6 +254,7 @@ def bibliometrics_from_row(row: dict) -> dict:
         "collaboration_type": _COLLABORATION.get(_clean(row.get("Tipo de colaboración"))),
         "institutions": _split(row.get("Instituciones participantes")),
         "countries": _split(row.get("Países de las instituciones")),
+        "contribution_type": _clean(row.get("Tipo"))[:40] or None,
         "data_source": _clean(row.get("Fuente de información"))[:255] or None,
         "retrieved_at": datetime.fromisoformat(retrieved) if retrieved else None,
     }
@@ -279,6 +286,7 @@ class SeedPlan:
     professors: dict[str, str]  # orcid -> nombre
     products: list[SeedProduct]
     skipped: Counter
+    departments: dict[str, str] = field(default_factory=dict)  # orcid -> departamento
 
 
 def build_plan(dump: dict[str, list[dict]], departments: tuple[str, ...], only_yachay: bool) -> SeedPlan:
@@ -286,6 +294,10 @@ def build_plan(dump: dict[str, list[dict]], departments: tuple[str, ...], only_y
     from app.utils.identifiers import normalize_doi, normalize_orcid
 
     names = {normalize_orcid(d["orcid"]): _clean(d["nombre"]) for d in dump["docentes"]}
+    # El departamento sale de la ficha del docente; la fila de la obra es el respaldo.
+    teacher_departments = {
+        normalize_orcid(d["orcid"]): _clean(d.get("departamento")) for d in dump["docentes"]
+    }
     skipped: Counter = Counter()
     groups: dict[str, list[dict]] = {}
 
@@ -307,6 +319,7 @@ def build_plan(dump: dict[str, list[dict]], departments: tuple[str, ...], only_y
 
     products: list[SeedProduct] = []
     professors: dict[str, str] = {}
+    departments: dict[str, str] = {}
     for rows in groups.values():
         # Dueño: el profesor que figura como primer autor; si ninguno, el primero del volcado.
         rows.sort(key=lambda r: r["Posición del docente"] != "Primero")
@@ -317,6 +330,9 @@ def build_plan(dump: dict[str, list[dict]], departments: tuple[str, ...], only_y
             orcid = normalize_orcid(row["ORCID"])
             name = names.get(orcid) or _clean(row["Investigador"])
             professors[orcid] = name
+            department = teacher_departments.get(orcid) or _clean(row["Departamento"])
+            if department:
+                departments[orcid] = department[:80]
             if name not in authors:
                 authors.append(name)
         if len(rows) > 1:
@@ -340,7 +356,7 @@ def build_plan(dump: dict[str, list[dict]], departments: tuple[str, ...], only_y
             metrics=bibliometrics_from_row(first),
         ))
 
-    return SeedPlan(professors=professors, products=products, skipped=skipped)
+    return SeedPlan(professors=professors, products=products, skipped=skipped, departments=departments)
 
 
 # ---------------------------------------------------------------------------
@@ -352,7 +368,11 @@ def seed_username(orcid: str) -> str:
 
 
 def apply_plan(db, plan: SeedPlan) -> Counter:
-    """Inserta perfiles técnicos y productos. Es idempotente: lo que ya existe se salta."""
+    """Inserta perfiles técnicos y productos. Es idempotente: lo que ya existe no se duplica.
+
+    Si el perfil o los indicadores ya existen pero les falta un dato que esta versión del script
+    sí sabe cargar (departamento, tipo de contribución), se completa sin tocar lo demás.
+    """
     from sqlalchemy import select
 
     from app.models.product import Product
@@ -363,6 +383,7 @@ def apply_plan(db, plan: SeedPlan) -> Counter:
     owner_ids: dict[str, str] = {}
     for orcid, name in plan.professors.items():
         user = db.scalar(select(User).where(User.username == seed_username(orcid)))
+        department = plan.departments.get(orcid)
         if user is None:
             # Si un profesor real ya registró ese ORCID, no se repite (columna única).
             orcid_taken = db.scalar(select(User.id).where(User.orcid == orcid)) is not None
@@ -374,15 +395,20 @@ def apply_plan(db, plan: SeedPlan) -> Counter:
                 is_active=False,
                 school=SCHOOL,
                 orcid=None if orcid_taken else orcid,
+                department=department,
             )
             db.add(user)
             db.flush()
             stats["perfiles técnicos creados"] += 1
+        elif user.department is None and department:
+            user.department = department
+            stats["departamentos completados"] += 1
         owner_ids[orcid] = user.id
 
     products_by_doi = {p.doi: p for p in db.scalars(select(Product).where(Product.doi.is_not(None)))}
     products_by_key = {(p.owner_id, p.external_id): p for p in db.scalars(select(Product))}
-    with_metrics = set(db.scalars(select(ProductBibliometrics.product_id)))
+    metrics_by_product = {m.product_id: m for m in db.scalars(select(ProductBibliometrics))}
+    seed_owner_ids = set(owner_ids.values())
     for item in plan.products:
         owner_id = owner_ids[item.owner_orcid]
         product = (products_by_doi.get(item.doi) if item.doi else None) or products_by_key.get(
@@ -413,10 +439,16 @@ def apply_plan(db, plan: SeedPlan) -> Counter:
             stats["productos creados"] += 1
 
         # Indicadores: solo para las obras de esta carga, y una sola vez (no pisa datos más nuevos).
-        if product.owner_id in owner_ids.values() and product.id not in with_metrics and item.metrics:
-            db.add(ProductBibliometrics(product_id=product.id, **item.metrics))
-            with_metrics.add(product.id)
+        if product.owner_id not in seed_owner_ids or not item.metrics:
+            continue
+        existing = metrics_by_product.get(product.id)
+        if existing is None:
+            metrics_by_product[product.id] = ProductBibliometrics(product_id=product.id, **item.metrics)
+            db.add(metrics_by_product[product.id])
             stats["indicadores bibliométricos creados"] += 1
+        elif existing.contribution_type is None and item.metrics.get("contribution_type"):
+            existing.contribution_type = item.metrics["contribution_type"]
+            stats["tipos de contribución completados"] += 1
 
     db.commit()
     return stats

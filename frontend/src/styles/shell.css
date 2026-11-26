@@ -1,0 +1,82 @@
+/*
+ * Estructura común del portal con pestañas (PortalLayout): botón «Iniciar sesión» en la barra
+ * superior y barra inferior en móvil. Usa los tokens de portal.css y no cambia sus estilos:
+ * todas las reglas van bajo el prefijo `shell`.
+ */
+
+.shell-login {
+  min-height: 44px;
+  padding: 8px 18px;
+  white-space: nowrap;
+}
+
+.shell .portal-main {
+  min-width: 0;
+}
+
+.shell .portal-main:focus {
+  outline: none;
+}
+
+.shell-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .shell-bottom-nav {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 42;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    padding-bottom: env(safe-area-inset-bottom);
+    border-top: 1px solid var(--line);
+    background: #fff;
+  }
+
+  .shell-bottom-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 60px;
+    padding: 6px 2px;
+    border-top: 3px solid transparent;
+    font-size: 12px;
+    line-height: 1.1;
+    color: #3d3935;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .shell-bottom-link.active {
+    border-top-color: var(--school-accent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* Espacio para que la barra inferior no tape el final de la página. */
+  .shell .portal-footer {
+    padding-bottom: 88px;
+  }
+
+  .shell-login {
+    padding: 8px 12px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 380px) {
+  .shell .topbar-context span:first-child {
+    letter-spacing: 1px;
+  }
+}
+
+/* Botones de la pantalla de bienvenida: «Conocer la Escuela» y «Consultar la producción». */
+.shell-access-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 14px;
+}

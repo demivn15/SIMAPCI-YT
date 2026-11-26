@@ -54,6 +54,10 @@ class ProductBibliometrics(Base):
     sjr_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     scimago_h_index: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
+    # Tipo de obra según Crossref/OpenAlex (journal-article, book-chapter…), tal como llega de la
+    # fuente; se usa para el filtro «tipo de contribución» (migración 0006).
+    contribution_type: Mapped[str | None] = mapped_column(String(40), nullable=True, index=True)
+
     # Acceso abierto y colaboración
     is_open_access: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     yachay_affiliation: Mapped[str | None] = mapped_column(String(20), nullable=True)

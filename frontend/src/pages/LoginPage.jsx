@@ -73,7 +73,7 @@ export default function LoginPage() {
         <button type="button" className="login-close" aria-label="Cerrar inicio de sesión" onClick={() => navigate('/')}>
           <X size={22} aria-hidden="true" />
         </button>
-        <p className="eyebrow">SIMAPC</p>
+        <p className="eyebrow">SIMAPCI</p>
         <h2 id={`${id}-title`} className="display">
           Iniciar sesión
         </h2>

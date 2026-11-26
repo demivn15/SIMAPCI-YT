@@ -8,7 +8,6 @@
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, ExternalLink, FileText, FolderKanban } from 'lucide-react';
-import PublicShell from '../components/catalog/PublicShell';
 import { getPublicProduct } from '../services/catalogService';
 import { productTypeLabel, projectStatusLabel } from '../utils/catalogFilters';
 
@@ -41,19 +40,19 @@ export default function PublicProductPage() {
 
   if (isPending) {
     return (
-      <PublicShell>
+      <>
         {backLink}
         <div className="catalog-loading" role="status">
           <div className="spinner" aria-hidden="true" />
           Cargando producto…
         </div>
-      </PublicShell>
+      </>
     );
   }
 
   if (isError) {
     return (
-      <PublicShell>
+      <>
         {backLink}
         <div className="notice notice-error catalog-error" role="alert">
           <span>No se pudo cargar el producto. Revise su conexión e inténtelo de nuevo.</span>
@@ -61,19 +60,19 @@ export default function PublicProductPage() {
             Reintentar
           </button>
         </div>
-      </PublicShell>
+      </>
     );
   }
 
   if (!product) {
     return (
-      <PublicShell>
+      <>
         {backLink}
         <div className="catalog-empty">
           <h1 className="display">Producto no disponible</h1>
           <p>Este producto no existe o todavía no está publicado en el catálogo.</p>
         </div>
-      </PublicShell>
+      </>
     );
   }
 
@@ -81,7 +80,7 @@ export default function PublicProductPage() {
   const Icon = isProject ? FolderKanban : FileText;
 
   return (
-    <PublicShell>
+    <>
       {backLink}
       <article className="product-detail">
         <header className="product-detail-header">
@@ -129,6 +128,6 @@ export default function PublicProductPage() {
           </section>
         )}
       </article>
-    </PublicShell>
+    </>
   );
 }

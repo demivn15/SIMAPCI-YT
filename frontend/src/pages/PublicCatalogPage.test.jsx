@@ -13,6 +13,7 @@ import { sortCatalog } from '../utils/catalogFilters';
 import PublicCatalogPage from './PublicCatalogPage';
 import PublicProductPage from './PublicProductPage';
 import AccessScreen from '../components/portal/AccessScreen';
+import PortalLayout from '../components/portal/PortalLayout';
 
 vi.mock('../services/api', () => ({ api: { get: vi.fn() } }));
 vi.mock('../context/AuthContext', () => ({ useAuth: () => ({ isAuthenticated: false, user: null }) }));
@@ -38,8 +39,11 @@ function renderAt(path) {
       <MemoryRouter initialEntries={[path]}>
         <Routes>
           <Route path="/" element={<AccessScreen />} />
-          <Route path="/produccion" element={<PublicCatalogPage />} />
-          <Route path="/produccion/:productId" element={<PublicProductPage />} />
+          {/* Como en App.jsx: el catálogo vive dentro del portal con pestañas */}
+          <Route element={<PortalLayout />}>
+            <Route path="/produccion" element={<PublicCatalogPage />} />
+            <Route path="/produccion/:productId" element={<PublicProductPage />} />
+          </Route>
         </Routes>
         <UrlProbe />
       </MemoryRouter>

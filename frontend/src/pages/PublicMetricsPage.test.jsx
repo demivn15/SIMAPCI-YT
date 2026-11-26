@@ -1,98 +1,69 @@
 /**
- * Dashboard público de métricas - HU09 (por profesor) y HU10 (evolución de la Escuela).
+ * Inicio (la Escuela en cifras) - HU09 y HU10, con los filtros comunes del análisis.
+ * La tabla por profesor y la red de coautoría se prueban en Docentes y en NetworkGraph.
  */
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { api } from '../services/api';
 import PublicMetricsPage from './PublicMetricsPage';
 import { displayName, formatShare, shortName } from '../utils/metricsFormat';
+import { currentUrl, metricsApi, renderRoute } from '../testing/analysisFixtures';
 
 vi.mock('../services/api', () => ({ api: { get: vi.fn() } }));
-vi.mock('../context/AuthContext', () => ({ useAuth: () => ({ isAuthenticated: false, user: null }) }));
 
-const responses = {
-  '/metrics/overview': {
-    total_products: 3, publications: 3, projects: 0, professors: 2, citations_total: 13,
-    products_with_citations: 2, h_index: 2,
-    quartiles: { Q1: 1, Q2: 0, Q3: 1, Q4: 0, sin_cuartil: 1 },
-    q1_q2_share: 0.5, open_access_share: 0.5, international_share: 0.5,
-    year_from: 2024, year_to: 2025, data_as_of: '2026-11-10T13:40:53',
-    research_lines: [{ research_line: 'Ciencia de datos', count: 3 }],
-  },
-  '/metrics/timeline': {
-    items: [
-      { year: 2024, total: 2, citations: 13, Q1: 1, Q2: 0, Q3: 1, Q4: 0, sin_cuartil: 0 },
-      { year: 2025, total: 1, citations: 0, Q1: 0, Q2: 0, Q3: 0, Q4: 0, sin_cuartil: 1 },
-    ],
-  },
-  '/metrics/professors': {
-    items: [
-      { id: 'a', full_name: 'Ana Morales', products: 2, citations: 13, h_index: 2, Q1: 1, Q2: 0, Q3: 1, Q4: 0,
-        first_year: 2024, last_year: 2024, main_research_line: 'Ciencia de datos', coauthored_in_school: 1 },
-      { id: 'l', full_name: 'LUIS PAREDES ORTEGA', products: 3, citations: 10, h_index: 1, Q1: 1, Q2: 0, Q3: 0, Q4: 0,
-        first_year: 2024, last_year: 2025, main_research_line: 'Ciencia de datos', coauthored_in_school: 1 },
-    ],
-  },
-  '/metrics/collaboration': {
-    nodes: [
-      { id: 'l', full_name: 'LUIS PAREDES ORTEGA', products: 3, main_research_line: 'Ciencia de datos' },
-      { id: 'a', full_name: 'Ana Morales', products: 2, main_research_line: 'Ciencia de datos' },
-    ],
-    edges: [{ source: 'a', target: 'l', weight: 1 }],
-    countries: [{ code: 'ES', count: 1 }],
-    institutions: [{ name: 'Universitat Politècnica de Catalunya', count: 1 }],
-  },
-};
+const renderPage = (path = '/inicio') => renderRoute(path, '/inicio', <PublicMetricsPage />);
 
-function renderPage() {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={['/metricas']}>
-        <PublicMetricsPage />
-      </MemoryRouter>
-    </QueryClientProvider>,
-  );
-  return userEvent.setup();
-}
-
-describe('PublicMetricsPage', () => {
+describe('PublicMetricsPage (Inicio)', () => {
   beforeEach(() => {
     api.get.mockReset();
-    api.get.mockImplementation((url) => Promise.resolve({ data: responses[url] }));
+    api.get.mockImplementation(metricsApi);
   });
 
-  it('muestra los indicadores de la Escuela con su fuente', async () => {
+  it('muestra los indicadores de la Escuela con su fuente y fecha de corte', async () => {
     renderPage();
     expect(await screen.findByText('Índice h de la Escuela')).toBeInTheDocument();
     expect(screen.getByText('de 2 obras con citas conocidas')).toBeInTheDocument();
-    expect(screen.getByText(/ORCID, OpenAlex y SCImago/)).toBeInTheDocument();
+    expect(screen.getByText(/ORCID, OpenAlex, Crossref y\s+SCImago/)).toBeInTheDocument();
+    expect(screen.getByText(/fecha de corte: 10 de noviembre de 2026/)).toBeInTheDocument();
     expect(screen.getByText('España')).toBeInTheDocument();
     expect(screen.getByText('Universitat Politècnica de Catalunya')).toBeInTheDocument();
   });
 
-  it('ordena la tabla de profesores al pulsar una columna', async () => {
-    const user = renderPage();
-    const table = await screen.findByRole('table');
-    const names = () => within(table).getAllByRole('rowheader').map((cell) => cell.textContent);
-    expect(names()[0]).toMatch(/^Luis Paredes Ortega/); // por obras, de mayor a menor
-    await user.click(within(table).getByRole('button', { name: /Índice h/ }));
-    expect(names()[0]).toMatch(/^Ana Morales/);
-    expect(within(table).getByRole('columnheader', { name: /Índice h/ })).toHaveAttribute('aria-sort', 'descending');
+  it('agrega los gráficos de citas por año y de tipo de contribución', async () => {
+    renderPage();
+    expect(await screen.findByRole('heading', { name: 'Citas por año de publicación' })).toBeInTheDocument();
+    const types = screen.getByRole('heading', { name: 'Tipo de contribución' }).closest('section');
+    expect(within(types).getByText('Artículo de revista')).toBeInTheDocument();
+    // Una obra sin tipo conocido no se esconde: se muestra como tal.
+    expect(within(types).getByText('Sin tipo registrado')).toBeInTheDocument();
   });
 
-  it('al elegir un profesor en la red muestra sus coautores', async () => {
-    const user = renderPage();
-    await user.click(await screen.findByRole('button', { name: /Ana Morales: 2 obras, 1 coautores/ }));
-    const panel = screen.getByRole('heading', { level: 3, name: 'Ana Morales' }).closest('aside');
-    expect(within(panel).getByText('Luis Paredes Ortega')).toBeInTheDocument();
+  it('aplica los filtros de la URL a todas las consultas y los cambia en la URL', async () => {
+    const user = renderPage('/inicio?department=Matemáticas&year_from=2025&year_to=2020');
+    await screen.findByText('Índice h de la Escuela');
+    const expected = { department: 'Matemáticas', year_from: '2020', year_to: '2025' };
+    for (const url of ['/metrics/overview', '/metrics/timeline', '/metrics/collaboration']) {
+      expect(api.get).toHaveBeenCalledWith(url, { params: expected });
+    }
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Cuartil SJR' }), 'Q1');
+    expect(currentUrl()).toContain('quartile=Q1');
+    expect(currentUrl()).toContain('department=Matem');
+    expect(api.get).toHaveBeenCalledWith('/metrics/overview', { params: { ...expected, quartile: 'Q1' } });
+
+    await user.click(screen.getByRole('button', { name: /Restablecer/ }));
+    expect(currentUrl()).toBe('/inicio');
+  });
+
+  it('ignora valores de filtros que no existen', async () => {
+    renderPage('/inicio?quartile=Q9&affiliation=todas&department=Física&year_from=20x4');
+    await screen.findByText('Índice h de la Escuela');
+    expect(api.get).toHaveBeenLastCalledWith('/metrics/collaboration', undefined);
+    expect(screen.getByText('Sin filtros: toda la producción verificada.')).toBeInTheDocument();
   });
 
   it('avisa y permite reintentar si el servicio falla', async () => {
-    api.get.mockRejectedValue(new Error('Network Error'));
+    api.get.mockImplementation((url) => (url === '/metrics/filters' ? metricsApi(url) : Promise.reject(new Error('Network Error'))));
     renderPage();
     expect(await screen.findByRole('alert')).toHaveTextContent('No se pudieron cargar las métricas');
     expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();

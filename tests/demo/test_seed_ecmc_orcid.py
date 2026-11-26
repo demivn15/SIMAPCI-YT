@@ -136,3 +136,51 @@ def test_bibliometrics_zero_citations_without_openalex_are_unknown():
     assert unknown["yachay_affiliation"] == "no_verificable"
     assert unknown["collaboration_type"] == "internacional"
     assert unknown["countries"] == ["EC", "ES"]
+
+
+def test_plan_carries_department_and_contribution_type(tmp_path):
+    plan = build_plan(read_dump(_write_dump(tmp_path)), ("Matemáticas", "Computación"), only_yachay=False)
+    # El departamento sale de la tabla `docentes`, enlazada por ORCID.
+    assert plan.departments == {"0000-0002-1825-0097": "Matemáticas", "0000-0001-5109-3700": "Computación"}
+    assert {p.metrics["contribution_type"] for p in plan.products} == {"journal-article"}
+
+
+def test_apply_sets_department_and_type_and_completes_existing_rows(tmp_path, db_session):
+    plan = build_plan(read_dump(_write_dump(tmp_path)), ("Matemáticas", "Computación"), only_yachay=False)
+    apply_plan(db_session, plan)
+
+    users = {u.full_name: u for u in db_session.scalars(select(User).where(User.username.like("orcid-%")))}
+    assert users["Ana Morales"].department == "Matemáticas"
+    assert users["Luis Paredes"].department == "Computación"
+    assert {m.contribution_type for m in db_session.scalars(select(ProductBibliometrics))} == {"journal-article"}
+
+    # Simula una BD cargada con la versión anterior del script: sin departamento ni tipo.
+    for user in users.values():
+        user.department = None
+    for metrics in db_session.scalars(select(ProductBibliometrics)):
+        metrics.contribution_type = None
+    db_session.commit()
+
+    stats = apply_plan(db_session, plan)
+    assert stats["departamentos completados"] == 2
+    assert stats["tipos de contribución completados"] == 3
+    assert stats["productos creados"] == 0 and stats["perfiles técnicos creados"] == 0
+    assert stats["indicadores bibliométricos creados"] == 0
+    assert len(db_session.scalars(select(Product)).all()) == 3
+    assert len(db_session.scalars(select(ProductBibliometrics)).all()) == 3
+    assert users["Ana Morales"].department == "Matemáticas"
+    assert {m.contribution_type for m in db_session.scalars(select(ProductBibliometrics))} == {"journal-article"}
+
+    # Una tercera pasada ya no tiene nada que completar.
+    third = apply_plan(db_session, plan)
+    assert third["departamentos completados"] == 0 and third["tipos de contribución completados"] == 0
+
+
+def test_apply_does_not_overwrite_an_existing_department(tmp_path, db_session):
+    plan = build_plan(read_dump(_write_dump(tmp_path)), ("Matemáticas", "Computación"), only_yachay=False)
+    apply_plan(db_session, plan)
+    ana = db_session.scalar(select(User).where(User.full_name == "Ana Morales"))
+    ana.department = "Computación"
+    db_session.commit()
+    apply_plan(db_session, plan)
+    assert ana.department == "Computación"

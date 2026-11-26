@@ -1,0 +1,323 @@
+/*
+ * Grafos de red (NetworkGraph), métricas del grafo, tabla de centralidades y pestañas de
+ * Colaboraciones. Usa los tokens de portal.css y el aspecto del antiguo grafo de métricas;
+ * todas las clases nuevas llevan el prefijo `network-`.
+ */
+
+.network-graph {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 28px;
+  align-items: start;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fffdfa;
+}
+
+.network-graph.is-bare {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.network-graph.is-compact {
+  padding: 12px;
+}
+
+.network-figure {
+  min-width: 0;
+  margin: 0;
+}
+
+/* En pantallas angostas el lienzo conserva un ancho mínimo legible y se desplaza en horizontal. */
+.network-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.network-scroll svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.network-edges line {
+  stroke: #b9b0a7;
+  stroke-opacity: 0.7;
+  stroke-linecap: round;
+  transition: stroke-opacity 0.15s;
+}
+
+.network-edges line.is-active {
+  stroke: var(--accent);
+  stroke-opacity: 0.9;
+}
+
+.network-edges line.is-dim {
+  stroke-opacity: 0.1;
+}
+
+.network-node {
+  cursor: pointer;
+  outline: none;
+  transition: opacity 0.15s;
+}
+
+.network-node circle,
+.network-node rect {
+  stroke: #fffdfa;
+  stroke-width: 2;
+}
+
+.network-node text {
+  font-family: var(--font-body);
+  font-size: 13px;
+  fill: var(--ink);
+  paint-order: stroke;
+  stroke: #fffdfa;
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.network-node.is-dim {
+  opacity: 0.2;
+}
+
+.network-node.is-active circle,
+.network-node.is-active rect,
+.network-node:focus-visible circle,
+.network-node:focus-visible rect,
+.network-node.is-emphasis circle {
+  stroke: var(--ink);
+  stroke-width: 3;
+}
+
+.network-node.is-active text,
+.network-node.is-emphasis text {
+  font-weight: 700;
+}
+
+.network-figure figcaption {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.network-panel h4 {
+  margin: 18px 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.network-detail-link,
+.network-person-link {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.network-person-link:hover,
+.network-detail-link:hover {
+  color: var(--accent-hover);
+}
+
+.network-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.network-limitation {
+  margin: -36px 0 0;
+  padding-left: 12px;
+  border-left: 3px solid var(--school-accent);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ---------- Métricas del grafo ---------- */
+.network-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  margin: 0;
+  border-top: 2px solid var(--ink);
+}
+
+.network-summary > div {
+  padding: 14px 14px 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.network-summary dt {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.network-summary dd {
+  display: grid;
+  gap: 4px;
+  margin: 6px 0 0;
+}
+
+.network-summary-value {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.network-summary-note {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.network-summary.is-compact {
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  border-top-width: 1px;
+}
+
+.network-summary.is-compact .network-summary-value {
+  font-size: 20px;
+}
+
+.network-table td,
+.network-table th {
+  white-space: nowrap;
+}
+
+/* ---------- Controles y pestañas ---------- */
+.network-tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 32px;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+
+.network-tabs button {
+  flex-shrink: 0;
+  min-height: 48px;
+  padding: 10px 16px;
+  border-bottom: 3px solid transparent;
+  font-size: 16px;
+  color: #3d3935;
+  cursor: pointer;
+}
+
+.network-tabs button:hover {
+  background: #f6f4f1;
+}
+
+.network-tabs button[aria-selected="true"] {
+  border-bottom-color: var(--school-accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.network-body {
+  margin-top: 28px;
+}
+
+.network-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px 28px;
+  margin-bottom: -36px;
+}
+
+.network-control {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #3d3935;
+}
+
+.network-control .metrics-toggle button {
+  min-height: 40px;
+}
+
+/* ---------- Evolución por periodos ---------- */
+.network-periods {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.network-period {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.network-period h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.network-period h3 small {
+  margin-left: 6px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.network-periods-legend {
+  margin-top: -40px;
+}
+
+@media (max-width: 1100px) {
+  .network-graph {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .network-panel {
+    padding: 20px 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+}
+
+@media (max-width: 640px) {
+  .network-graph {
+    padding: 12px;
+  }
+
+  .network-periods {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .network-tabs button {
+    min-height: 44px;
+    padding: 8px 12px;
+    font-size: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .network-node,
+  .network-edges line {
+    transition: none;
+  }
+}
