@@ -194,7 +194,7 @@ A secure, scalable, role-based authentication and authorization web application 
 │   ├── conftest.py              # Test settings + in-memory SQLite instead of MySQL
 │   ├── backend/                 # Unit and integration tests per module
 │   ├── acceptance/              # Acceptance tests, one file per Jira test case (PR-HUxx-yy)
-│   ├── performance/             # Response-time measurements (T-HU02-07)
+│   ├── performance/             # Response-time measurements (T-HU02-07, T-HU05-04, T-HU07-06)
 │   └── support/                 # Test doubles: simulated LDAP directory, simulated network, test PDFs
 └── docs/
     └── deployment.md            # Deployment notes and limits (Render)
@@ -243,7 +243,7 @@ The screens follow the design of the `prototype` branch (ECMC colors, fonts and 
 ### Data Model
 
 * `users` (migration `0001`): UUID `id`, `username` and `email` (unique, lowercase), `full_name`, `role` (`professor` or `reviewer`), `is_active`, `school` (default `ECMC`, not hard-coded), optional academic identifiers (`orcid` unique, Google Scholar, Scopus, Web of Science), self-reported h-indexes, `research_lines` (JSON) and audit timestamps. There is no password column.
-* `products` (migration `0002`): UUID `id`, `owner_id` → `users`, `school`, `type` (`publicacion` / `proyecto`), `title`, `authors` (JSON), `year`, `research_line`, `abstract`; for publications `doi` (unique) and `venue`; for projects `project_code` (unique) and `project_status`; `status` (`cargado` → `verificado` / `rechazado`), `source` (`manual` / `orcid`) and `external_id`; review data (`reviewed_by`, `reviewed_at`, `review_reason`) and timestamps.
+* `products` (migration `0002`): UUID `id`, `owner_id` → `users`, `school`, `type` (`publicacion` / `proyecto`), `title`, `authors` (JSON), `year`, `research_line`, `abstract`; for publications `doi` (unique) and `venue`; for projects `project_code` (unique) and `project_status`; `status` (`cargado` → `verificado` / `rechazado`), `source` (`manual` / `orcid`) and `external_id`; review data (`reviewed_by`, `reviewed_at`, `review_reason`) and timestamps. The composite index `ix_products_catalog` on `(status, year, created_at, id)` (migration `0004`) backs the paginated, newest-first reads of the consolidated catalogue (T-HU05-04).
 * `notifications` (migration `0003`): `user_id`, optional `product_id`, `title`, `message`, `is_read`, `created_at`, plus the `uq_notification_event` unique constraint on `(user_id, product_id, title)` that backs the duplicate control of CA24.
 
 ---
@@ -257,7 +257,7 @@ The screens follow the design of the `prototype` branch (ECMC colors, fonts and 
 | User story | Implemented in `main` | Still pending |
 | :--- | :--- | :--- |
 | **HU04** Autocomplete a research project from its PDF | Upload with type, size and integrity checks (PGPCECMC-42), PDF field extraction (PGPCECMC-43), handling of unrecognized formats and partial extraction (PGPCECMC-91), extraction wired into the registration form (PGPCECMC-45), test PR-HU04-02 | PGPCECMC-40, 41, 44 |
-| **HU05** View the scientific production (public) | Public list and detail screens (PGPCECMC-47) and the catalogue query they will read from (`GET /products/catalog`, PGPCECMC-97) | Wiring the screens to the API (T-HU05-03 and T-HU05-05); they still read `src/data/catalogSample.js` |
+| **HU05** View the scientific production (public) | Public list and detail screens (PGPCECMC-47), the catalogue query they will read from (`GET /products/catalog`, PGPCECMC-97), and its pagination and read-query optimization — composite index `ix_products_catalog` and a response-time test (T-HU05-04, PGPCECMC-50, CA15) | Wiring the screens to the API (T-HU05-03 and T-HU05-05); they still read `src/data/catalogSample.js` |
 | **HU06** Filter the scientific production | Combinable filters on the public list (PGPCECMC-53) | Wiring the filters to the API (T-HU06-03 and T-HU06-05); they still filter the sample data |
 | **HU07** Check that a product exists before adding it | DOI normalization and duplicate control, pre-save existence check wired into the registration form (PGPCECMC-60, 63), tests PR-HU07-01, PR-HU07-02 and T-HU07-06 | — |
 | **HU08** Receive product status notifications | Notifications on save, approval, rejection and ORCID import, with shared templates and uniqueness control (PGPCECMC-93); owner-isolated query with unread count (PGPCECMC-69); `notifications` migration `0003` (PGPCECMC-67); tests PR-HU08-01, PR-HU08-02 and T-HU08-07 | The screen that shows them |
@@ -298,6 +298,7 @@ The QA suite turns each Jira test case into an automated test and runs the team'
 | PGPCECMC-122 | PR-HU12-02 · Council approves and rejects manual publications | `tests/acceptance/test_pr_hu12_02.py` |
 | PGPCECMC-123 | PR-HU12-03 · Review without permission and manual entry of an imported DOI | `tests/acceptance/test_pr_hu12_03.py` |
 | PGPCECMC-31 | T-HU02-07 · Authentication, authorization and response time | `tests/performance/test_t_hu02_07_tiempos.py` |
+| PGPCECMC-50 | T-HU05-04 · Pagination and read-query optimization of the consolidated catalogue (composite index and response times under load) | `tests/performance/test_t_hu05_04_tiempos.py` |
 | PGPCECMC-23 / 24 | T-HU01-06 / 07 · Registration confirmation and result messages | `frontend/src/pages/LoginPage.test.jsx` |
 
 Tests marked `xfail(strict=True)` (pytest) or `it.fails` (Vitest) document a known defect and name the Jira task it belongs to. They do not break CI; when the fix lands, the test reports an unexpected pass and the marker must be removed (`it.fails` becomes `it`). Response times use a provisional threshold of p95 ≤ 500 ms (`RNF02_P95_MS`) until RNF02 defines one.
@@ -311,7 +312,7 @@ cd frontend && npm run lint     # frontend lint (ESLint)
 cd frontend && npm run build    # frontend production build
 ```
 
-Current results on `main`: backend `457 passed, 1 skipped`; frontend `108 passed`. CI runs only the backend (`ruff` + `pytest`), so run the frontend commands locally before opening a pull request.
+Current results on `main`: backend `465 passed, 1 skipped`; frontend `108 passed`. CI runs only the backend (`ruff` + `pytest`), so run the frontend commands locally before opening a pull request.
 
 ### Known defects documented by tests
 
@@ -407,7 +408,7 @@ npm.cmd run dev
 * **Defect D-07** (see [Known defects documented by tests](#known-defects-documented-by-tests)).
 * **The extractor does not read the project code yet.** T-HU04-02 lists the institutional code among the fields to extract and the form already prefills it, but `app/utils/pdf_extractor.py` has no heuristic for it, so it always arrives empty (T-HU04-04, PGPCECMC-43).
 * **A council member cannot register their own production.** An account has a single role, so the `reviewer` account only reviews: registering and importing answer `403` (validated in T-HU12-05 CP-15). A council member who also publishes needs their production to go in through a professor account. Worth confirming with the client.
-* **The public catalogue screens still show sample data, and their contract does not match the API.** The HU05 and HU06 screens (PGPCECMC-47, 53) read `src/data/catalogSample.js` with `USES_SAMPLE_DATA = true`, and `src/services/catalogService.js` proposes `GET /api/v1/public/products` with query filters, `page` / `page_size` and an `owner: { id, full_name }` field. What HU12 published is `GET /api/v1/products/catalog` with `limit` / `offset`, no filters and no owner (PGPCECMC-97). The two contracts have to be reconciled before wiring them (T-HU05-03, T-HU05-05, T-HU06-03 and T-HU06-05): either the catalogue route grows the filters and the owner, or HU05 publishes its own public route and HU12 keeps using this one internally.
+* **The public catalogue screens still show sample data, and their contract does not match the API.** The HU05 and HU06 screens (PGPCECMC-47, 53) read `src/data/catalogSample.js` with `USES_SAMPLE_DATA = true`, and `src/services/catalogService.js` proposes `GET /api/v1/public/products` with query filters, `page` / `page_size` and an `owner: { id, full_name }` field. What HU12 published is `GET /api/v1/products/catalog` with `limit` / `offset`, no filters and no owner (PGPCECMC-97). The two contracts have to be reconciled before wiring them (T-HU05-03, T-HU05-05, T-HU06-03 and T-HU06-05): either the catalogue route grows the filters and the owner, or HU05 publishes its own public route and HU12 keeps using this one internally. The pagination and read-query optimization of the existing route (the `ix_products_catalog` composite index, T-HU05-04 / PGPCECMC-50) does not depend on that decision and is already done.
 
 ---
 
