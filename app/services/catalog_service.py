@@ -14,10 +14,15 @@ en un único punto, para que la definición de «catálogo» no se repita en cad
 lo necesite (la vista pública de HU05 y sus filtros de HU06 se construyen sobre esto).
 """
 
-from sqlalchemy import func, select
+from dataclasses import dataclass
+from unicodedata import category, normalize
+
+from sqlalchemy import String, cast, func, or_, select
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.elements import ColumnElement
 
 from app.models.product import Product
+from app.models.user import User
 from app.services.product_identity_service import PUBLIC_STATUS
 
 # Un solo lugar define qué entra al catálogo. Se reutiliza el estado público de HU07/HU05
@@ -25,28 +30,135 @@ from app.services.product_identity_service import PUBLIC_STATUS
 CATALOG_STATUS = PUBLIC_STATUS
 
 
-def count_catalog(db: Session) -> int:
-    """Cuántos productos hay en el catálogo consolidado."""
+@dataclass(frozen=True)
+class CatalogCriteria:
+    """Filtros opcionales para la consulta pública del catálogo."""
+
+    q: str | None = None
+    product_type: str | None = None
+    owner_id: str | None = None
+    year_from: int | None = None
+    year_to: int | None = None
+    research_line: str | None = None
+
+
+_ACCENT_REPLACEMENTS = (
+    ("á", "a"),
+    ("à", "a"),
+    ("ä", "a"),
+    ("â", "a"),
+    ("ã", "a"),
+    ("å", "a"),
+    ("é", "e"),
+    ("è", "e"),
+    ("ë", "e"),
+    ("ê", "e"),
+    ("í", "i"),
+    ("ì", "i"),
+    ("ï", "i"),
+    ("î", "i"),
+    ("ó", "o"),
+    ("ò", "o"),
+    ("ö", "o"),
+    ("ô", "o"),
+    ("õ", "o"),
+    ("ú", "u"),
+    ("ù", "u"),
+    ("ü", "u"),
+    ("û", "u"),
+    ("ñ", "n"),
+    ("ç", "c"),
+)
+
+
+def _normalize_text(value: str) -> str:
+    return "".join(char for char in normalize("NFD", value.lower()) if category(char) != "Mn")
+
+
+def _normalized_column(column):
+    expression = func.lower(cast(column, String))
+    for accented, unaccented in _ACCENT_REPLACEMENTS:
+        expression = func.replace(expression, accented, unaccented)
+        # JSON may store Unicode letters as escaped sequences (for example, on SQLite).
+        expression = func.replace(expression, f"\\u{ord(accented):04x}", unaccented)
+    return expression
+
+
+def _catalog_conditions(filters: CatalogCriteria) -> list[ColumnElement[bool]]:
+    conditions = [Product.status == CATALOG_STATUS]
+
+    if filters.q:
+        search = _normalize_text(filters.q.strip())
+        searchable_columns = (
+            Product.title,
+            Product.authors,
+            Product.doi,
+            Product.venue,
+            Product.project_code,
+        )
+        conditions.append(
+            or_(
+                *(
+                    _normalized_column(column).contains(search, autoescape=True)
+                    for column in searchable_columns
+                )
+            )
+        )
+    if filters.product_type:
+        conditions.append(Product.type == filters.product_type)
+    if filters.owner_id:
+        conditions.append(Product.owner_id == filters.owner_id)
+    if filters.year_from is not None:
+        conditions.append(Product.year >= filters.year_from)
+    if filters.year_to is not None:
+        conditions.append(Product.year <= filters.year_to)
+    if filters.research_line:
+        conditions.append(Product.research_line == filters.research_line)
+
+    return conditions
+
+
+def count_catalog(db: Session, filters: CatalogCriteria | None = None) -> int:
+    """Cuántos productos visibles coinciden con los filtros."""
+    filters = filters or CatalogCriteria()
     return db.scalar(
-        select(func.count()).select_from(Product).where(Product.status == CATALOG_STATUS)
+        select(func.count()).select_from(Product).where(*_catalog_conditions(filters))
     ) or 0
 
 
-def list_catalog(db: Session, limit: int = 20, offset: int = 0) -> list[Product]:
+def list_catalog(
+    db: Session,
+    limit: int = 20,
+    offset: int = 0,
+    filters: CatalogCriteria | None = None,
+) -> list[Product]:
     """Página del catálogo consolidado, de la producción más reciente a la más antigua.
 
     Se ordena por año y, dentro del mismo año, por fecha de registro: es el orden con el que
     se lee una producción científica. Se pagina porque el catálogo solo crece.
     """
+    filters = filters or CatalogCriteria()
     return list(
         db.scalars(
             select(Product)
-            .where(Product.status == CATALOG_STATUS)
+            .where(*_catalog_conditions(filters))
             .order_by(Product.year.desc(), Product.created_at.desc(), Product.id.desc())
             .limit(limit)
             .offset(offset)
         )
     )
+
+
+def list_catalog_professors(db: Session) -> list[dict[str, str]]:
+    """Profesores responsables de al menos un producto publicado."""
+    rows = db.execute(
+        select(User.id, User.full_name)
+        .join(Product, Product.owner_id == User.id)
+        .where(Product.status == CATALOG_STATUS)
+        .distinct()
+        .order_by(User.full_name, User.id)
+    )
+    return [{"id": row.id, "full_name": row.full_name} for row in rows]
 
 
 def get_catalog_product(db: Session, product_id: str) -> Product | None:

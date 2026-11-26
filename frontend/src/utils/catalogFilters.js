@@ -124,8 +124,8 @@ function searchable(text) {
 }
 
 /**
- * Aplica los filtros a una lista de productos (RFL-01: todos los criterios a la vez).
- * La usa la fuente de datos de ejemplo; el servicio real (T-HU06-03) hará lo mismo en la BD.
+ * Aplica los filtros a una lista en memoria (RFL-01), principalmente para las pruebas.
+ * En producción, el backend aplica los mismos criterios antes de contar y paginar.
  */
 export function applyCatalogFilters(products, filters) {
   const query = searchable(filters.q).trim();

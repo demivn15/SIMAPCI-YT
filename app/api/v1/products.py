@@ -4,12 +4,12 @@ Description: API router for managing scientific products, ORCID imports, and cou
 """
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Literal
 
 from app.api.deps import get_current_professor, get_current_reviewer
 from app.db.session import get_db
 from app.models.user import User  # <-- Importamos User al inicio correctamente
-from app.schemas.catalog import CatalogListResponse, CatalogProductResponse
+from app.schemas.catalog import CatalogListResponse, CatalogProfessorResponse, CatalogProductResponse
 from app.schemas.product import (
     OrcidItemImport,
     ProductCreate,
@@ -17,7 +17,13 @@ from app.schemas.product import (
     ProductResponse,
     ReviewDecisionSchema,
 )
-from app.services.catalog_service import count_catalog, get_catalog_product, list_catalog
+from app.services.catalog_service import (
+    CatalogCriteria,
+    count_catalog,
+    get_catalog_product,
+    list_catalog,
+    list_catalog_professors,
+)
 from app.services.product_identity_service import find_existing_product
 from app.utils.identifiers import is_valid_doi, normalize_doi
 from app.services.product_service import (
@@ -86,6 +92,12 @@ def check_product_existence(
 def get_consolidated_catalog(
     limit: int = Query(default=20, ge=1, le=MAX_CATALOG_PAGE_SIZE, description="Tamaño de la página"),
     offset: int = Query(default=0, ge=0, description="Cuántos productos saltar"),
+    q: str | None = Query(default=None, max_length=120, description="Búsqueda en título, autores e identificadores"),
+    type: Literal["publicacion", "proyecto"] | None = Query(default=None),
+    owner_id: str | None = Query(default=None, max_length=36),
+    year_from: int | None = Query(default=None, ge=1, le=9999),
+    year_to: int | None = Query(default=None, ge=1, le=9999),
+    research_line: str | None = Query(default=None, max_length=255),
     db: Session = Depends(get_db),
 ):
     """
@@ -97,14 +109,29 @@ def get_consolidated_catalog(
 
     Sin sesión: el catálogo es la producción publicada de la Escuela (HU05). Por eso la
     respuesta no lleva el dueño ni el expediente de revisión; ver CatalogProductResponse.
+    Los filtros opcionales de HU06 se combinan con AND y se aplican antes de paginar.
     """
+    filters = CatalogCriteria(
+        q=q,
+        product_type=type,
+        owner_id=owner_id,
+        year_from=year_from,
+        year_to=year_to,
+        research_line=research_line,
+    )
     return CatalogListResponse(
-        total=count_catalog(db),
+        total=count_catalog(db, filters),
         items=[
             CatalogProductResponse.model_validate(product)
-            for product in list_catalog(db, limit=limit, offset=offset)
+            for product in list_catalog(db, limit=limit, offset=offset, filters=filters)
         ],
     )
+
+
+@router.get("/catalog/professors", response_model=List[CatalogProfessorResponse], status_code=status.HTTP_200_OK)
+def get_catalog_professors(db: Session = Depends(get_db)):
+    """Opciones públicas de profesor para el filtro del catálogo (HU06)."""
+    return list_catalog_professors(db)
 
 
 @router.get("/catalog/{product_id}", response_model=CatalogProductResponse, status_code=status.HTTP_200_OK)

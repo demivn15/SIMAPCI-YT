@@ -40,6 +40,73 @@ PUBLICACION = {
 }
 
 
+def _sembrar_catalogo_para_filtros(db_session):
+    ana = User(
+        username="ana_filtros",
+        email="ana_filtros@yachaytech.edu.ec",
+        full_name="Ana Morales Vega",
+        role="professor",
+    )
+    beto = User(
+        username="beto_filtros",
+        email="beto_filtros@yachaytech.edu.ec",
+        full_name="Beto Salazar",
+        role="professor",
+    )
+    db_session.add_all([ana, beto])
+    db_session.flush()
+
+    productos = [
+        Product(
+            owner_id=ana.id,
+            school="ECMC",
+            type="publicacion",
+            title="Optimización de rutas de Ibarra",
+            authors=["Lucía Morales"],
+            year=2025,
+            research_line="Computación científica",
+            status="verificado",
+            source="manual",
+        ),
+        Product(
+            owner_id=ana.id,
+            school="ECMC",
+            type="publicacion",
+            title="Optimizacion de datos científicos",
+            authors=["Ana Morales"],
+            year=2024,
+            research_line="Computación científica",
+            status="verificado",
+            source="manual",
+        ),
+        Product(
+            owner_id=ana.id,
+            school="ECMC",
+            type="proyecto",
+            title="Optimización de un proyecto",
+            authors=["Ana Morales"],
+            year=2025,
+            research_line="Computación científica",
+            status="verificado",
+            source="manual",
+        ),
+        Product(
+            owner_id=beto.id,
+            school="ECMC",
+            type="publicacion",
+            title="Optimización pendiente",
+            authors=["Beto Salazar"],
+            year=2025,
+            research_line="Computación científica",
+            status="cargado",
+            source="manual",
+        ),
+    ]
+    db_session.add_all(productos)
+    db_session.commit()
+    return ana, productos
+
+
 def _login(monkeypatch, username: str) -> TestClient:
     """Sesión real: el login crea o recupera el perfil y emite la cookie con el rol de la cuenta."""
     monkeypatch.setattr(
@@ -248,6 +315,47 @@ def test_la_paginacion_del_catalogo_devuelve_la_pagina_pedida(profesor, consejer
     # Orden descendente por año: 2025, 2024, | 2023, 2022, | 2021
     assert cuerpo["total"] == 5
     assert [item["year"] for item in cuerpo["items"]] == [2023, 2022]
+
+
+def test_los_filtros_se_combinan_antes_de_contar_y_paginar(db_session, publico):
+    ana, productos = _sembrar_catalogo_para_filtros(db_session)
+    params = {
+        "q": "OPTIMIZACION",
+        "type": "publicacion",
+        "owner_id": ana.id,
+        "year_from": 2024,
+        "year_to": 2025,
+        "research_line": "Computación científica",
+        "limit": 1,
+        "offset": 0,
+    }
+
+    primera = publico.get(CATALOG_URL, params=params).json()
+    segunda = publico.get(CATALOG_URL, params={**params, "offset": 1}).json()
+
+    assert primera["total"] == 2
+    assert primera["items"][0]["id"] == productos[0].id
+    assert segunda["total"] == 2
+    assert segunda["items"][0]["id"] == productos[1].id
+
+
+def test_busqueda_del_catalogo_incluye_autores_y_no_distingue_tildes(db_session, publico):
+    _, productos = _sembrar_catalogo_para_filtros(db_session)
+
+    response = publico.get(CATALOG_URL, params={"q": "lucia"})
+
+    assert response.status_code == 200
+    assert response.json()["total"] == 1
+    assert response.json()["items"][0]["id"] == productos[0].id
+
+
+def test_las_opciones_de_profesor_solo_incluyen_productores_publicados(db_session, publico):
+    ana, _ = _sembrar_catalogo_para_filtros(db_session)
+
+    response = publico.get(f"{CATALOG_URL}/professors")
+
+    assert response.status_code == 200
+    assert response.json() == [{"id": ana.id, "full_name": "Ana Morales Vega"}]
 
 
 @pytest.mark.parametrize(
